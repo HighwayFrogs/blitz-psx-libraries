@@ -7,6 +7,8 @@ Andy Sidwell's Development Log for PSX Libraries
 
 Added a call to utilUpperStr() in fileLoad(), so that filenames automatically get promoted to upper-case. This should save all of the grief people have been having with their darn lower-case filenames. :)
 
+Found and fixed the bug in the sound library. I was comparing an unsigned value (sfxFrameNum) with a signed value(lastSampleCall[n]), hence it would never play any sound.
+
 
 29-11-99
 ========
