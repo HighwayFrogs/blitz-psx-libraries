@@ -61,11 +61,21 @@ typedef struct _TextureBankType {
 /**************************************************************************
 	FUNCTION:	textureInitialise()
 	PURPOSE:	Initialise VRAM/texture handling
-	PARAMETERS:	Number of 256 colour cluts to allocate
+	PARAMETERS:	Number of 16 & 256 colour cluts to allocate
 	RETURNS:	
 **************************************************************************/
 
-void textureInitialise(int num256Cluts);
+void textureInitialise(int num16Cluts, int num256Cluts);
+
+
+/**************************************************************************
+	FUNCTION:	textureDestroy()
+	PURPOSE:	Free up memory used by library
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void textureDestroy();
 
 
 /**************************************************************************

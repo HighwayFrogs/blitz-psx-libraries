@@ -6,6 +6,8 @@ Andy Sidwell's Development Log for PSX Libraries
 
 Tidied up the docs and header file for the sound library, it was in a complete state from before it was changed to entirely queue based. It's all up to date now, so it should be okay.
 
+textureInitialise() now takes parameters for the number of 16-color and 256-colour palettes you want. Hence, we also have a textureDestroy() function now to clean up.
+
 
 30-11-99
 ========

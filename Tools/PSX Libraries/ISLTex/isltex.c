@@ -22,8 +22,8 @@
 extern psFont	*font;
 
 #define MAXTEXBANKS			50
-#define VRAM_PALETTES		300
-#define VRAM_256PALETTES	16
+static int	VRAM_PALETTES;
+static int	VRAM_256PALETTES;
 
 // Richard's funky macros for calculating vram related stuff
 
@@ -54,17 +54,17 @@ static TextureBankType *texBank[MAXTEXBANKS];
 
 
 unsigned char	VRAMblock[VRAM_PAGES][VRAM_PAGEW*VRAM_PAGEH];
-unsigned short	VRAMpalBlock[VRAM_PALETTES];
-int				VRAMpalHandle[VRAM_PALETTES/32];
-unsigned short	VRAMpalCLUT[VRAM_PALETTES];
 
-// *** NEW IMPROVED CRC CHECKING FOR PALETTES!!! ***
-unsigned long	VRAMpalCRC[VRAM_PALETTES];
+unsigned short	*VRAMpalBlock;
+int				*VRAMpalHandle;
+unsigned short	*VRAMpalCLUT;
+unsigned long	*VRAMpalCRC;
 
-unsigned long	VRAMpal256CRC[VRAM_256PALETTES];
-unsigned long	VRAMpal256CLUT[VRAM_256PALETTES];
-unsigned short	VRAMpal256Block[VRAM_256PALETTES];
+unsigned long	*VRAMpal256CRC;
+unsigned long	*VRAMpal256CLUT;
+unsigned short	*VRAMpal256Block;
 
+// workspace for the vram viewer to display the current palette
 unsigned short	currentPal16[16];
 unsigned short	currentPal256[256];
 
@@ -188,11 +188,11 @@ void textureInit256ClutSpace(int numCluts)
 /**************************************************************************
 	FUNCTION:	textureInitialise()
 	PURPOSE:	Initialise VRAM/texture handling
-	PARAMETERS:	
+	PARAMETERS:	Number of 16 colour palettes, number of 256 colour palettes
 	RETURNS:	
 **************************************************************************/
 
-void textureInitialise(int num256Cluts)
+void textureInitialise(int num16Cluts, int num256Cluts)
 {
 	int		page;
 	RECT	rect;
@@ -202,10 +202,50 @@ void textureInitialise(int num256Cluts)
 	for(loop=0; loop<MAXTEXBANKS; loop++)
 		texBank[loop] = NULL;
 
+	if(num16Cluts > 0)
+	{
+#ifdef _DEBUG
+	printf("\ntextureInitialise: allocating space for %d 16-colour cluts", num16Cluts);
+#endif
+		VRAMpalBlock = MALLOC(sizeof(unsigned short) * num16Cluts);
+		VRAMpalHandle = MALLOC(sizeof(int) * (num16Cluts / 32));
+		VRAMpalCLUT = MALLOC(sizeof(unsigned short) * num16Cluts);
+		VRAMpalCRC = MALLOC(sizeof(unsigned long) * num16Cluts);
+
+		memset(VRAMpalBlock, 0, sizeof(unsigned short) * num16Cluts);
+		memset(VRAMpalHandle, 0, sizeof(int) * (num16Cluts / 32));
+		memset(VRAMpalCLUT, 0, sizeof(unsigned short) * num16Cluts);
+		memset(VRAMpalCRC, 0, sizeof(unsigned long) * num16Cluts);
+
+		VRAM_PALETTES = num16Cluts;
+	}
+	else
+	{
+		VRAM_PALETTES = 0;
+	}
+
+	if(num256Cluts > 0)
+	{
+#ifdef _DEBUG
+	printf("\ntextureInitialise: allocating space for %d 256-colour cluts", num256Cluts);
+#endif
+		VRAMpal256Block = MALLOC(sizeof(unsigned short) * num256Cluts);
+		VRAMpal256CLUT = MALLOC(sizeof(unsigned long) * num256Cluts);
+		VRAMpal256CRC = MALLOC(sizeof(unsigned long) * num256Cluts);
+
+		memset(VRAMpal256Block, 0, sizeof(unsigned short) * num256Cluts);
+		memset(VRAMpal256CLUT, 0, sizeof(unsigned short) * num256Cluts);
+		memset(VRAMpal256CRC, 0, sizeof(unsigned long) * num256Cluts);
+
+		VRAM_256PALETTES = num256Cluts;
+	}
+	else
+	{
+		VRAM_256PALETTES = 0;
+	}
+
 	memset(VRAMblock, 0, sizeof(VRAMblock));
-	memset(VRAMpalBlock, 0, sizeof(VRAMpalBlock));
-	memset(VRAMpalHandle, 0, sizeof(VRAMpalHandle));
-	memset(VRAMpalCRC, 0, sizeof(VRAMpalCRC));
+	
 	rect.x = rect.y = 0;
 	rect.w = 512;
 	rect.h = 512;
@@ -240,6 +280,28 @@ void textureInitialise(int num256Cluts)
 #endif
 
 }
+
+
+void textureDestroy()
+{
+
+	if(VRAM_PALETTES)
+	{
+		FREE(VRAMpalBlock);
+		FREE(VRAMpalHandle);
+		FREE(VRAMpalCLUT);
+		FREE(VRAMpalCRC);
+	}
+
+	if(VRAM_256PALETTES)
+	{
+		FREE(VRAMpal256Block);
+		FREE(VRAMpal256CLUT);
+		FREE(VRAMpal256CRC);
+	}
+
+}
+
 
 unsigned short textureAddCLUT16(unsigned short *palette)
 {
@@ -304,7 +366,7 @@ unsigned short textureAddCLUT16(unsigned short *palette)
 			return VRAMpalCLUT[pal];
 		}
 	}
-	printf("*** WARNING: No more palettes\n");
+	printf("\ntexture: No more 16-colour palettes");
 	return NULL;
 }
 
@@ -957,7 +1019,7 @@ static void VRAMdrawPalette(unsigned long clut, int y)
 	rect.h = 1;
 
 	DrawSync(0);
-	StoreImage(&rect, &currentPal16[0]);
+	StoreImage(&rect, currentPal16);
    	
 	BEGINPRIM(f4, POLY_F4);
 	setPolyF4(f4);
@@ -1001,7 +1063,7 @@ static void VRAMdrawPalette256(unsigned long clut, int y)
 	rect.h = 1;
 
 	DrawSync(0);
-	StoreImage(&rect, &currentPal256[0]);
+	StoreImage(&rect, currentPal256);
    	
 	BEGINPRIM(f4, POLY_F4);
 	setPolyF4(f4);
@@ -1031,7 +1093,7 @@ static void VRAMdrawPalette256(unsigned long clut, int y)
    	{
    		if ((VRAMpal256Block[pal]) && (clut==VRAMpal256CLUT[pal]))
    		{
-			sprintf(str, "256Palette #%d (used %dx) CRC=0x%x", pal, VRAMpal256Block[pal], VRAMpal256CRC[pal]);
+			sprintf(str, "256Palette #%d (used %dx)", pal, VRAMpal256Block[pal]);
    			fontPrint(font, -230,y+5, str, 128,128,128);
 			break;
 		}
