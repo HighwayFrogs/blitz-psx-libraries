@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+29-11-99
+========
+
+Fixed a "doh!" bug in the memory library, where (sizeof(AllocBlock) * maxAllocs) wasn't being subtracted from the size of the pool. This meant that discs would run on kits, but not on debug stations, because it was writing over the 2mb limit. Duh!
+
+
 24-11-99
 ========
 
