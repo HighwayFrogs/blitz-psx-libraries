@@ -191,7 +191,7 @@ static void padHandlePort(int port)
 			if(padData2.newShock[padNo] < 1)
 			{
 #ifdef _DEBUG
-				printf("  Controller disconnected\n");
+				//printf("  Controller disconnected\n");
 #endif
   				padData.present[padNo] = PADTYPE_NONE;
 				padData2.state[padNo] = PadStateDiscon;
@@ -201,7 +201,7 @@ static void padHandlePort(int port)
 			if(padData2.newShock[padNo] < 1)
 			{
 #ifdef _DEBUG
-				printf("  Find controller connection (checking)\n");
+				//printf("  Find controller connection (checking)\n");
 #endif
 				padData2.state[padNo] = PadStateFindPad;
 			}
@@ -210,7 +210,7 @@ static void padHandlePort(int port)
 			if (padData2.state[padNo]!=PadStateStable)
 			{
 #ifdef _DEBUG
-				printf("  Check for controller connection with controllers other than DUAL SHOCK (Complete the acquisition of controller information)\n");
+				//printf("  Check for controller connection with controllers other than DUAL SHOCK (Complete the acquisition of controller information)\n");
 #endif
 				padData2.state[padNo] = PadStateStable;
 				currPad = PadInfoMode(HWport, InfoModeCurID, 0);
@@ -218,14 +218,14 @@ static void padHandlePort(int port)
 				{
 				case 4:
 #ifdef _DEBUG
-					printf("%d: Standard Pad Connected\n", padNo);
+					//printf("%d: Standard Pad Connected\n", padNo);
 #endif
 					padData.present[padNo] = PADTYPE_DIGITAL;
 					padData.digital[padNo] = 0;
 					break;
 				case 7:
 #ifdef _DEBUG
-					printf("%d: Old Analog Pad (Red Mode) Connected\n", padNo);
+					//printf("%d: Old Analog Pad (Red Mode) Connected\n", padNo);
 #endif
 					padData.present[padNo] = PADTYPE_ANALOG;
 					padData.digital[padNo] = 0;
@@ -236,21 +236,21 @@ static void padHandlePort(int port)
 			break;
 		case PadStateReqInfo:
 #ifdef _DEBUG
-			printf("  Actuator information being retrieved (data being retrieved)\n");
+			//printf("  Actuator information being retrieved (data being retrieved)\n");
 #endif
 			continue;
 		case PadStateStable:
 			if (padData2.state[padNo]!=PadStateStable)
 			{
 #ifdef _DEBUG
-				printf("  Retrieval of actuator information completed, or library-controller communication completed\n");
+				//printf("  Retrieval of actuator information completed, or library-controller communication completed\n");
 #endif
 				padData2.state[padNo] = PadStateStable;
 				currPad = PadInfoMode(HWport, InfoModeCurExID, 0);
 				if(currPad)
 				{
 #ifdef _DEBUG
-					printf("%d: Found DUAL SHOCK controller\n", padNo);
+					//printf("%d: Found DUAL SHOCK controller\n", padNo);
 #endif
 					padData.present[padNo] = PADTYPE_DUALSHOCK;
 					padData.digital[padNo] = 0;
@@ -260,7 +260,7 @@ static void padHandlePort(int port)
 				else
 				{
 #ifdef _DEBUG
-					printf("  Found unsupported extended controller\n");
+					//printf("  Found unsupported extended controller\n");
 #endif
 					padData.present[padNo] = PADTYPE_NONE;
 				}
@@ -288,17 +288,17 @@ static void padHandlePort(int port)
 				{
 				case PADTYPE_DIGITAL:
 #ifdef _DEBUG
-					printf("%d: Morphing controller became digital\n", padNo);
+					//printf("%d: Morphing controller became digital\n", padNo);
 #endif
 					break;
 				case PADTYPE_ANALOG:
 #ifdef _DEBUG
-					printf("%d: Morphing controller became red analog\n", padNo);
+					//printf("%d: Morphing controller became red analog\n", padNo);
 #endif
 					break;
 				case PADTYPE_NONE:
 #ifdef _DEBUG
-					printf("%d: Morphing controller became unsupported\n", padNo);
+					//printf("%d: Morphing controller became unsupported\n", padNo);
 #endif
 					break;
 				}
