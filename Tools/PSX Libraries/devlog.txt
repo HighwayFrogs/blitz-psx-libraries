@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+4-2-2000
+========
+
+Button printing in the font library went astray when we converted the source from AM1, so that's gone back in, with a new function to set the sprites to be used, fontRegisterButtonSprites().
+
+
 2-2-2000
 ========
 

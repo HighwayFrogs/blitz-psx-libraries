@@ -83,4 +83,14 @@ int fontFitToWidth(psFont *font, int width, char *text, char *buffer);
 void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsigned char g, unsigned char b, int n);
 
 
+/**************************************************************************
+	FUNCTION:	fontRegisterButtonSprites()
+	PURPOSE:	Set sprites to be used for button display
+	PARAMETERS:	pointers to sprites
+	RETURNS:	
+**************************************************************************/
+
+void fontRegisterButtonSprites(TextureType *triangle, TextureType *circle, TextureType *cross, TextureType *square);
+
+
 #endif //__ISLFONT_H__

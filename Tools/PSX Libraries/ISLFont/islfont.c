@@ -29,11 +29,16 @@
 #define VRAM_CALCVRAMX(HND)	(512+((VRAM_GETPAGE(HND)%(VRAM_PAGECOLS))*64)+(VRAM_GETX(HND)*2))
 #define VRAM_CALCVRAMY(HND)	(((VRAM_GETPAGE(HND)/(VRAM_PAGECOLS))*256)+(VRAM_GETY(HND)*8))
 
+#define ANG2FIX(a)		(((a)*4096)/360)
+
+static TextureType	*buttonSprites[4];
+
 
 unsigned char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-=+[]{}:;\"'|\\,<.>/?"
 					"\xe0\xe8\xec\xf2\xf9\xc0\xc8\xcc\xd2\xd9\xe1\xe9\xed\xf3\xfa\xfd\xc1\xc9\xcd\xd3\xda\xdd\xe2\xea\xee\xf4\xfb\xc2\xca\xce\xd4\xdb\xe3\xf1\xf5\xc3\xd1\xd5\xe4\xeb\xef\xf6\xfc\xff\xc4\xcb\xcf\xd6\xdc\xe5\xc5\xe6\xc6\xe7\xc7\xf0\xd0\xf8\xd8\xbf\xa1\xdf";
 
 
+static void fontDispSprite(TextureType *tex, short x,short y, UBYTE r, UBYTE g, UBYTE b, UBYTE transMode, UBYTE depth, USHORT scale, USHORT rot, UBYTE xflip);
 
 static void fontDownload(psFont *font, char *fontdata, int character)
 {
@@ -329,29 +334,29 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 			x += font->height/2;
 			break;
 		case '@':
-/*			switch(*(strPtr+1))
+			switch(*(strPtr+1))
 			{
 			case 'X':
-			   	mapScreenDispSquare(gameInfo.buttons[0], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			    fontDispSprite(buttonSprites[0], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
 				strPtr++;
 				x += 32;
 				break;
 			case 'C':
-			   	mapScreenDispSquare(gameInfo.buttons[1], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			   	fontDispSprite(buttonSprites[1], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
 				strPtr++;
 				x += 32;
 				break;
 			case 'S':
-			   	mapScreenDispSquare(gameInfo.buttons[2], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			   	fontDispSprite(buttonSprites[2], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
 				strPtr++;
 				x += 32;
 				break;
 			case 'T':
-			   	mapScreenDispSquare(gameInfo.buttons[3], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			   	fontDispSprite(buttonSprites[3], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
 				strPtr++;
 				x += 32;
 				break;
-			}*/
+			}
 			break;
 		default:
 			loop = font->charlookup[c];
@@ -368,4 +373,95 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 	}
 }
 
+static void fontDispSprite(TextureType *tex, short x,short y, UBYTE r, UBYTE g, UBYTE b, UBYTE transMode, UBYTE depth, USHORT scale, USHORT rot, UBYTE xflip)
+{
+	POLY_FT4 	*si;
+	USHORT		w,h;
 
+	
+	BEGINPRIM(si, POLY_FT4);
+
+	w = (tex->w*2*scale)/8192;
+	h = (tex->h*scale)/8192;
+
+
+	if (rot>4095)
+	{
+		if (!xflip)
+		{
+			si->x0 = x-w;
+			si->y0 = y-h;
+			si->x1 = x+w;
+			si->y1 = y-h;
+			si->x2 = x-w;
+			si->y2 = y+h-1;
+			si->x3 = x+w;
+			si->y3 = y+h-1;
+		}
+		else
+		{
+			si->x0 = x+w;
+			si->y0 = y-h;
+			si->x1 = x-w;
+			si->y1 = y-h;
+			si->x2 = x+w;
+			si->y2 = y+h-1;
+			si->x3 = x-w;
+			si->y3 = y+h-1;
+		}
+	}
+	else
+	{
+		if (!xflip)
+		{
+			si->x0 = x-(w*rsin(ANG2FIX(135)+rot))/2897;		// Inverse of root 2
+			si->y0 = y+(h*rcos(ANG2FIX(135)+rot))/2897;
+			si->x1 = x-(w*rsin(ANG2FIX(225)+rot))/2897;
+			si->y1 = y+(h*rcos(ANG2FIX(225)+rot))/2897;
+			si->x2 = x-(w*rsin(ANG2FIX(45)+rot))/2897;
+			si->y2 = y+(h*rcos(ANG2FIX(45)+rot))/2897;
+			si->x3 = x-(w*rsin(ANG2FIX(315)+rot))/2897;
+			si->y3 = y+(h*rcos(ANG2FIX(315)+rot))/2897;
+		}
+		else
+		{
+			si->x0 = x+(w*rsin(ANG2FIX(135)+rot))/2897;
+			si->y0 = y+(h*rcos(ANG2FIX(135)+rot))/2897;
+			si->x1 = x+(w*rsin(ANG2FIX(225)+rot))/2897;
+			si->y1 = y+(h*rcos(ANG2FIX(225)+rot))/2897;
+			si->x2 = x+(w*rsin(ANG2FIX(45)+rot))/2897;
+			si->y2 = y+(h*rcos(ANG2FIX(45)+rot))/2897;
+			si->x3 = x+(w*rsin(ANG2FIX(315)+rot))/2897;
+			si->y3 = y+(h*rcos(ANG2FIX(315)+rot))/2897;
+		}
+	}
+	si->r0 = r;
+	si->g0 = g;
+	si->b0 = b;
+	si->u0 = tex->u0;
+	si->v0 = tex->v0;
+	si->u1 = tex->u1;
+	si->v1 = tex->v1;
+	si->u2 = tex->u2;
+	si->v2 = tex->v2;
+	si->u3 = tex->u3;
+	si->v3 = tex->v3;
+	si->tpage = tex->tpage;
+	si->clut = tex->clut;
+	si->code = 0x2c;
+	if (transMode)
+	{
+		SETSEMIPRIM(si, transMode);
+		si->code |= 2;
+	}
+	ENDPRIM(si, depth, POLY_FT4);
+}
+
+
+void fontRegisterButtonSprites(TextureType *triangle, TextureType *circle, TextureType *cross, TextureType *square)
+{
+	buttonSprites[0] = triangle;
+	buttonSprites[1] = circle;
+	buttonSprites[2] = cross;
+	buttonSprites[3] = square;
+}
