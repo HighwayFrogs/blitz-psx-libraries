@@ -2,8 +2,17 @@ Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
 
+20-10-99
+========
+
+Worked on the skinning library today. Split off all the actor functions into a separate file, which will be provided as source code for people to use however they want. The actual animation setup/blending and rendering functions will be provided as a library.
+
+
 
 19-10-99
 ========
 
 Had a meeting this morning with Andrew, Richard, Fred, Chris S., Ian, Scott and Byron, on the future of the library system. Agreed on a whole load of additions to be made once the initial release is out, which should be within the next two weeks.
+
+Started working on a users guide for the libraries. Not too sure exactly how basic to start, so I've beginning at the installation stage, with how to set up your compiler to include and link in the new libs.
+
