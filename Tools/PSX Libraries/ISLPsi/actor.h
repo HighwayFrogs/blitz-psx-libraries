@@ -86,6 +86,8 @@ extern ACTORLIST	actorList;
 
 // functions
 
+void actorInitialise();
+
 void actorAdd(ACTOR *actor);
 
 void actorSub(ACTOR *actor);
