@@ -1,0 +1,9 @@
+Andy Sidwell's Development Log for PSX Libraries
+================================================
+
+
+
+19-10-99
+========
+
+Had a meeting this morning with Andrew, Richard, Fred, Chris S., Ian, Scott and Byron, on the future of the library system. Agreed on a whole load of additions to be made once the initial release is out, which should be within the next two weeks.
