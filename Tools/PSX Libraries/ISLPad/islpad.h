@@ -48,6 +48,7 @@ typedef struct _PadDataType {
 	int				shockDiv[8];				// 2nd shock inertia divisor
 	int				buzzTime[8];				// Countdown time for 1st shock
 	int				shockEnable;
+	int				analogAccel;				// acceleration for analog emulation
 } PadDataType;
 
 // extern declaration of pad data structure

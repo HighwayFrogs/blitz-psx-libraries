@@ -111,6 +111,7 @@ void padInitialise(unsigned char multiTap)
 	PadStartCom();
 	padData.numPads[0] = 1;
 	padData.numPads[1] = 1;
+	padData.analogAccel = 4;	// default acceleration for analog emulation
 	VSync(5);
 	for(loop=0; loop<8; loop++)
 	{
@@ -310,8 +311,65 @@ static void padHandlePort(int port)
 			padData.analogY[padNo] = packet->leftY;
 			padData.analogX2[padNo] = packet->rightX;
 			padData.analogY2[padNo] = packet->rightY;
-			NormaliseJoy2(packet->leftX, packet->leftY, &padData.analogXS[padNo], &padData.analogYS[padNo]);
-			NormaliseJoy2(packet->rightX, packet->rightY, &padData.analogX2S[padNo], &padData.analogY2S[padNo]);
+			
+			if(padData.analog[padNo])
+			{
+				// if we really are an analog pad, do some smoothing stuff
+				NormaliseJoy2(packet->leftX, packet->leftY, &padData.analogXS[padNo], &padData.analogYS[padNo]);
+				NormaliseJoy2(packet->rightX, packet->rightY, &padData.analogX2S[padNo], &padData.analogY2S[padNo]);
+			}
+			else
+			{
+				// analog emulation for digital pads
+
+				if(padData.digital[padNo] & PAD_LEFT)
+				{
+					padData.analogXS[padNo] += (((-4096) - padData.analogXS[padNo]) / padData.analogAccel);
+					if(padData.analogXS[padNo] > -4096)
+						padData.analogXS[padNo] --;
+				}
+				else
+				{
+					if(padData.digital[padNo] & PAD_RIGHT)
+					{
+						padData.analogXS[padNo] += ((4096 - padData.analogXS[padNo]) / padData.analogAccel);
+						if(padData.analogXS[padNo] < 4096)
+							padData.analogXS[padNo] ++;
+					}
+					else
+					{
+						padData.analogXS[padNo] += ((0 - padData.analogXS[padNo]) / padData.analogAccel);
+						if(padData.analogXS[padNo] > 0)
+							padData.analogXS[padNo] --;
+						if(padData.analogXS[padNo] < 0)
+							padData.analogXS[padNo] ++;
+					}
+				}
+
+				if(padData.digital[padNo] & PAD_UP)
+				{
+					padData.analogYS[padNo] += (((-4096) - padData.analogYS[padNo]) / padData.analogAccel);
+					if(padData.analogYS[padNo] > -4096)
+						padData.analogYS[padNo] --;
+				}
+				else
+				{
+					if(padData.digital[padNo] & PAD_DOWN)
+					{
+						padData.analogYS[padNo] += ((4096 - padData.analogYS[padNo]) / padData.analogAccel);
+						if(padData.analogYS[padNo] < 4096)
+							padData.analogYS[padNo] ++;
+					}
+					else
+					{
+						padData.analogYS[padNo] += ((0 - padData.analogYS[padNo]) / padData.analogAccel);
+						if(padData.analogYS[padNo] > 0)
+							padData.analogYS[padNo] --;
+						if(padData.analogYS[padNo] < 0)
+							padData.analogYS[padNo] ++;
+					}
+				}
+			}
 		}
 		else
 			padData.digital[padNo] = 0;
