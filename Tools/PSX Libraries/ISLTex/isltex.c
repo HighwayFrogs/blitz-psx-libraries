@@ -691,7 +691,10 @@ void textureUnload(TextureType *txPtr)
 	else
 		ClearImage(&rect, 100,100,100);
 	
-	textureVRAMfree(txPtr->handle, (txPtr->w+7)/8,(txPtr->h+7)/8);
+	if(txPtr->tpage & (1 << 7))
+		textureVRAMfree(txPtr->handle, ((txPtr->w+7)/8) * 2,(txPtr->h+7)/8);
+	else
+		textureVRAMfree(txPtr->handle, (txPtr->w+7)/8,(txPtr->h+7)/8);
 
 	if(txPtr->tpage & (1 << 7))
 		textureRemoveCLUT256(txPtr->clut);
