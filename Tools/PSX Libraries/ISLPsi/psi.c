@@ -589,8 +589,16 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					a = sizeof(TMD_P_FT3I );
 					sprt = PageTexture( ((TMD_P_FT3I*)primitive)->clut ); // clut = texture index number
 					
-					if (((TMD_P_FT3I*)primitive)->tpage) 
+					// check for semi
+					if(((TMD_P_FT3I*)primitive)->tpage)
+					{
+						// set code
 						((TMD_P_FT3I*)primitive)->cd |= 2;
+
+						// if both add&sub flags are set, then clear them
+						if((((TMD_P_FT3I*)primitive)->tpage) == 96)
+							((TMD_P_FT3I*)primitive)->tpage = 0;
+					}
 					
 					((TMD_P_FT3I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_FT3I*)primitive)->clut = sprt->clut;
@@ -615,8 +623,13 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					a = sizeof(TMD_P_FT4I );
 					sprt = PageTexture( ((TMD_P_FT4I*)primitive)->clut ); // clut= texture index number
 
-					if (((TMD_P_FT4I*)primitive)->tpage) 
+					if(((TMD_P_FT4I*)primitive)->tpage)
+					{
 						((TMD_P_FT4I*)primitive)->cd |= 2;
+						if((((TMD_P_FT4I*)primitive)->tpage) == 96)
+							((TMD_P_FT4I*)primitive)->tpage = 0;
+					}
+						
 						
 					((TMD_P_FT4I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_FT4I*)primitive)->clut = sprt->clut;
@@ -643,8 +656,12 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					a = sizeof(TMD_P_GT3I );
 					sprt = PageTexture( ((TMD_P_GT3I*)primitive)->clut ); // clut= texture index number
 					
-					if (((TMD_P_GT3I*)primitive)->tpage) 
+					if(((TMD_P_GT3I*)primitive)->tpage)
+					{
 						((TMD_P_GT3I*)primitive)->cd |= 2;
+						if((((TMD_P_GT3I*)primitive)->tpage) == 96)
+							((TMD_P_GT3I*)primitive)->tpage = 0;
+					}
 									
 					((TMD_P_GT3I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_GT3I*)primitive)->clut = sprt->clut;
@@ -668,8 +685,12 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					a = sizeof(TMD_P_GT4I );
 					sprt = PageTexture( ((TMD_P_GT4I*)primitive)->clut ); // clut= texture index number
 
-					if (((TMD_P_GT4I*)primitive)->tpage) 
+					if(((TMD_P_GT4I*)primitive)->tpage)
+					{
 						((TMD_P_GT4I*)primitive)->cd |= 2;
+						if((((TMD_P_GT4I*)primitive)->tpage) == 96)
+							((TMD_P_GT4I*)primitive)->tpage = 0;
+					}
 						
 					((TMD_P_GT4I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_GT4I*)primitive)->clut = sprt->clut;
