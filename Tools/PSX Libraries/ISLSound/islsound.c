@@ -383,6 +383,7 @@ void sfxInitialise()
 	SpuSetCommonMasterVolume(0x3fff,0x3fff);	// set master volume to max
 	SpuSetCommonCDMix(SPU_ON);					// turn cd audio off
 	SpuSetTransferCallback(NULL);
+	SpuSetTransferMode(SPU_TRANSFER_BY_IO);
 	SpuInitMalloc(4,sampleBank.rec);
 	sfxFrameNum = 0;
 	for (loop=0; loop<MAX_SAMPLES; loop++)
@@ -525,7 +526,10 @@ void sfxLoadBank(char *filename)
 		vagInfo ++;
 	}
 
-	SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+
+	//SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+	// this is no longer necessary, as transfer to SPU RAM is done by the CPU now
+
 
 #ifdef _DEBUG
 	printf("\nSFX: Sample upload complete\n");
