@@ -114,7 +114,7 @@ void sfxInitialise(int maxReverb)
 
 void sfxDestroy()
 {
-	int	loop, loop2;
+	int	loop;
 	SpuReverbAttr	sceReverb;					// SCE reverb struct
 	
 	SpuSetKey(SPU_OFF,0xFFFFFFFF);				// turn off all voices
@@ -128,10 +128,7 @@ void sfxDestroy()
 	{
 		if(sfx2Data.sfx2Banks[loop])
 		{
-			for(loop2 = 0; loop2 < sfx2Data.sfx2Banks[loop]->numSamples; loop2 ++)
-			{
-				sfxUnloadSample(&sfx2Data.sfx2Banks[loop]->sample[loop2]);
-			}
+			sfxUnloadBank(sfx2Data.sfx2Banks[loop]);
 		}
 	}
 }
@@ -172,7 +169,7 @@ SfxBankType *sfxFixupSampleBankHeader(SfxBankType *bank, unsigned long spuAddr)
 
 /**************************************************************************
 	FUNCTION:	sfxLoadSampleBankBody()
-	PURPOSE:	Load a sample bank into spu ram
+	PURPOSE:	Load sample bank body into spu ram
 	PARAMETERS:	filename of sample bank (minus extension)
 	RETURNS:	spu base address
 **************************************************************************/
@@ -250,7 +247,6 @@ SfxBankType *sfxLoadSampleBank(char *fileName)
 
 	if(sampleData)
 	{
-		// point to sample body
 		newBank->sampleData = sampleData;
 		(unsigned long)newBank->sample = (unsigned long)newBank + sizeof(SfxBankType);
 
@@ -364,6 +360,31 @@ SfxSampleType *sfxUnloadSample(SfxSampleType *sample)
 	SpuFree(sample->spuOffset);
 
 	return sample;
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxUnloadBank
+	PURPOSE:	Unload sample bank from SPU ram
+	PARAMETERS:	pointer to sample bank
+	RETURNS:	pointer to sample bank, or NULL if failed
+**************************************************************************/
+
+SfxBankType *sfxUnloadBank(SfxBankType *bank)
+{
+	int loop;
+	
+	if(bank)
+	{
+		for(loop = 0; loop < bank->numSamples; loop ++)
+		{
+			sfxUnloadSample(&bank->sample[loop]);
+		}
+
+		return bank;
+	}
+
+	return NULL;
 }
 
 

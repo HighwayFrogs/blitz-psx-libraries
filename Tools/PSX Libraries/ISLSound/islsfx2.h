@@ -9,23 +9,21 @@
 #define __ISLSFX2_H__
 
 typedef struct _SfxSampleType {
-
 	unsigned char	inSPURam;		// is this sample in SPU ram?
+	unsigned char	pad;
+	unsigned short	sampleRate;		// default sample rate
 	unsigned long	spuOffset;		// offset in SPU ram
 	unsigned long	nameCRC;		// CRC of sample name
 	unsigned long	sampleSize;		// length of sample data
 	unsigned char	*sampleData;	// pointer to sample data in RAM
-
 } SfxSampleType;
 
 
 typedef struct _SfxBankType {
-
-	int				numSamples;		// number of samples in this bank
-	SfxSampleType	*sample;		// array of SfxSampleType's
+	unsigned long	numSamples;		// number of samples in this bank
 	unsigned long	baseAddr;		// if the bank was downloaded entirely, the base address
-	unsigned char	*sampleData;
-
+	SfxSampleType	*sample;		// array of SfxSampleType's
+	unsigned char	*sampleData;	// pointer to all sample data in this bank
 } SfxBankType;
 
 
@@ -120,6 +118,16 @@ SfxSampleType *sfxDownloadSample(SfxSampleType *sample);
 **************************************************************************/
 
 SfxSampleType *sfxUnloadSample(SfxSampleType *sample);
+
+
+/**************************************************************************
+	FUNCTION:	sfxUnloadBank
+	PURPOSE:	Unload sample bank from SPU ram
+	PARAMETERS:	pointer to sample bank
+	RETURNS:	pointer to sample bank, or NULL if failed
+**************************************************************************/
+
+SfxBankType *sfxUnloadBank(SfxBankType *bank);
 
 
 /**************************************************************************
