@@ -133,6 +133,7 @@ psFont *fontLoad(char *fontname)
 	FREE(fontdata);
 
 	font->alpha = 0;
+	font->spriteYOffset = 0;
 
 	return font;
 }
