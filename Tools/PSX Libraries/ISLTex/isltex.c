@@ -1287,7 +1287,7 @@ void textureShowVRAM(unsigned char palMode)
 	SetDefDispEnv(&dispenv, 0,0, 512,256);
 	while ((padData.digital[4] & PAD_START)==0)
 	{
-		padHandler();
+		padHandleInput();
 		switch(viewMode)
 		{
 		case 0:

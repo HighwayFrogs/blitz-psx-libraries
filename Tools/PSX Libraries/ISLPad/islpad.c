@@ -378,19 +378,30 @@ static void padHandlePort(int port)
 
 
 /**************************************************************************
-	FUNCTION:	padHandler()
+	FUNCTION:	padHandleInput()
 	PURPOSE:	Handle pad reading/connection etc.
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
 
-void padHandler()
+void padHandleInput()
+{
+	padHandlePort(0);
+	padHandlePort(1);
+}
+
+
+/**************************************************************************
+	FUNCTION:	padHandleShock()
+	PURPOSE:	Handle pad dual shock stuff
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void padHandleShock()
 {
 	int		HWport, loop;
 	unsigned short	temp;
-
-	padHandlePort(0);
-	padHandlePort(1);
 
 	for(loop=0; loop<8; loop++)
 	{

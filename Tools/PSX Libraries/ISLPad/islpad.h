@@ -91,13 +91,23 @@ void padInitialise(unsigned char multiTap);
 
 
 /**************************************************************************
-	FUNCTION:	padHandler()
+	FUNCTION:	padHandleInput()
 	PURPOSE:	Handle pad reading/connection etc.
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
 
-void padHandler();
+void padHandleInput();
+
+
+/**************************************************************************
+	FUNCTION:	padHandleShock()
+	PURPOSE:	Handle pad dual shock stuff
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void padHandleShock();
 
 
 #endif

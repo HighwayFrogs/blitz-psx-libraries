@@ -325,7 +325,7 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 
 
 		// Check for exit. 
-		padHandler();
+		padHandleInput();
 		if (!fadeVol && (*keyHandler)())
 			fadeVol = dec.volume;
 
