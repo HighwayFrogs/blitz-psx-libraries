@@ -123,14 +123,22 @@ static void (*customDrawFunction)(int) = 0;
 static void (*customDrawFunction2)(int) = 0;
 
 
-void psiRegisterDrawFunction(void (*drawHandler)(int))
+void *psiRegisterDrawFunction(void (*drawHandler)(int))
 {
+	void *olddraw = (void *)customDrawFunction;
+
 	customDrawFunction = drawHandler;
+
+	return olddraw;
 }
 
-void psiRegisterDrawFunction2(void (*drawHandler)(int))
+void *psiRegisterDrawFunction2(void (*drawHandler)(int))
 {
+	void *olddraw = (void *)customDrawFunction2;
+
 	customDrawFunction2 = drawHandler;
+
+	return olddraw;
 }
 
 
@@ -3107,28 +3115,29 @@ static void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 
 	while(world)
 	{
-	   	world->matrixscale = world->matrix;
-
-		// if inherit scale in on, scale matrix before calculating children
-		if(PSImodelctrl.inheritScale)
-			ScaleMatrix(&world->matrixscale,&world->scale);
-		
+		world->matrixscale = world->matrix;
+		ScaleMatrix(&world->matrixscale, &world->scale);
 		gte_MulMatrix0(&parent->matrix, &world->matrix, &world->matrix);
-		gte_MulMatrix0(&parent->matrixscale, &world->matrixscale, &world->matrixscale);
+		
+		if(PSImodelctrl.inheritScale)
+		{
+			gte_MulMatrix0(&parent->matrixscale, &world->matrixscale, &world->matrixscale);
+		}
+		else
+		{
+			ScaleMatrix(&world->matrixscale, PSIactorScale);
+			gte_MulMatrix0(&parent->matrix, &world->matrixscale, &world->matrixscale);
+		}
+
 		gte_SetRotMatrix(&parent->matrixscale);
 		gte_SetTransMatrix(&parent->matrixscale);
 		gte_ldlvl(&world->matrixscale.t);
 		gte_rtirtr();
 		gte_stlvl(&world->matrixscale.t);
-			
 
 		if(world->child)
 			psiCalcChildMatrix(world->child, world);
 
-		// if inherit scale is off, then scale matrix after calculating children
-		if(PSImodelctrl.inheritScale == 0)
-			ScaleMatrix(&world->matrixscale,&world->scale);
-		
 		world = world->next;
 	}
 }

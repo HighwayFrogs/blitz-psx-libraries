@@ -354,7 +354,7 @@ void psiDrawSegments(PSIDATA *psiData);
 	RETURNS:	
 **************************************************************************/
 
-void psiRegisterDrawFunction(void (*drawHandler)(int));
+void *psiRegisterDrawFunction(void (*drawHandler)(int));
 
 
 /**************************************************************************
@@ -364,7 +364,7 @@ void psiRegisterDrawFunction(void (*drawHandler)(int));
 	RETURNS:	
 **************************************************************************/
 
-void psiRegisterDrawFunction2(void (*drawHandler)(int));
+void *psiRegisterDrawFunction2(void (*drawHandler)(int));
 
 
 /**************************************************************************

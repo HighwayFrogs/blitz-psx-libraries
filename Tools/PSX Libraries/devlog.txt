@@ -1,6 +1,14 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+22-11-99
+========
+
+Fixed the inheritScale option in the PSI library, it wasn't working previously, but it should be now.
+
+psiRegisterDrawFunction() and psiRegisterDrawFunction2() now return a pointer to the previously registered draw function, making it easier for people to manage a set of custom draw handlers.
+
+
 19-11-99
 ========
 
