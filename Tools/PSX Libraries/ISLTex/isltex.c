@@ -21,7 +21,6 @@
 
 extern psFont	*font;
 
-#define MAXTEXBANKS			50
 static int	VRAM_PALETTES;
 static int	VRAM_256PALETTES;
 
@@ -44,7 +43,7 @@ static int	VRAM_256PALETTES;
 #define VRAM_CALCVRAMX(HND)	(512+((VRAM_GETPAGE(HND)%(VRAM_PAGECOLS))*64)+(VRAM_GETX(HND)*2))
 #define VRAM_CALCVRAMY(HND)	(((VRAM_GETPAGE(HND)/(VRAM_PAGECOLS))*256)+(VRAM_GETY(HND)*8))
 
-static TextureBankType *texBank[MAXTEXBANKS];
+TextureBankType *texBank[MAXTEXBANKS];
 
 unsigned char	VRAMblock[VRAM_PAGES][VRAM_PAGEW*VRAM_PAGEH];
 
@@ -759,6 +758,21 @@ TextureBankType *textureLoadBank(char *sFile)
 	int				loop;
 	NSPRITE			*nspr;
 	int				mallocSize, numTextures;
+	unsigned long	bankCRC;
+
+	// CRC bank name
+	bankCRC = utilStr2CRC(sFile);
+
+	// check to see if this bank is already loaded
+	for(loop = 0; loop < MAXTEXBANKS; loop ++)
+	{
+		if(texBank[loop])
+		{
+			// if the CRC's match, this bank is already loaded
+			if(texBank[loop]->bankCRC == bankCRC)
+				return texBank[loop];
+		}
+	}
 
 	nspr = (NSPRITE *)fileLoad(sFile, NULL);
 
@@ -791,6 +805,8 @@ TextureBankType *textureLoadBank(char *sFile)
 	
 	newBank->used = (unsigned char *)((unsigned char *)newBank->texture + newBank->numTextures*sizeof(TextureType));
 	memset(newBank->used, 0, ((newBank->numTextures+7)/8));
+
+	newBank->bankCRC = bankCRC;
 
 	return newBank;
 }
@@ -960,6 +976,8 @@ TextureBankType *textureReallocTextureBank(TextureBankType *txBank)
 	
 	//textureBank = MALLOC(sizeof(TextureBankType));
 	textureBank->numTextures = txBank->numTextures;
+
+	textureBank->bankCRC = txBank->bankCRC;
 
 	txPtr = (TextureType *)((unsigned char *)textureBank + sizeof(TextureBankType));
 	

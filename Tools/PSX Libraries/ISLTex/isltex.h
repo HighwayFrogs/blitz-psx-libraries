@@ -16,6 +16,8 @@
 #define NALPHA		16
 #define NCOLOURKEY	32
 
+#define MAXTEXBANKS			50
+
 
 // single texture structure
 typedef struct {
@@ -63,6 +65,7 @@ typedef struct _TextureBankType {
 	TextureType			*texture;
 	unsigned char		*used;
 	unsigned long		*CRC;
+	unsigned long		bankCRC;
 } TextureBankType;
 
 
@@ -260,6 +263,9 @@ void textureDownLoad(NSPRITE *nspr, TextureType *txPtr);
 
 #define textureFindInBank(b,n)		textureFindCRCInBank((b),utilStr2CRC((n)))
 #define textureFindInAllBanks(n)	textureFindCRCInAllBanks(utilStr2CRC((n)))
+
+// Just for fred :)
+extern TextureBankType *texBank[MAXTEXBANKS];
 
 
 #endif

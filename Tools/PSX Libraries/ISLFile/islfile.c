@@ -18,9 +18,9 @@
 #define FLA_MAGIC			0x32414c46			// Magic number 'FLA2' INTEL
 
 #ifdef _DEBUG
-static char FILEIO_PCROOT[64];	//	"C:\\PSX\\MYGAME\\CD\\"
+char FILEIO_PCROOT[64];		//	"C:\\PSX\\MYGAME\\CD\\"
 #else
-static char FILEIO_CDINDEX[64]; //	"\\MYGAME.DAT;1"
+char FILEIO_CDINDEX[64];	//	"\\MYGAME.DAT;1"
 #endif
 
 typedef struct _FileIODataType
@@ -233,7 +233,7 @@ static void fileCDInitialise(char *fileSystem)
 	RETURNS:	
 **************************************************************************/
 
-static void fileCDDATgetLocation(char *fName, long *sector, long *length)
+void fileCDDATgetLocation(char *fName, long *sector, long *length)
 {
 	long	crc, *iPtr;
 	char	name[40];

@@ -48,4 +48,10 @@ unsigned char *fileLoad(unsigned char *fName, int *length);
 void fileGetLastLoaded();
 
 
+// Just for Fred :)
+extern char FILEIO_PCROOT[64];
+
+void fileCDDATgetLocation(char *fName, long *sector, long *length);
+
+
 #endif
