@@ -1,6 +1,15 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+
+26-10-99
+========
+
+
+
+Added actorDraw2() at the request of Recoil, for setting up and drawing non-animated, non-hierarchical meshes. Doesn't seem to make that much difference, but if it keeps them happy...
+
+
 25-10-99
 ========
 
@@ -9,6 +18,14 @@ Added psiRegisterDrawFunction2(), which lets you use your own draw function for 
 Finished documenting the exported functions for islpsi.lib.
 
 Paul Holman & Alister Bodin from SCEE are visiting this afternoon. Erk!
+
+Re-wrote actorIsVisible() to try and make it a bit more efficient/reliable.
+
+Fixed a few bugs in the draw functions that meant flat shaded models would crash and burn.
+
+The Sony visit didn't go quite as well as we hoped. They only have 20 PS2 kits for Europe this year, so it's looking unlikely that we'll get one before next year.
+
+On the other hand, managed (at last!) to get my hands on a PS2 dev CD with all the docs on. Looks like a tasty piece of hardware, not as tricky as I thought it would be. Just a case of turning your brain on it's side.
 
 
 22-10-99
