@@ -14,6 +14,13 @@ ACTORLIST	actorList;
 #define Bound(a,x,b) min(b,max(a,x))
 
 
+void actorInitialise()
+{
+	actorList.numEntries = 0;
+	actorList.head.next = actorList.head.prev = &actorList.head;
+}
+
+
 
 /**************************************************************************
 	Function 	: actorAdd()
