@@ -2244,9 +2244,9 @@ void psiDrawSegments(PSIDATA *psiData)
 		modctrl->polysdrawn = sortCount;
 
 		if(customDrawFunction)
-			customDrawFunction(depth & 1023);
+			customDrawFunction(depth >> modctrl->depthShift);
 		else
-			psiDrawSortedPrimitives(depth & 1023);
+			psiDrawSortedPrimitives(depth >> modctrl->depthShift);
 	}
 	else
 	{
@@ -2268,9 +2268,9 @@ void psiDrawSegments(PSIDATA *psiData)
 			modctrl->PrimLeft = world->meshdata->sortlistsize[s];
 
 			if(customDrawFunction2)
-				customDrawFunction2(depth);
+				customDrawFunction2(depth >> modctrl->depthShift);
 			else
-				psiDrawPrimitives(depth);
+				psiDrawPrimitives(depth >> modctrl->depthShift);
 		}
 	}
 }
