@@ -88,7 +88,8 @@ static void XAcallback(int intr, u_char *result)
 		XAData.currSector++;
 		if((ID == 352) && (XAData.currChannel==XAData.activeChannel))	// Check for end sector marker
 		{
-	        CdControlF(CdlPause,0);
+	        SpuSetCommonCDVolume(0,0);
+			CdControlF(CdlPause,0);
 			if (XAData.currXA->loop)
 			{
 				XAplayChannel(XAData.currXA, XAData.activeChannel, XAData.currXA->loop, XAData.currXA->vol);
