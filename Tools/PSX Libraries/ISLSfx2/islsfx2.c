@@ -515,6 +515,32 @@ SfxBankType *sfxUnloadSampleBank(SfxBankType *bank)
 
 
 /**************************************************************************
+	FUNCTION:	sfxRemoveSampleBank
+	PURPOSE:	Remove sample bank from list
+	PARAMETERS:	pointer to sample bank
+	RETURNS:	1 if removed, 0 if not found in list
+**************************************************************************/
+
+int sfxRemoveSampleBank(SfxBankType *bank)
+{
+	int	loop, ok;
+
+	ok = 0;
+
+	for(loop = 0; loop < SFX2_MAXBANKS; loop ++)
+	{
+		if(sfx2Data.sfx2Banks[loop] == bank)
+		{
+			sfx2Data.sfx2Banks[loop] = NULL;
+			ok = 1;
+		}
+	}
+
+	return ok;
+}
+
+
+/**************************************************************************
 	FUNCTION:	sfxOn()
 	PURPOSE:	Turn sound output on
 	PARAMETERS:	none

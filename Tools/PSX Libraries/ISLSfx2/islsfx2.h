@@ -152,6 +152,16 @@ SfxBankType *sfxDestroySampleBank(SfxBankType *bank);
 
 
 /**************************************************************************
+	FUNCTION:	sfxRemoveSampleBank
+	PURPOSE:	Remove sample bank from list
+	PARAMETERS:	pointer to sample bank
+	RETURNS:	1 if removed, 0 if not found in list
+**************************************************************************/
+
+int sfxRemoveSampleBank(SfxBankType *bank);
+
+
+/**************************************************************************
 	FUNCTION:	sfxOn()
 	PURPOSE:	Turn sound output on
 	PARAMETERS:	none
