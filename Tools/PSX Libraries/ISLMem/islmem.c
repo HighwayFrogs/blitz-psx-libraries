@@ -40,6 +40,35 @@ typedef struct {
 
 static AllocType	pool;
 
+static int			lastBlockAlloced;
+
+
+#ifdef _DEBUG
+
+void memoryGetLastAlloc()
+{
+	int				loop;
+	unsigned char	*ucp;
+
+	if (pool.lastused == -1)
+		return;
+
+	ucp = (unsigned char *)(pool.base+pool.size);
+	for(loop=0; loop<=pool.lastused; loop++)
+	{
+		ucp -= pool.blocks[loop].size;
+		if (pool.blocks[loop].inuse)
+		{
+			if(loop == lastBlockAlloced)
+			{
+				printf("\n  #%3d ---- @ 0x%x, %6d: %s/%d", loop,
+						(int)ucp, pool.blocks[loop].size, pool.blocks[loop].file,pool.blocks[loop].lineno);
+			}
+		}
+	}
+}
+
+#endif
 
 /**************************************************************************
 	FUNCTION:	memoryInitialise()
@@ -63,6 +92,8 @@ int memoryInitialise(unsigned long base, unsigned long size, unsigned long maxAl
 	memoryReset();
 	printf("\nmemoryInitialise: base = 0x%x, size = 0x%x", base, size);
 	printf("\nmemoryInitialise: pool.base = 0x%x, pool.size = 0x%x, pool.top = 0x%x\n",pool.base, pool.size, pool.base+pool.size);
+
+	lastBlockAlloced = -1;
 	return 0;
 }
 
@@ -208,6 +239,7 @@ void *memoryAllocate(unsigned long size, char *file, int line)
 		pool.lastused = 0;
 		ret = (void *)(pool.base+pool.size-size);
 		MEMORY_MARKBLOCK;
+		lastBlockAlloced = 0;
 		return ret;
 	}
 
@@ -238,6 +270,7 @@ void *memoryAllocate(unsigned long size, char *file, int line)
 		pool.blocks[l].offset = oldsize;
 		ret = (void *)(pool.base+pool.size-size-pool.blocks[pool.lastused].offset);
 		MEMORY_MARKBLOCK;
+		lastBlockAlloced = l;
 		return ret;
 	}
 
@@ -261,6 +294,7 @@ void *memoryAllocate(unsigned long size, char *file, int line)
 
 	ret = (void *)(pool.base+pool.size-size-pool.blocks[l].offset);
 	MEMORY_MARKBLOCK;
+	lastBlockAlloced = l;
 	return ret;
 }
 
