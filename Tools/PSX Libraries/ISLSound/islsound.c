@@ -72,6 +72,43 @@ static int				listHead, listTail;
 	PRIVATE FUNCTIONS
 **************************************************************************/
 
+/**************************************************************************
+	FUNCTION:	sfxPlayVoice()
+	PURPOSE:	plays a sound
+	PARAMETERS:	sample number, volume
+	RETURNS:	channel number
+**************************************************************************/
+
+unsigned long sfxPlayVoice(int sfxNum);
+
+/**************************************************************************
+	FUNCTION:	sfxStopVoice()
+	PURPOSE:	stops a channel
+	PARAMETERS:	channel number
+	RETURNS:	none
+**************************************************************************/
+
+void sfxStopVoice(int channelNum);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetVoiceVolume()
+	PURPOSE:	sets volume of a channel
+	PARAMETERS:	channel number, volume
+	RETURNS:	none
+**************************************************************************/
+
+void sfxSetVoiceVolume(int channelNum, int vol);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetPitch()
+	PURPOSE:	set pitch of channel
+	PARAMETERS:	channel number, pitch
+	RETURNS:	none
+**************************************************************************/
+
+void sfxSetVoicePitch(int channelNum, int pitch);
 
 /**************************************************************************
 	FUNCTION:	sfxCalc3DPosition()
@@ -136,13 +173,13 @@ static int sfxCalc3DPosition(VECTOR *pos, VECTOR *camPos, VECTOR *camRef, int *l
 
 
 /**************************************************************************
-	FUNCTION:	sfxPlaySound()
+	FUNCTION:	sfxPlayVoice()
 	PURPOSE:	Plays the requested sample
 	PARAMETERS:	sample number
 	RETURNS:	none
 **************************************************************************/
 
-static unsigned long sfxPlayVoice(int sfxNum)
+unsigned long sfxPlayVoice(int sfxNum)
 {
 	unsigned long voiceLoop;
 
@@ -175,13 +212,13 @@ static unsigned long sfxPlayVoice(int sfxNum)
 
 
 /**************************************************************************
-	FUNCTION:	sfxSetVolume()
+	FUNCTION:	sfxSetVoiceVolume()
 	PURPOSE:	sets volume of a channel
 	PARAMETERS:	channel number, volume
 	RETURNS:	none
 **************************************************************************/
 
-void sfxSetVolume(int sampleNum, int vol)
+void sfxSetVoiceVolume(int sampleNum, int vol)
 {
 	if (sampleNum < 0 || sampleNum > 99) return;
 	SpuSetVoiceVolume(sampleNum,(vol*sampleBank.volume)/100,(vol*sampleBank.volume)/100);	// channel, left vol, right vol,
@@ -203,13 +240,13 @@ void sfxStopVoice(int sfxNum)
 
 
 /**************************************************************************
-	FUNCTION:	sfxQueueStopSample()
+	FUNCTION:	sfxStopChannel()
 	PURPOSE:	queues a stop request
 	PARAMETERS:	sample number
 	RETURNS:	none
 **************************************************************************/
 
-void sfxQueueStopSample(int sfxNum)
+void sfxStopChannel(int sfxNum)
 {
 	if (((listHead+1)%SAMPLELIST_LENGTH)==listTail) return;
 
@@ -221,30 +258,14 @@ void sfxQueueStopSample(int sfxNum)
 	listHead = (listHead+1)%SAMPLELIST_LENGTH;
 }
 
-
 /**************************************************************************
-	FUNCTION:	sfxPlaySound()
-	PURPOSE:	plays a sound
-	PARAMETERS:	sample number, volume
-	RETURNS:	channel number
-**************************************************************************/
-
-unsigned long sfxPlaySound(int sfxNum, int vol)
-{
-	sampleBank.samples[sfxNum].leftVol = vol;
-	sampleBank.samples[sfxNum].rightVol = vol;
-	return (sfxPlayVoice(sfxNum));
-}
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueSound2()
+	FUNCTION:	sfxPlaySound2()
 	PURPOSE:	queues a sound request
 	PARAMETERS:	sample number, volume, pitch, variable to set with channel number
 	RETURNS:	none
 **************************************************************************/
 
-void sfxQueueSound2(int sampleNum, int vol, int pitch,unsigned char *address)
+void sfxPlaySound2(int sampleNum, int vol, int pitch,unsigned char *address)
 {
 	if (((listHead+1)%SAMPLELIST_LENGTH)==listTail) return;
 
@@ -261,13 +282,13 @@ void sfxQueueSound2(int sampleNum, int vol, int pitch,unsigned char *address)
 
 
 /**************************************************************************
-	FUNCTION:	sfxQueueSound()
+	FUNCTION:	sfxPlaySound()
 	PURPOSE:	queues a sound request
 	PARAMETERS:	sample number, volume, pitch
 	RETURNS:	none
 **************************************************************************/
 
-void sfxQueueSound(int sampleNum, int vol, int pitch)
+void sfxPlaySound(int sampleNum, int vol, int pitch)
 {
 	if (((listHead+1)%SAMPLELIST_LENGTH)==listTail) return;
 
@@ -283,13 +304,13 @@ void sfxQueueSound(int sampleNum, int vol, int pitch)
 
 
 /**************************************************************************
-	FUNCTION:	sfxQueueSetPitch()
+	FUNCTION:	sfxSetPitch()
 	PURPOSE:	queues a volume set request
 	PARAMETERS:	sample number, volume
 	RETURNS:	none
 **************************************************************************/
 
-void sfxQueueSetPitch(int sampleNum, int pitch)
+void sfxSetPitch(int sampleNum, int pitch)
 {
 	if (((listHead+1)%SAMPLELIST_LENGTH)==listTail) return;
 
@@ -304,13 +325,13 @@ void sfxQueueSetPitch(int sampleNum, int pitch)
 
 
 /**************************************************************************
-	FUNCTION:	sfxQueueSetVolume()
+	FUNCTION:	sfxSetVolume()
 	PURPOSE:	queues a volume set request
 	PARAMETERS:	sample number, volume
 	RETURNS:	none
 **************************************************************************/
 
-void sfxQueueSetVolume(int sampleNum, int vol)
+void sfxSetVolume(int sampleNum, int vol)
 {
 	if (((listHead+1)%SAMPLELIST_LENGTH)==listTail) return;
 
@@ -323,36 +344,14 @@ void sfxQueueSetVolume(int sampleNum, int vol)
 	listHead = (listHead+1)%SAMPLELIST_LENGTH;
 }
 
-
 /**************************************************************************
 	FUNCTION:	sfxPlaySound3D()
-	PURPOSE:	Plays the requested sound in 3D space
-	PARAMETERS:	sample number, position in space, camera reference points
-	RETURNS:	none
-**************************************************************************/
-
-void sfxPlaySound3D(int sampleNum, VECTOR *position, VECTOR *camPos, VECTOR *camRef)
-{
-	int leftVol, rightVol;
-
-	if(sfxCalc3DPosition(position, camPos, camRef, &leftVol, &rightVol))
-	{
-		sampleBank.samples[sampleNum].leftVol = leftVol;
-		sampleBank.samples[sampleNum].rightVol = rightVol;
-
-		sfxPlayVoice(sampleNum);
-	}
-}
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueSound3D()
 	PURPOSE:	queues the requested sound in 3D space
 	PARAMETERS:	sample number, position in space
 	RETURNS:	none
 **************************************************************************/
 
-void sfxQueueSound3D(int sampleNum, VECTOR *position, VECTOR *camPos, VECTOR *camRef, int pitch)
+void sfxPlaySound3D(int sampleNum, VECTOR *position, VECTOR *camPos, VECTOR *camRef, int pitch)
 {
 	int leftVol, rightVol;
 
@@ -414,13 +413,13 @@ void sfxStartSound()
 
 
 /**************************************************************************
-	FUNCTION:	sfxStopSound()
+	FUNCTION:	sfxDisableDMA()
 	PURPOSE:	Stop sound DMA processing
 	PARAMETERS:	none
 	RETURNS:	none
 **************************************************************************/
 
-void sfxStopSound()
+void sfxDisableDMA()
 {
 #ifdef _DEBUG
 	printf("\nSound system stopped...");
@@ -603,13 +602,13 @@ void sfxDisplayDebug()
 
 
 /**************************************************************************
-	FUNCTION:	sfxSetPitch()
+	FUNCTION:	sfxSetVoicePitch()
 	PURPOSE:	set pitch of channel
 	PARAMETERS:	channel number, pitch
 	RETURNS:	none
 **************************************************************************/
 
-void sfxSetPitch(int sampleNum, int pitch)
+void sfxSetVoicePitch(int sampleNum, int pitch)
 {
 	if(sampleNum<0) return;
 	if(sampleNum>23) return;
@@ -643,7 +642,7 @@ void sfxFrame()
 			if(sfxNum!=-1)
 			{
 //				printf("\nSOUND: Playing sound %d at %d",sfxList[listTail].sample,sfxList[listTail].pitch);
-				sfxSetPitch(sfxNum,sfxList[listTail].pitch);
+				sfxSetVoicePitch(sfxNum,sfxList[listTail].pitch);
 				if (sfxList[listTail].returnAddress)
 					*(sfxList[listTail].returnAddress) = sfxNum;
 				listTail = (listTail+1)%SAMPLELIST_LENGTH;
@@ -656,12 +655,12 @@ void sfxFrame()
 			break;
 		case SET_PITCH:
 //			printf("\nSOUND: Setting Pitch to %d",sfxList[listTail].pitch);
-			sfxSetPitch(sfxList[listTail].sample,sfxList[listTail].pitch);
+			sfxSetVoicePitch(sfxList[listTail].sample,sfxList[listTail].pitch);
 			listTail = (listTail+1)%SAMPLELIST_LENGTH;
 			break;
 		case SET_VOLUME:
 //			printf("\nSOUND: Setting Volume to %d",sfxList[listTail].leftVolume);
-			sfxSetVolume(sfxList[listTail].sample,sfxList[listTail].leftVolume);
+			sfxSetVoiceVolume(sfxList[listTail].sample,sfxList[listTail].leftVolume);
 			listTail = (listTail+1)%SAMPLELIST_LENGTH;
 			break;
 		case STOP_SAMPLE:

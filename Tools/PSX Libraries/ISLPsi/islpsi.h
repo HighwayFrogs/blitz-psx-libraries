@@ -1,7 +1,16 @@
+/************************************************************************************
+	ISL PSX LIBRARY	(c) 1999 Interactive Studios Ltd.
+
+	islpsi.h			Skinned model routines
+
+************************************************************************************/
+
+
 #ifndef __ISLPSI_H__
 #define __ISLPSI_H__
 
 
+// lighting types
 enum
 {
 	NOLIGHTING,
@@ -10,6 +19,12 @@ enum
 	COLOURIZE,
 	AMBIENT,
 };
+
+// flags for PSIDATA
+#define ACTOR_DYNAMICSORT	1
+#define ACTOR_HOLDMOTION	2
+#define ACTOR_BONED			4
+#define ACTOR_MOTIONBONE	8
 
 
 // keyframe data structures
@@ -34,6 +49,7 @@ typedef struct
 	SHORTVECTOR vect;
 	SHORT time;
 } SVKEYFRAME;
+
 
 // PSI mesh data structure
 typedef struct _PSIMESH
@@ -62,6 +78,7 @@ typedef struct _PSIMESH
 	SVECTOR			center;
 } PSIMESH;
 
+
 // PSI object data structure
 typedef struct _PSIOBJECT
 {
@@ -83,8 +100,20 @@ typedef struct _PSIOBJECT
 
 } PSIOBJECT;
 
+typedef struct _PSIDATA
+{
+	unsigned long	flags;
+	unsigned long	numObjects;
+	unsigned long	noofVerts;
+	unsigned long	noofPrims;
+	unsigned long	primitiveList;
+	unsigned long	*objectTable;
+	PSIOBJECT		*object;
+	char			*modelName;
+} PSIDATA;
 
-// PSI model structure
+
+// PSI model structure from Jobe
 typedef struct
 {
 
@@ -122,98 +151,22 @@ typedef struct
 } PSIMODEL;
 
 
-#define ANIM_QUEUE_LENGTH 8
-
-// Actor animation data structure
-typedef struct
-{
-	short		numAnimations;
-	short		currentAnimation;
-
-	UBYTE		reachedEndOfAnimation;
-	UBYTE		loopAnimation;
-	short 		numberQueued;
-
-	long		animationSpeed;
-
-	short		queueAnimation[ANIM_QUEUE_LENGTH];
-	UBYTE		queueLoopAnimation[ANIM_QUEUE_LENGTH];
-	long		queueAnimationSpeed[ANIM_QUEUE_LENGTH];
-//	animation	*anims;
-	long		animTime;//, animTimeDelta;
-
-	short		frame;
-	UBYTE 		exclusive;
-	UBYTE 		spare;
-
-} ACTOR_ANIMATION;
-
-
-// bounding box data structure
-typedef struct
-{
-
-	long	minX,maxX;
-	long	minY,maxY;
-	long	minZ,maxZ;
-
-} BOUNDINGBOX;
-
-
-// Actor data structure
-typedef struct _ACTOR
-{
-
-	struct _ACTOR 	*next,*prev;
-
-	unsigned long flags;	
-
-	unsigned long numObjects;
-
-	unsigned long noofVerts;
-
-	unsigned long noofPrims;
-	unsigned long primitiveList;
-
-	USHORT		animFrames;				// number of animation frames
-	USHORT		*animSegments;			// list of start-end frames (shorts)
-
-	ACTOR_ANIMATION	animation;
-	ULONG		*objectTable;
-
-	VECTOR		oldPosition;	//
-	VECTOR		accumulator;	// for animation movement;
-	VECTOR		position;		// real position
-
-   	VECTOR		size;
-
-	PSIOBJECT	*object;
-
-	ULONG		radius;
-	BOUNDINGBOX	bounding;
-
-	char		*modelName;
-
-} ACTOR;
-
 // RGB colour struct
 typedef struct {
 	u_char r, g, b;
 } RGB;
 
+
 // model control struct
 typedef struct
 {
-	USHORT 	depthoverride; //0=sort normally, otherwise model will be at this depth;
-	UBYTE  	specialmode;	//OFF addhue
-	UBYTE	onmap;		//YES or NO;
-			
-	RGB		col;		//override RGB of model
-			
-
-	UBYTE		sprites;	//ON or OFF attached sprites on model
-	UBYTE		alpha;		//0 or 1 (NO or YES)	//	was UBYTE	lighting;	//OFF ON (not used)
-	UBYTE		semitrans;  //0 or 2 for ON!
+	USHORT 		depthoverride;	//0=sort normally, otherwise model will be at this depth;
+	UBYTE  		specialmode;	//OFF addhue
+	UBYTE		onmap;			//YES or NO;
+	RGB			col;			//override RGB of model
+	UBYTE		sprites;		//ON or OFF attached sprites on model
+	UBYTE		alpha;			//0 or 1 (NO or YES)	//	was UBYTE	lighting;	//OFF ON (not used)
+	UBYTE		semitrans;		//0 or 2 for ON!
 	USHORT		PrimLeft;
 	int			*SortPtr;
 	ULONG		*PrimTop;
@@ -223,83 +176,67 @@ typedef struct
 	LONG		polysclipped;
 	LONG		preclipped;
 	USHORT		lastdepth;
-	USHORT		nearclip; //default 100
+	USHORT		nearclip;		//default 100
 	long		farclip;
-
 	GsRVIEW2	*whichcamera;			
-
 	USHORT		sorttable;
 	USHORT		*SortOffs;
-
-	UBYTE		lighting;
-
-	int			depthShift;	// 0== use default shift !0=shift value
+	UBYTE		lighting;		// lighting mode
+	int			depthShift;		// 0== use default shift !0=shift value
 
 } PSIMODELCTRL;
 
 extern PSIMODELCTRL	PSImodelctrl;
 
+extern VECTOR *PSIactorScale;
+
+extern VECTOR *PSIrootScale;
+
 
 // function prototypes
 
-void PSIInitialise();
-void PSIDestroy();
+void psiInitialise();
 
-void PSISetLight(int lightNum, int r, int g, int b, int x, int y, int z);
+void psiDestroy();
 
-void actorAdd(ACTOR *actor);
-void actorSub(ACTOR *actor);
-void actorFree(ACTOR *actor);
+void psiSetLight(int lightNum, int r, int g, int b, int x, int y, int z);
 
-ACTOR *actorCreate(PSIMODEL *psiModel);
+void psiDisplay(PSIMODEL* psiModel);
 
-PSIOBJECT *PSIFindObject(ACTOR *actor, char *name);
-												  
-void PSIDisplay(PSIMODEL* psiModel);
+PSIOBJECT *psiObjectScan(PSIOBJECT *obj, char *name);
 
-PSIMODEL *PSICheck(char *psiName);
+PSIMODEL *psiCheck(char *psiName);
 
-PSIMODEL *PSILoad(char *psiName);
+PSIMODEL *psiLoad(char *psiName);
 
-void PSIDrawLine(ULONG depth);
+void psiDrawLine(ULONG depth);
 
-void PSIDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri);
+void psiDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri);
 
-void PSISetAnimation(ACTOR *actor, ULONG frame);
+void psiUpdateAnimation();
 
-void PSISetAnimation2(ACTOR *actor, ULONG frame0, ULONG frame1, ULONG blend);
+void psiDebug();
 
-void PSIUpdateAnimation();
+void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame);
 
-void PSISetBoundingRotated(ACTOR *actor,int frame,int rotX,int rotY, int rotZ);
+void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame);
 
-void PSISetBounding(ACTOR *actor,int frame);
+void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame);
 
-UBYTE PSIIsVisible(ACTOR *actor);
+void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
 
-void PSIMoveActor(ACTOR *actor);
+void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
 
-void PSIDrawActor(ACTOR *actor);
+void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
 
-void PSIDraw();
+void psiInitSortList(int range);
 
-void PSIDebug();
+void psiCalcWorldMatrix(PSIOBJECT *world);
 
-void actorInitAnim(ACTOR *actor);
+void psiDrawSegments(PSIDATA *psiData);
 
-void actorAdjustPosition(ACTOR *actor);
+void psiCalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS);
 
-void actorAnimate(ACTOR *actor, int animNum, char loop, char queue, int speed, char skipendframe);
-
-void actorSetAnimationSpeed(ACTOR *actor, int speed);
-
-void actorUpdateAnimations(ACTOR *actor);
-
-
-void PSISetMoveKeyFrames(PSIOBJECT *world, ULONG frame);
-
-
-#define PSIGetAnimFrameStart(actor,anim)	(actor)->animSegments[ (anim)*2]
-#define PSIGetAnimFrameEnd(actor,anim)		(actor)->animSegments[((anim)*2)+1]
+void psiRegisterDrawFunction(void (*drawHandler)(int));
 
 #endif //__ISLPSI_H__
