@@ -426,7 +426,7 @@ SfxSampleType *sfxDownloadSample(SfxSampleType *sample)
 #ifdef DEBUGGING
 	printf("sfxDownloadSample: SpuMalloc returned 0x%x\n", spuAddr);
 #endif
-	if(spuAddr)
+	if(spuAddr != -1)
 	{
 		SpuSetTransferStartAddr(spuAddr);
 		spuWrittenSize = SpuWrite(sample->sampleData, sample->sampleSize);
