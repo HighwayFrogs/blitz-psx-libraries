@@ -131,7 +131,7 @@ void sfxDestroy()
 	{
 		if(sfx2Data.sfx2Banks[loop])
 		{
-			sfxUnloadBank(sfx2Data.sfx2Banks[loop]);
+			sfxUnloadSampleBank(sfx2Data.sfx2Banks[loop]);
 		}
 	}
 }
