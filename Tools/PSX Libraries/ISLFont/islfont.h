@@ -104,4 +104,14 @@ void fontRegisterButtonSprites(TextureType *triangle, TextureType *circle, Textu
 void fontRegisterOtherSprites(char code, TextureType *sprite);
 
 
+/**************************************************************************
+	FUNCTION:	fontSetPrintDepth()
+	PURPOSE:	Set depth for font printing
+	PARAMETERS:	depth
+	RETURNS:	
+**************************************************************************/
+
+void fontSetPrintDepth(int depth);
+
+
 #endif //__ISLFONT_H__

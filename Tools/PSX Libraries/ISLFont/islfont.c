@@ -36,6 +36,7 @@ static TextureType	*buttonSprites[4];
 static TextureType	*otherSprites[16];
 static char			otherChars[16];
 static int			numOtherSprites;
+static int			fontPrintDepth;
 
 
 unsigned char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-=+[]{}:;\"'|\\,<.>/?"
@@ -100,6 +101,8 @@ psFont *fontLoad(char *fontname)
 //	unsigned char			*str;
 
 	numOtherSprites = 0;
+
+	fontPrintDepth = 0;
 
 	font = (psFont *)MALLOC(sizeof(psFont));
 	if ((fontdata = fileLoad(fontname, NULL))==NULL)
@@ -172,7 +175,7 @@ static void fontDispChar(TextureType *tex, short x,short y, unsigned char r, uns
 	if(alpha)
 		SETSEMIPRIM(ft4, alpha);
 	ft4->clut = tex->clut;
-	ENDPRIM(ft4, 0, POLY_FT4);
+	ENDPRIM(ft4, fontPrintDepth, POLY_FT4);
 }
 
 
@@ -498,7 +501,7 @@ static void fontDispSprite(TextureType *tex, short x,short y)
 	si->tpage = tex->tpage;
 	si->clut = tex->clut;
 	setPolyFT4(si);
-	ENDPRIM(si, 0, POLY_FT4);
+	ENDPRIM(si, fontPrintDepth, POLY_FT4);
 }
 
 
@@ -520,4 +523,9 @@ void fontRegisterOtherSprites(char code, TextureType *sprite)
 		otherChars[numOtherSprites] = code;
 		numOtherSprites ++;
 	}
+}
+
+void fontSetPrintDepth(int depth)
+{
+	fontPrintDepth = depth;
 }
