@@ -76,13 +76,16 @@ static unsigned char *filePCLoad(char *fName, int *length)
 
 	while(1)
 	{
+		// get full path name
 		strcpy(pathName, FILEIO_PCROOT);
 		strcat(pathName, fName);
+		// try to open file
 		if ((fHandle = PCopen(pathName, 0,0))==-1)
 		{
 			printf("Error opening PC file '%s'\n", pathName);
 			return NULL;
 		}
+		// get first couple of words in file
 		size = PClseek(fHandle, 0,2);
 		PClseek(fHandle, 0,0);
 		if (PCread(fHandle, sectorBuf, 8)!=8)
@@ -93,20 +96,29 @@ static unsigned char *filePCLoad(char *fName, int *length)
 		}
 		lPtr = (unsigned long *)sectorBuf;
 		PClseek(fHandle, 0,0);
+		// does it start with the magic number?
 		if (lPtr[0]==FLA_MAGIC)
 		{
-//			printf("### COMPRESSED FILE %d/%d ###\n", lPtr[1], size);
-			buffer = MALLOC(lPtr[1]+1024);
-			ptr = buffer+(lPtr[1]-size)+1024;
-			PCread(fHandle, ptr, size);
-//			printf("### UNRAVELLING ###\n");
-			utilDecompressBuffer(ptr+8, buffer);
-//			printf("### DECOMPRESSED! ###\n");
-			*length = lPtr[1];
+			// allocate uncompressed amount
+			buffer = MALLOC((((lPtr[1]+1024)>>11)+1)<<11);		// round up to next 2k boundary
+			if(buffer)
+			{
+				ptr = buffer+(lPtr[1]-size)+1024;
+				PCread(fHandle, ptr, size);
+				utilDecompressBuffer(ptr+8, buffer);
+				*length = lPtr[1];
+			}
+			else
+			{
+				printf("Error allocating PC file '%s' (FlatPacked)\n", fName);
+				PCclose(fHandle);
+				continue;
+			}
 		}
 		else
 		{
-			if ((buffer = MALLOC(size))==NULL)
+			// file is not compressed, so just allocate file size
+			if ((buffer = MALLOC(((size>>11)+1)<<11))==NULL)
 			{
 				printf("Error allocating PC file '%s'\n", fName);
 				PCclose(fHandle);
@@ -317,35 +329,41 @@ static long fileCDGetLocation(unsigned char *index, char *filespec, long *firsts
 
 static unsigned long *fileCDloadDATfile(char *fName, int *length)
 {
-	long	sec, sz;//, num, roundSz;
+	long	sec, sz;
 	CdlFILE	fp;
 	unsigned char	*buffer, *ptr;
 	unsigned long	*lPtr;
 	int		rtn;
 
-//	if (fileCDGetLocation(fileIO.index, fName, &sec, &sz, &num))
 	fileCDDATgetLocation(fName, &sec, &sz);
+	
 	if (sec==-1)
 		return NULL;
+
 	CdIntToPos(sec, &fp.pos);
+
 	if (CdControl(CdlSetloc, (unsigned char *)&fp.pos, fileIO.CDresult)==0)		// Seek to file
 	{
 		printf("Load file: CDControl() error\n");
 		return NULL;
 	}
+
 	if (fileIO.CDresult[0]==0)											// Check seek OK
 	{
 		printf("Load file: Seek error\n");
 		return NULL;
 	}
+
 	if (CdRead(1, (unsigned long *)sectorBuf, CdlModeSpeed)==0)					// Start read
 	{
 		printf("Load file: CdRead() error\n");
 		return NULL;
 	}
+
 	lPtr = (unsigned long *)sectorBuf;
 
 	while((rtn=CdReadSync(1, fileIO.CDresult))>0);						// Wait for first sector
+	
 	if (rtn<0)
 	{
 		printf("Load file: CdReadSync() error\n");
@@ -353,11 +371,13 @@ static unsigned long *fileCDloadDATfile(char *fName, int *length)
 	}
 
 	CdIntToPos(sec, &fp.pos);
+
 	if (CdControl(CdlSetloc, (unsigned char *)&fp.pos, fileIO.CDresult)==0)		// Seek to file
 	{
 		printf("Load file: CDControl() error\n");
 		return NULL;
 	}
+	
 	if (fileIO.CDresult[0]==0)											// Check seek OK
 	{
 		printf("Load file: Seek error\n");
@@ -366,30 +386,33 @@ static unsigned long *fileCDloadDATfile(char *fName, int *length)
 
 	if (lPtr[0]==FLA_MAGIC)												// Check compression
 	{																	// Compressed file
-//		printf("### COMPRESSED FILE %d/%d ###\n", lPtr[1], ((sz>>11)+1)<<11);
 		buffer = MALLOC(lPtr[1]+2048);
+		
 		if (!buffer)
 		{
 			printf("Can't malloc buffer space for file read: %s\n",fName);
 			return NULL;
 		}
+		
 		ptr = buffer+(lPtr[1]-(((sz>>11)+1)<<11))+2048;
+		
 		if (CdRead((sz>>11)+1, ptr, CdlModeSpeed)==0)					// Start read
 		{
 			printf("Load file: CdRead() error\n");
 			FREE(buffer);
 			return NULL;
 		}
+		
 		while((rtn=CdReadSync(1, fileIO.CDresult))>0);					// Wait for whole file
+		
 		if (rtn<0)
 		{
 			printf("Load file: CdReadSync()[2] error\n");
 			FREE(buffer);
 			return NULL;
 		}
-//		printf("### UNRAVELLING ###\n");							// Decompress
+
 		utilDecompressBuffer(ptr+8, buffer);
-//		printf("### DECOMPRESSED! ###\n");
 		*length = lPtr[1];
 	}
 	else
@@ -399,15 +422,19 @@ static unsigned long *fileCDloadDATfile(char *fName, int *length)
 			printf("Load file: Not enough RAM\n");
 			return NULL;
 		}
+
 		if (CdRead((sz>>11)+1, buffer, CdlModeSpeed)==0)				// Start read
 		{
 			printf("Load file: CdRead() error\n");
 			FREE(buffer);
 			return NULL;
 		}
+
 		while((rtn=CdReadSync(1, fileIO.CDresult))>0);					// Wait for whole file
+
 		*length = sz;
 	}
+
 	return buffer;
 }
 
@@ -435,14 +462,11 @@ static int fileCDcheckLoaded()
 static unsigned char *fileCDLoad(char *fName, int *length)
 {
 	unsigned long	*buffer;
-	//int		rtn;
 
 	while (1)
 	{
 		if ((buffer = fileCDloadDATfile(fName, length))!=NULL)
 		{
-//			while((rtn=fileCDcheckLoaded())>0);
-//			if (rtn==0)
 				return (unsigned char *)buffer;
 		}		
 		printf("Problem reading file - retry\n");
@@ -460,13 +484,11 @@ static unsigned char *fileCDLoad(char *fName, int *length)
 
 static unsigned char fileCDloadDATbinary(char *fName, int *loc)
 {
-	long	sec, sz;//, num;
+	long	sec, sz;
 	CdlFILE	fp;
 	int		rtn;
 	unsigned char	*ptr;
 
-//	if (fileCDGetLocation(fileIO.index, fName, &sec, &sz, &num))
-//		return 1;
 	fileCDDATgetLocation(fName, &sec, &sz);
 	if (sec==-1)
 		return 1;
@@ -560,8 +582,7 @@ void fileInitialise(char *fileSystem)
 
 unsigned char *fileLoad(unsigned char *fName, int *length)
 {
-	unsigned char	*data, *realData;
-	unsigned long	*lPtr;
+	unsigned char	*data;
 	int		len;
 
 	utilUpperStr(fName);
@@ -574,6 +595,7 @@ unsigned char *fileLoad(unsigned char *fName, int *length)
 	if (data==NULL)
 		return NULL;
 
+/*
 	lPtr = (unsigned long *)data;
 	if (lPtr[0] == FLA_MAGIC)
 	{
@@ -588,6 +610,8 @@ unsigned char *fileLoad(unsigned char *fName, int *length)
 			return realData;
 		}
 	}
+*/
+
 	printf("READ FILE: %s\n", fName);
 	if (length!=NULL)
 		*length = len;
