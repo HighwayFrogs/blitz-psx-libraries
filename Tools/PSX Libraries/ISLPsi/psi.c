@@ -771,12 +771,14 @@ long psiCRCName(char *psiName)
 
 	
 	utilUpperStr(psiName);
+	/*
 	for ( i=0; i<8; i++)
 	{
 		str[i] = psiName[i];
 		if ( (psiName[i]==0) || (psiName[i]==32) || (psiName[i]=='.') )break;
 	}
 	str[i] = 0;
+	*/
 
 	return utilStr2CRC(&str[0]);
 }
@@ -927,7 +929,7 @@ PSIMODEL *psiLoad(char *psiName)
 	}
 
 
-	psiName = psiConstructName(psiName);
+	//psiName = psiConstructName(psiName);
 	addr = (void *)fileLoad(psiName, &lastfilelength);
 	
 	return psiFixup(addr);
@@ -1251,6 +1253,7 @@ static void psiDrawSortedPrimitives(int depth)
 	int						primsleft,lightmode;
 	ULONG					*sorts = sortedIndex;
 	ULONG					sortBucket = 0;
+	VERT					*vp = modctrl->VertTop;
 								  
 	primsleft = sortCount;
 	if (!primsleft)
@@ -1309,7 +1312,7 @@ static void psiDrawSortedPrimitives(int depth)
 		 		}
 
 				setPolyFT3(si);
-				//si->code = op->cd | modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT3);
 
 				op = op->next;
@@ -1358,7 +1361,7 @@ static void psiDrawSortedPrimitives(int depth)
 				*(u_long *)  (&si->u3) = *(u_long *) (&op->tu3);
 
 				setPolyFT4(si);
-				//si->code = op->cd | modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
 				op = op->next;
 				break;
@@ -1405,7 +1408,7 @@ static void psiDrawSortedPrimitives(int depth)
 						*(u_long *)  (&si->r2) = *(u_long *) (&op->r2);
 				}
 				setPolyGT3(si);
-				//si->code = op->cd | modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT3);
 				op = op->next;
 				break;
@@ -1466,7 +1469,7 @@ static void psiDrawSortedPrimitives(int depth)
 				}
 		
 				setPolyGT4(si);
-				//si->code = op->cd | modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT4);
 				(int)op = op->next;
 				break;
@@ -1476,7 +1479,7 @@ static void psiDrawSortedPrimitives(int depth)
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_FT4*)packet)
 #define op ((TMD_P_FT4I*)opcd)
-/*
+
 			case GPU_COM_TF4SPR :
 				{
 				SHORT		spritez;
@@ -1528,7 +1531,7 @@ static void psiDrawSortedPrimitives(int depth)
 				op = op->next;
 			}
 			break;
-*/
+
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
@@ -1585,7 +1588,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 
 				setPolyG4(si);
-				//si->code = op->cd | modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G4);
 				op = op->next;
 				break;
@@ -1634,7 +1637,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 
 				setPolyG3(si);
-				//si->code = op->cd | modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G3);
 				op = op->next;
 				break;
@@ -1722,6 +1725,7 @@ void psiDrawPrimitives(int depth)
 					default:
 						*(u_long *) (&si->r0) = *(u_long *) (&op->r0);		// 9 cycles here
 		 		}
+				setPolyFT3(si);
 				si->code = op->cd | modctrl->semitrans;
 
  				ENDPRIM(si, depth & 1023, POLY_FT3);
@@ -1775,6 +1779,7 @@ void psiDrawPrimitives(int depth)
 				*(u_long *)  (&si->u2) = *(u_long *) (&op->tu2);
 				*(u_long *)  (&si->u3) = *(u_long *) (&op->tu3);
 
+				setPolyFT4(si);
 				si->code = op->cd | modctrl->semitrans;
 				
 				modctrl->polysdrawn++;
@@ -1831,6 +1836,7 @@ void psiDrawPrimitives(int depth)
 						*(u_long *)  (&si->r1) = *(u_long *) (&op->r1);
 						*(u_long *)  (&si->r2) = *(u_long *) (&op->r2);
 				}
+				setPolyGT3(si);
 				si->code = op->cd | modctrl->semitrans;
 			
 				modctrl->polysdrawn++;
@@ -1906,6 +1912,7 @@ void psiDrawPrimitives(int depth)
 		
 				modctrl->polysdrawn++;
 			
+				setPolyGT4(si);
 				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, depth & 1023, POLY_GT4);
 				break;
@@ -1964,6 +1971,7 @@ void psiDrawPrimitives(int depth)
 				si->y2 = si->y3=si->y0+height;
 				si->y0 = si->y1=si->y0-height;
 
+				setPolyFT4(si);
 				si->code = GPU_COM_TF4 | modctrl->semitrans;
 
 				ENDPRIM(si, depth & 1023, POLY_FT4);
@@ -2029,7 +2037,7 @@ void psiDrawPrimitives(int depth)
 						*(u_long *)  (&si->r3) = *(u_long *) (&op->r3);
 				}
 
-
+				setPolyG4(si);
 				si->code = op->cd | modctrl->semitrans;
 
 				modctrl->polysdrawn++;
@@ -2087,7 +2095,8 @@ void psiDrawPrimitives(int depth)
 
 
 				modctrl->polysdrawn++;
-			
+
+				setPolyG3(si);
 				si->code = op->cd | modctrl->semitrans;
 
 				ENDPRIM(si, depth & 1023, POLY_G3);
@@ -3104,6 +3113,31 @@ void psiCalcWorldMatrix(PSIOBJECT *world)
 		psiCalcChildMatrix(world->child, world);
 }
 
+/**************************************************************************
+	FUNCTION:
+	PURPOSE:	calc matrices relative to camera
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void psiCalcLocalMatrix(PSIOBJECT *world)
+{
+	cameraAndGlobalscale = GsIDMATRIX;
+	ScaleMatrix(&cameraAndGlobalscale, PSIactorScale);
+	world->matrixscale = world->matrix;
+	ScaleMatrix(&world->matrixscale,&world->scale);
+	gte_MulMatrix0(&cameraAndGlobalscale, &world->matrixscale, &world->matrixscale);
+	/*
+	gte_SetRotMatrix(&GsIDMATRIX);
+	gte_SetTransMatrix(&GsIDMATRIX);
+	gte_ldlvl(&world->matrixscale.t);
+	gte_rtirtr();
+	gte_stlvl(&world->matrixscale.t);
+	*/
+
+	if(world->child)
+		psiCalcChildMatrix(world->child, world);
+}
 
 /**************************************************************************
 	FUNCTION:
@@ -3111,7 +3145,7 @@ void psiCalcWorldMatrix(PSIOBJECT *world)
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
-
+/*
 void psiCalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS)
 {
 
@@ -3152,7 +3186,7 @@ void psiCalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS)
 		world = world->next;
 	}
 }
-
+*/
 
 void psiDebug()
 {
