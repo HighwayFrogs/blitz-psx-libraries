@@ -392,7 +392,8 @@ void memoryCheck()
 			if (bad)
 			{
 				beenBad = 1;
-				printf("\nBlock malloc @ %s:%d", pool.blocks[loop].file,pool.blocks[loop].lineno);
+				printf("\nBlock malloc @ %s:%d (0x%x)", pool.blocks[loop].file,pool.blocks[loop].lineno,
+					pool.base+pool.size-pool.blocks[loop].size-pool.blocks[loop].offset);
 				/*				
 				while (1)
 				{
