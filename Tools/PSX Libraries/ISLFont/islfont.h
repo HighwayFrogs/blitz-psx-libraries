@@ -19,6 +19,7 @@ typedef struct _psFont
 	unsigned short	clut;
 	unsigned char	charlookup[256];
 	unsigned char	alpha;
+	int				spriteYOffset;
 	
 } psFont;
 

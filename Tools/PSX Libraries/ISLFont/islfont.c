@@ -208,22 +208,22 @@ void fontPrint(psFont *font, short x,short y, char *text, unsigned char r, unsig
 			switch(*(strPtr+1))
 			{
 			case 'X':
-			    fontDispSprite(buttonSprites[2], x+3,y-3);
+			    fontDispSprite(buttonSprites[2], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[2]->w+6;
 				break;
 			case 'C':
-			   	fontDispSprite(buttonSprites[1], x+3,y-3);
+			   	fontDispSprite(buttonSprites[1], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[1]->w+6;
 				break;
 			case 'S':
-			   	fontDispSprite(buttonSprites[3], x+3,y-3);
+			   	fontDispSprite(buttonSprites[3], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[3]->w+6;
 				break;
 			case 'T':
-			   	fontDispSprite(buttonSprites[0], x+3,y-3);
+			   	fontDispSprite(buttonSprites[0], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[0]->w+6;
 				break;
@@ -233,7 +233,7 @@ void fontPrint(psFont *font, short x,short y, char *text, unsigned char r, unsig
 			{
 				if((*(strPtr+1)) == otherChars[loop])
 				{
-					fontDispSprite(otherSprites[loop], x+3,y-3);
+					fontDispSprite(otherSprites[loop], x+3,y-3 + font->spriteYOffset);
 					strPtr++;
 					x += otherSprites[loop]->w+6;
 					break;
@@ -415,22 +415,22 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 			switch(*(strPtr+1))
 			{
 			case 'X':
-			    fontDispSprite(buttonSprites[2], x+3,y-3);
+			    fontDispSprite(buttonSprites[2], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[2]->w+6;
 				break;
 			case 'C':
-			   	fontDispSprite(buttonSprites[1], x+3,y-3);
+			   	fontDispSprite(buttonSprites[1], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[1]->w+6;
 				break;
 			case 'S':
-			   	fontDispSprite(buttonSprites[3], x+3,y-3);
+			   	fontDispSprite(buttonSprites[3], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[3]->w+6;
 				break;
 			case 'T':
-			   	fontDispSprite(buttonSprites[0], x+3,y-3);
+			   	fontDispSprite(buttonSprites[0], x+3,y-3 + font->spriteYOffset);
 				strPtr++;
 				x += buttonSprites[0]->w+6;
 				break;
@@ -440,7 +440,7 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 			{
 				if((*(strPtr+1)) == otherChars[loop])
 				{
-					fontDispSprite(otherSprites[loop], x+3,y-3);
+					fontDispSprite(otherSprites[loop], x+3,y-3 + font->spriteYOffset);
 					strPtr++;
 					x += otherSprites[loop]->w+6;
 					break;
