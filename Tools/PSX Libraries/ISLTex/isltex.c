@@ -187,10 +187,11 @@ void textureInit256ClutSpace(int numCluts)
 
 void textureInitialise(int num16Cluts, int num256Cluts)
 {
-	int		page;
-	RECT	rect;
+	int				page;
+	RECT			rect;
 	unsigned char	r,g,b;
-	int	loop;
+	int				loop;
+	int				mallocSize;
 
 	for(loop=0; loop<MAXTEXBANKS; loop++)
 		texBank[loop] = NULL;
@@ -200,11 +201,20 @@ void textureInitialise(int num16Cluts, int num256Cluts)
 #ifdef _DEBUG
 	printf("\ntextureInitialise: allocating space for %d 16-colour cluts", num16Cluts);
 #endif
+		
+		mallocSize = (sizeof(unsigned short) * num16Cluts) + (sizeof(int) * (num16Cluts / 32)) +
+			(sizeof(unsigned short) * num16Cluts) + (sizeof(unsigned long) * num16Cluts);
+		
+		VRAMpalBlock = MALLOC(mallocSize);
+		VRAMpalHandle = (int *)((unsigned char *)VRAMpalBlock + (sizeof(unsigned short) * num16Cluts));
+		VRAMpalCLUT = (unsigned short *)((unsigned char *)VRAMpalHandle + (sizeof(int) * (num16Cluts / 32)));
+		VRAMpalCRC = (unsigned long *)((unsigned char *)VRAMpalCLUT + (sizeof(unsigned short) * num16Cluts));
+/*
 		VRAMpalBlock = MALLOC(sizeof(unsigned short) * num16Cluts);
 		VRAMpalHandle = MALLOC(sizeof(int) * (num16Cluts / 32));
 		VRAMpalCLUT = MALLOC(sizeof(unsigned short) * num16Cluts);
 		VRAMpalCRC = MALLOC(sizeof(unsigned long) * num16Cluts);
-
+*/
 		memset(VRAMpalBlock, 0, sizeof(unsigned short) * num16Cluts);
 		memset(VRAMpalHandle, 0, sizeof(int) * (num16Cluts / 32));
 		memset(VRAMpalCLUT, 0, sizeof(unsigned short) * num16Cluts);
@@ -222,10 +232,18 @@ void textureInitialise(int num16Cluts, int num256Cluts)
 #ifdef _DEBUG
 	printf("\ntextureInitialise: allocating space for %d 256-colour cluts", num256Cluts);
 #endif
+		mallocSize = (sizeof(unsigned short) * num256Cluts) + (sizeof(unsigned long) * num256Cluts) +
+			(sizeof(unsigned long) * num256Cluts);
+
+		VRAMpal256Block = MALLOC(mallocSize);
+		VRAMpal256CLUT = (unsigned long *)((unsigned char *)VRAMpal256Block + (sizeof(unsigned short) * num256Cluts));
+		VRAMpal256CRC = (unsigned long *)((unsigned char *)VRAMpal256CLUT + (sizeof(unsigned long) * num256Cluts));
+
+/*
 		VRAMpal256Block = MALLOC(sizeof(unsigned short) * num256Cluts);
 		VRAMpal256CLUT = MALLOC(sizeof(unsigned long) * num256Cluts);
 		VRAMpal256CRC = MALLOC(sizeof(unsigned long) * num256Cluts);
-
+*/
 		memset(VRAMpal256Block, 0, sizeof(unsigned short) * num256Cluts);
 		memset(VRAMpal256CLUT, 0, sizeof(unsigned short) * num256Cluts);
 		memset(VRAMpal256CRC, 0, sizeof(unsigned long) * num256Cluts);
@@ -281,16 +299,16 @@ void textureDestroy()
 	if(VRAM_PALETTES)
 	{
 		FREE(VRAMpalBlock);
-		FREE(VRAMpalHandle);
-		FREE(VRAMpalCLUT);
-		FREE(VRAMpalCRC);
+		//FREE(VRAMpalHandle);
+		//FREE(VRAMpalCLUT);
+		//FREE(VRAMpalCRC);
 	}
 
 	if(VRAM_256PALETTES)
 	{
 		FREE(VRAMpal256Block);
-		FREE(VRAMpal256CLUT);
-		FREE(VRAMpal256CRC);
+		//FREE(VRAMpal256CLUT);
+		//FREE(VRAMpal256CRC);
 	}
 
 }
@@ -739,8 +757,16 @@ TextureBankType *textureLoadBank(char *sFile)
 {
  	TextureBankType	*newBank;
 	int				loop;
+	NSPRITE			*nspr;
+	int				mallocSize, numTextures;
 
-	newBank = MALLOC(sizeof(TextureBankType));	
+	nspr = (NSPRITE *)fileLoad(sFile, NULL);
+
+	numTextures = textureSetSPRPointers(nspr);
+	
+	mallocSize = (sizeof(TextureBankType)) + (numTextures*4+((numTextures+7)/8)) + (sizeof(TextureType)*numTextures);
+
+	newBank = MALLOC(mallocSize);
 
 	for(loop=0; loop<MAXTEXBANKS; loop++)
 	{
@@ -753,19 +779,18 @@ TextureBankType *textureLoadBank(char *sFile)
 	if (loop==MAXTEXBANKS)
 		printf("**** WARNING: OUT OF TEXTURE BANKS\n");
 
-	newBank->pNSprite = (NSPRITE *)fileLoad(sFile, NULL);
+	newBank->numTextures = numTextures;
+	newBank->pNSprite = nspr;
+	newBank->CRC = (unsigned long *)((unsigned char *)newBank + (sizeof(TextureBankType)));
 
-	newBank->numTextures = textureSetSPRPointers(newBank->pNSprite);
-
-	newBank->CRC = (unsigned long *)MALLOC(newBank->numTextures*4+(newBank->numTextures/8)+1);
 	for(loop=0; loop<newBank->numTextures; loop++)
 		newBank->CRC[loop] = newBank->pNSprite[loop].crc;
 
-	newBank->used = (unsigned char *)(newBank->CRC+newBank->numTextures);
-	memset(newBank->used, 0, (newBank->numTextures/8)+1);
-
-	newBank->texture = (TextureType *)MALLOC(sizeof(TextureType)*newBank->numTextures);
+	newBank->texture = (TextureType *)((unsigned char *)newBank->CRC+newBank->numTextures*4);
 	memset(newBank->texture, 0, sizeof(TextureType)*newBank->numTextures);
+	
+	newBank->used = (unsigned char *)((unsigned char *)newBank->texture + newBank->numTextures*sizeof(TextureType));
+	memset(newBank->used, 0, ((newBank->numTextures+7)/8));
 
 	return newBank;
 }
@@ -863,8 +888,8 @@ void textureUnloadBank(TextureBankType *bank)
 			texBank[loop] = NULL;
 
 	// free up ram space
-	FREE(bank->texture);
-	FREE(bank->CRC);
+	//FREE(bank->texture);
+	//FREE(bank->CRC);
 	FREE(bank);
 }
 
@@ -927,24 +952,32 @@ TextureBankType *textureReallocTextureBank(TextureBankType *txBank)
 	TextureBankType	*textureBank;
 	int				loop;
 	TextureType		*txPtr;
+	int				mallocSize;
 
-	textureBank = MALLOC(sizeof(TextureBankType));
-	textureBank->numTextures = txBank->numTextures;
+	mallocSize = (sizeof(TextureBankType)) + (txBank->numTextures*4+((txBank->numTextures+7)/8)) + (sizeof(TextureType)*txBank->numTextures);
+
+	textureBank = MALLOC(mallocSize);	
 	
-	txPtr = MALLOC(sizeof(TextureType) * txBank->numTextures);
+	//textureBank = MALLOC(sizeof(TextureBankType));
+	textureBank->numTextures = txBank->numTextures;
+
+	txPtr = (TextureType *)((unsigned char *)textureBank + sizeof(TextureBankType));
+	
+	//txPtr = MALLOC(sizeof(TextureType) * txBank->numTextures);
 	memcpy(txPtr, txBank->texture, sizeof(TextureType)*txBank->numTextures);
 	textureBank->texture = txPtr;
 
-	textureBank->CRC = (unsigned long *)MALLOC(textureBank->numTextures*4+(textureBank->numTextures/8)+1);
-	memcpy(textureBank->CRC, txBank->CRC, textureBank->numTextures*4+(textureBank->numTextures/8)+1);
+	textureBank->CRC = (unsigned long *)((unsigned char *)textureBank->texture + sizeof(TextureType)*txBank->numTextures);
+	//textureBank->CRC = (unsigned long *)MALLOC(textureBank->numTextures*4+(textureBank->numTextures/8)+1);
+	memcpy(textureBank->CRC, txBank->CRC, textureBank->numTextures*4+((textureBank->numTextures+7)/8));
 
 	textureBank->pNSprite = txBank->pNSprite;
 
-	textureBank->used = (unsigned char *)(textureBank->CRC+textureBank->numTextures);
-	memcpy(textureBank->used, txBank->used, (textureBank->numTextures/8)+1);
+	textureBank->used = (unsigned char *)((unsigned char *)textureBank->CRC+textureBank->numTextures*4);
+	memcpy(textureBank->used, txBank->used, ((textureBank->numTextures+7)/8));
 
-	FREE(txBank->texture);
-	FREE(txBank->CRC);
+	//FREE(txBank->texture);
+	//FREE(txBank->CRC);
 	FREE(txBank);
 
 	for(loop = 0; loop < MAXTEXBANKS; loop ++)
@@ -1263,12 +1296,15 @@ TextureAnimType *textureCreateAnimation(TextureType *dummy, TextureType **anim, 
 {
 	TextureAnimType	*texAnim;
 	int				loop;
+	int				mallocSize;
 
-	texAnim = MALLOC(sizeof(TextureAnimType));
+	mallocSize = sizeof(TextureAnimType) + (sizeof(TextureType) * numFrames);
+
+	texAnim = MALLOC(mallocSize);
 
 	texAnim->dest = dummy;
 
-	texAnim->anim = MALLOC(sizeof(TextureType) * numFrames);
+	texAnim->anim = (TextureType *)((unsigned char *)texAnim + sizeof(TextureAnimType));
 
 	for(loop = 0; loop < numFrames; loop ++)
 	{
@@ -1316,6 +1352,5 @@ void textureSetAnimation(TextureAnimType *texAnim, int frameNum)
 
 void textureDestroyAnimation(TextureAnimType *texAnim)
 {
-	FREE(texAnim->anim);
 	FREE(texAnim);
 }
