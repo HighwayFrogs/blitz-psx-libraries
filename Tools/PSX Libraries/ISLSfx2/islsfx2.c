@@ -864,6 +864,153 @@ int sfxGetChannelReverb(int channel)
 
 
 /**************************************************************************
+	FUNCTION:	sfxSetChannelPitch()
+	PURPOSE:	set pitch of channel
+	PARAMETERS:	channel number, pitch (Hz)
+	RETURNS:	none
+**************************************************************************/
+
+void sfxSetChannelPitch(int channel, int pitch)
+{
+	int	tmpPitch;
+
+	if((channel < 0) || (channel > 23))
+		return;
+
+	// calculate pitch
+	if(pitch)
+	{
+		tmpPitch = (pitch * 4096) / 44100;
+	}
+	else
+	{
+		tmpPitch = 0;
+	}
+
+	SpuSetVoicePitch(channel, tmpPitch);
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetChannelVolume()
+	PURPOSE:	set volume of channel
+	PARAMETERS:	channel number, left vol, right vol (0 - 255)
+	RETURNS:	none
+**************************************************************************/
+
+void sfxSetChannelVolume(int channel, int volL, int volR)
+{
+	int	tmpVolL, tmpVolR;
+
+	if((channel < 0) || (channel > 23))
+		return;
+
+	// calculate left and right volumes
+	if(volL)
+	{
+		tmpVolL = (((volL * sfx2Data.sfx2SampleVolume) / 256) * 0x3fff) / 256;
+	}
+	else
+	{
+		tmpVolL = 0;
+	}
+	
+	if(volR)
+	{
+		tmpVolR = (((volR * sfx2Data.sfx2SampleVolume) / 256) * 0x3fff) / 256;
+	}
+	else
+	{
+		tmpVolR = 0;
+	}
+	
+	SpuSetVoiceVolume(channel, tmpVolL, tmpVolR);	// channel, left vol, right vol,
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetSampleVolume()
+	PURPOSE:	set volume of requested sample
+	PARAMETERS:	pointer to sample, channel number (0 - 23) or -1 for all, left and right volumes (0 - 255)
+	RETURNS:	1 if ok, 0 if failure
+**************************************************************************/
+
+int sfxSetSampleVolume(SfxSampleType *sample, int channel, int volL, int volR)
+{
+	int	loop, ok;
+
+	if((channel >= 0) && (channel <= 23))
+	{
+		if(sfx2Data.sfx2Active[channel] == sample)
+		{
+			sfxSetChannelVolume(channel, volL, volR);
+			return 1;
+		}
+	}
+	else
+	{
+		if(channel == -1)
+		{
+			ok = 0;
+			for(loop = 0; loop < 24; loop ++)
+			{
+				if(sfx2Data.sfx2Active[loop] == sample)
+				{
+					sfxSetChannelVolume(channel, volL, volR);
+					ok = 1;
+				}
+			}
+
+			return ok;
+		}
+	}
+
+	return 0;
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetSamplePitch()
+	PURPOSE:	set volume of requested sample
+	PARAMETERS:	pointer to sample, channel number (0 - 23) or -1 for all, pitch (Hz)
+	RETURNS:	1 if ok, 0 if failure
+**************************************************************************/
+
+int sfxSetSamplePitch(SfxSampleType *sample, int channel, int pitch)
+{
+	int	loop, ok;
+
+	if((channel >= 0) && (channel <= 23))
+	{
+		if(sfx2Data.sfx2Active[channel] == sample)
+		{
+			sfxSetChannelPitch(channel, pitch);
+			return 1;
+		}
+	}
+	else
+	{
+		if(channel == -1)
+		{
+			ok = 0;
+			for(loop = 0; loop < 24; loop ++)
+			{
+				if(sfx2Data.sfx2Active[loop] == sample)
+				{
+					sfxSetChannelPitch(channel, pitch);
+					ok = 1;
+				}
+			}
+
+			return ok;
+		}
+	}
+
+	return 0;
+}
+
+
+/**************************************************************************
 	FUNCTION:	sfxGetFreeSoundMemory
 	PURPOSE:	Print the amount of free SPU ram
 	PARAMETERS:	

@@ -273,6 +273,56 @@ int sfxSetChannelReverb(int channel, int status);
 
 
 /**************************************************************************
+	FUNCTION:	sfxGetChannelReverb
+	PURPOSE:	Get reverb status for a channel
+	PARAMETERS:	channel number (0 - 23)
+	RETURNS:	1 if on, 0 if off, -1 if failure
+**************************************************************************/
+
+int sfxGetChannelReverb(int channel);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetChannelPitch()
+	PURPOSE:	set pitch of channel
+	PARAMETERS:	channel number, pitch (Hz)
+	RETURNS:	none
+**************************************************************************/
+
+void sfxSetChannelPitch(int channel, int pitch);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetChannelVolume()
+	PURPOSE:	set volume of channel
+	PARAMETERS:	channel number, left vol, right vol (0 - 255)
+	RETURNS:	none
+**************************************************************************/
+
+void sfxSetChannelVolume(int channel, int volL, int volR);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetSampleVolume()
+	PURPOSE:	set volume of requested sample
+	PARAMETERS:	pointer to sample, channel number (0 - 23) or -1 for all, left and right volumes (0 - 255)
+	RETURNS:	1 if ok, 0 if failure
+**************************************************************************/
+
+int sfxSetSampleVolume(SfxSampleType *sample, int channel, int volL, int volR);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetSamplePitch()
+	PURPOSE:	set volume of requested sample
+	PARAMETERS:	pointer to sample, channel number (0 - 23) or -1 for all, pitch (Hz)
+	RETURNS:	1 if ok, 0 if failure
+**************************************************************************/
+
+int sfxSetSamplePitch(SfxSampleType *sample, int channel, int pitch);
+
+
+/**************************************************************************
 	FUNCTION:	sfxGetFreeSoundMemory
 	PURPOSE:	Print the amount of free SPU ram
 	PARAMETERS:	
