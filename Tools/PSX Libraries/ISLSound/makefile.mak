@@ -16,18 +16,18 @@ PSYLIB = C:\Psx\bin\psylib
         $(CCPSX) $(OPT) $&.c -o$&.obj
 
 !if $(DEBUG) == 1
-Debug\islsound.lib: islsound.obj
-        del Debug\islsound.lib
-        $(PSYLIB) /a Debug\islsound.lib islsound.obj
-        del islsound.obj
+Debug\islsfx2.lib: islsfx2.obj
+        del Debug\islsfx2.lib
+        $(PSYLIB) /a Debug\islsfx2.lib islsfx2.obj
+        del islsfx2.obj
 !else
-Release\islsound.lib: islsound.obj
-        del Release\islsound.lib
-        $(PSYLIB) /a Release\islsound.lib islsound.obj
-        del islsound.obj
+Release\islsfx2.lib: islsfx2.obj
+        del Release\islsfx2.lib
+        $(PSYLIB) /a Release\islsfx2.lib islsfx2.obj
+        del islsfx2.obj
 !endif
 
-islsound.obj: islsound.c islsound.h
+islsfx2.obj: islsfx2.c islsfx2.h
 
 
 

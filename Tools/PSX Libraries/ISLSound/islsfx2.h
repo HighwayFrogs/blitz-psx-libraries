@@ -28,15 +28,27 @@ typedef struct _SfxBankType {
 
 
 
+// Reverb types
+#define SFX_REVERB_MODE_OFF				0	// needs 0 bytes workspace
+#define SFX_REVERB_MODE_ROOM			1	// needs 9920 bytes workspace
+#define SFX_REVERB_MODE_SMALL_STUDIO	2	// needs 8000 bytes workspace
+#define SFX_REVERB_MODE_MEDIUM_STUDIO	3	// needs 18496 bytes workspace
+#define SFX_REVERB_MODE_LARGE_STUDIO	4	// needs 28640 bytes workspace
+#define SFX_REVERB_MODE_HALL			5	// needs 44512 bytes workspace
+#define SFX_REVERB_MODE_SPACE			6	// needs 63168 bytes workspace
+#define SFX_REVERB_MODE_ECHO			7	// needs 98368 bytes workspace
+#define SFX_REVERB_MODE_DELAY			8	// needs 98368 bytes workspace
+#define SFX_REVERB_MODE_PIPE			9	// needs 15360 bytes workspace
+
 
 /**************************************************************************
 	FUNCTION:	sfxInitialise()
 	PURPOSE:	Initialise the sound library
-	PARAMETERS:	maximum reverb setting
+	PARAMETERS:	reverb mode
 	RETURNS:	none
 **************************************************************************/
 
-void sfxInitialise(int maxReverb);
+void sfxInitialise(int reverbMode);
 
 
 /**************************************************************************
@@ -51,7 +63,7 @@ void sfxDestroy();
 
 /**************************************************************************
 	FUNCTION:	sfxFixupSampleBankHeader()
-	PURPOSE:	fix up sample bank header
+	PURPOSE:	fix up sample bank header already in ram
 	PARAMETERS:	pointer to sample bank header, spu base address
 	RETURNS:	pointer to sample bank header
 **************************************************************************/
@@ -131,6 +143,16 @@ SfxBankType *sfxUnloadBank(SfxBankType *bank);
 
 
 /**************************************************************************
+	FUNCTION:	sfxDestroySampleBank
+	PURPOSE:	Destroy ram copy of sample data
+	PARAMETERS:	pointer to sample bank
+	RETURNS:	pointer to samplebank, or NULL if failed
+**************************************************************************/
+
+SfxBankType *sfxDestroySampleBank(SfxBankType *bank);
+
+
+/**************************************************************************
 	FUNCTION:	sfxOn()
 	PURPOSE:	Turn sound output on
 	PARAMETERS:	none
@@ -178,6 +200,87 @@ void sfxStopSound();
 **************************************************************************/
 
 void sfxSetGlobalVolume(int vol);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetReverb()
+	PURPOSE:	Set reverb level
+	PARAMETERS:	delay (0 - 128), depth (0 - 255).
+	RETURNS:	1 if successful, 0 if failure
+	NOTE:		delay is only effective on SFX_REVERB_MODE_ECHO & SFX_REVERB_MODE_DELAY
+**************************************************************************/
+
+int sfxSetReverb(int delay, int depth);
+
+
+/**************************************************************************
+	FUNCTION:	sfxPlaySample()
+	PURPOSE:	Plays the requested sample
+	PARAMETERS:	pointer to sample, left & right volume (0 - 255), pitch (Hz, 0 for default)
+	RETURNS:	channel number, or -1 if failure
+**************************************************************************/
+
+int sfxPlaySample(SfxSampleType *sample, int volL, int volR, int pitch);
+
+
+/**************************************************************************
+	FUNCTION:	sfxStopSample()
+	PURPOSE:	Stop the requested sample
+	PARAMETERS:	pointer to sample, channel number (0 - 23) or -1 for all
+	RETURNS:	1 if ok, 0 if failure
+**************************************************************************/
+
+int sfxStopSample(SfxSampleType *sample, int channel);
+
+
+/**************************************************************************
+	FUNCTION:	sfxStopChannel
+	PURPOSE:	Stop a channel from playing
+	PARAMETERS:	channel number
+	RETURNS:	none
+**************************************************************************/
+
+void sfxStopChannel(int channel);
+
+
+/**************************************************************************
+	FUNCTION:	sfxGetSampleStatus
+	PURPOSE:	get the status of a sample
+	PARAMETERS:	pointer to sample
+	RETURNS:	Bitfield of channels currently playing sample
+**************************************************************************/
+
+unsigned long sfxGetSampleStatus(SfxSampleType *sample);
+
+
+/**************************************************************************
+	FUNCTION:	sfxGetChannelStatus
+	PURPOSE:	get the status of a channel
+	PARAMETERS:	channel number (0 - 23)
+	RETURNS:	Currently playing sample, or NULL if no sample playing
+**************************************************************************/
+
+SfxSampleType *sfxGetChannelStatus(int channel);
+
+
+/**************************************************************************
+	FUNCTION:	sfxSetChannelReverb
+	PURPOSE:	Turn reverb on/off for a channel
+	PARAMETERS:	channel number (0 - 23), status (1 = on, 0 = off)
+	RETURNS:	1 if OK, 0 if failure
+**************************************************************************/
+
+int sfxSetChannelReverb(int channel, int status);
+
+
+/**************************************************************************
+	FUNCTION:	sfxGetChannelReverb
+	PURPOSE:	Get reverb status for a channel
+	PARAMETERS:	channel number (0 - 23)
+	RETURNS:	1 if on, 0 if off, -1 if failure
+**************************************************************************/
+
+int sfxGetChannelReverb(int channel);
 
 
 #endif //__ISLSFX2_H__
