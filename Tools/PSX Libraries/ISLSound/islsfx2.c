@@ -1,7 +1,7 @@
 /************************************************************************************
 	ISL PSX LIBRARY	(c) 1999 Interactive Studios Ltd.
 
-	islsound2.c:		Sound fx handling 2.0
+	islsfx2.c:		Sound fx handling 2.0
 
 ************************************************************************************/
 
@@ -114,6 +114,7 @@ void sfxInitialise(int maxReverb)
 
 void sfxDestroy()
 {
+	int	loop, loop2;
 	SpuReverbAttr	sceReverb;					// SCE reverb struct
 	
 	SpuSetKey(SPU_OFF,0xFFFFFFFF);				// turn off all voices
@@ -123,9 +124,16 @@ void sfxDestroy()
 	SpuSetReverbModeParam(&sceReverb);
 
 	// now go and SpuFree all the space that got SpuMalloc'd
-
-
-
+	for(loop = 0; loop < SFX2_MAXBANKS; loop ++)
+	{
+		if(sfx2Data.sfx2Banks[loop])
+		{
+			for(loop2 = 0; loop2 < sfx2Data.sfx2Banks[loop]->numSamples; loop2 ++)
+			{
+				sfxUnloadSample(&sfx2Data.sfx2Banks[loop]->sample[loop2]);
+			}
+		}
+	}
 }
 
 
@@ -382,6 +390,32 @@ void sfxOn()
 void sfxOff()
 {
 	SpuSetMute(SPU_ON);							// mute on = sound off
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxStartSound()
+	PURPOSE:	Start sound DMA processing
+	PARAMETERS:	none
+	RETURNS:	none
+**************************************************************************/
+
+void sfxStartSound()
+{
+	SpuStart();									// start spu dma
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxStopSound()
+	PURPOSE:	Stop sound DMA processing
+	PARAMETERS:	none
+	RETURNS:	none
+**************************************************************************/
+
+void sfxStopSound()
+{
+	SpuQuit();									// stop spu dma
 }
 
 
