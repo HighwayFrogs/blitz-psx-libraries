@@ -1,6 +1,14 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+19-11-99
+========
+
+Been working on PS2 stuff for a while, got textures loading pretty much okay now, just a few problems with 64x16's (???) , still haven't figured it out yet.
+
+Added an extra bit to the memory library, so that it now prints out the address of damaged memory blocks, as well as where they were allocated.
+
+
 11-11-99
 ========
 
