@@ -561,7 +561,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					if (((TMD_P_FG3I*)primitive)->dummy & psiTRANSPAR )
 						((TMD_P_FG3I*)primitive)->cd |=2;
 					
-					((TMD_P_FG3I*)primitive)->dummy &= psiDOUBLESIDED; 
+					//((TMD_P_FG3I*)primitive)->dummy &= psiDOUBLESIDED; 
 					F3count++;							  
 					break;
 
@@ -574,7 +574,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					if (((TMD_P_FG4I*)primitive)->dummy & psiTRANSPAR )
 						((TMD_P_FG4I*)primitive)->cd |=2;
 					
-					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					//((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
 					
 					F4count++;
 					break;
@@ -600,7 +600,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					((TMD_P_FT3I*)primitive)->tv2 += sprt->y;
 
 					TF3count++;
-					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					//((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
 					break;
 
 				case GPU_COM_TF4SPR:
@@ -628,7 +628,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					((TMD_P_FT4I*)primitive)->tv3 += sprt->y;
 
 					TF4count++;
-					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					//((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
 					break;
 
 				case GPU_COM_TG3:	
@@ -961,7 +961,7 @@ PSIMODEL *psiLoad(char *psiName)
 	psiModel = psiCheck(psiName);		// already loaded ?
 	if (psiModel!=NULL)
 	{
-		utilPrintf("Already loaded file %s\n",psiName);
+		//utilPrintf("Already loaded file %s\n",psiName);
 		//psiDisplay(psiModel);
 		return psiModel;
 
@@ -2947,7 +2947,7 @@ static void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, 
 	}
 }
 
-static void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
+static void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b, PSIOBJECT *root)
 {
 	
 	register SVKEYFRAME	*workingkeys,*tmpmovekeys;
@@ -3057,15 +3057,28 @@ static void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, U
 
 		// interpolate between frame0 and frame1
 		
-		gte_lddp(b);							// load interpolant
-		gte_ld_intpol_sv1(&move[0]);
-		gte_ld_intpol_sv0(&move[1]);
-		gte_intpl();							// interpolate (8 cycles)
-		gte_stlvnl(&world->matrix.t);			// store interpolated vector
+		// if this is the root bone (motion bone)
+		if(world == root)
+		{
+			gte_lddp(4096);							// load interpolant
+			gte_ld_intpol_sv1(&move[0]);
+			gte_ld_intpol_sv0(&move[1]);
+			gte_intpl();							// interpolate (8 cycles)
+			gte_stlvnl(&world->matrix.t);			// store interpolated vector
+		}
+		else
+		{
+			gte_lddp(b);							// load interpolant
+			gte_ld_intpol_sv1(&move[0]);
+			gte_ld_intpol_sv0(&move[1]);
+			gte_intpl();							// interpolate (8 cycles)
+			gte_stlvnl(&world->matrix.t);			// store interpolated vector
+		}
+	
 
 		if(world->child)
 		{
-			psiSetMoveKeyFrames2(world->child, frame0, frame1, b);
+			psiSetMoveKeyFrames2(world->child, frame0, frame1, b, root);
 		}
 		
 		world = world->next;
@@ -3075,7 +3088,7 @@ static void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, U
 
 void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend)
 {
-	psiSetMoveKeyFrames2(world, frame0, frame1, blend);
+	psiSetMoveKeyFrames2(world, frame0, frame1, blend, world);
 	psiSetScaleKeyFrames2(world, frame0, frame1, blend);
 	psiSetRotateKeyFrames2(world, frame0, frame1, blend);
 }

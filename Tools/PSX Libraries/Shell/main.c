@@ -152,7 +152,7 @@ void silly()
 int main()
 { 
 // NO LOCAL ALLOWED
-	install_exc();
+	utilInstallException();
 	while(1)
 	{
 		memset((void *)0x1f8000,0,0x8000);
