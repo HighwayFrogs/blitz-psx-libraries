@@ -129,10 +129,12 @@ void sfxInitialise(int reverbMode)
 
 	sfx2Data.sfx2SampleVolume = 255;
 
+
 	sceEnv.mask = 0;							// turn voice queueing on
 	sceEnv.queueing = SPU_ON;
 
 	SpuSetEnv(&sceEnv);
+
 }
 
 
@@ -167,6 +169,19 @@ void sfxDestroy()
 			sfxUnloadSampleBank(sfx2Data.sfx2Banks[loop]);
 		}
 	}
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxUpdate()
+	PURPOSE:	update the sound queue
+	PARAMETERS:	none
+	RETURNS:	none
+**************************************************************************/
+
+void sfxUpdate()
+{
+	SpuFlush(SPU_EVENT_ALL);
 }
 
 
@@ -310,18 +325,15 @@ SfxBankType *sfxLoadSampleBank(char *fileName)
 
 
 /**************************************************************************
-	FUNCTION:	sfxFindSampleInBank()
+	FUNCTION:	sfxFindSampleInBankCRC()
 	PURPOSE:	Find a sample in a bank
-	PARAMETERS:	sample name
+	PARAMETERS:	sample name crc, bank to search
 	RETURNS:	pointer to sample, or NULL if not found
 **************************************************************************/
 
-SfxSampleType *sfxFindSampleInBank(char *sampleName, SfxBankType *bank)
+SfxSampleType *sfxFindSampleInBankCRC(unsigned long CRC, SfxBankType *bank)
 {
-	unsigned long	CRC;
-	int				loop;
-
-	CRC = utilStr2CRC(sampleName);
+	int	loop;
 
 	for(loop = 0; loop < bank->numSamples; loop ++)
 	{
@@ -337,13 +349,26 @@ SfxSampleType *sfxFindSampleInBank(char *sampleName, SfxBankType *bank)
 
 
 /**************************************************************************
-	FUNCTION:	sfxFindSampleInAllBanks()
-	PURPOSE:	Find a sample in all loaded banks
-	PARAMETERS:	sample name
+	FUNCTION:	sfxFindSampleInBank()
+	PURPOSE:	Find a sample in a bank
+	PARAMETERS:	sample name, bank to search
 	RETURNS:	pointer to sample, or NULL if not found
 **************************************************************************/
 
-SfxSampleType *sfxFindSampleInAllBanks(char *sampleName)
+SfxSampleType *sfxFindSampleInBank(char *sampleName, SfxBankType *bank)
+{
+	return sfxFindSampleInBankCRC(utilStr2CRC(sampleName), bank);
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxFindSampleInAllBanksCRC()
+	PURPOSE:	Find a sample in all loaded banks
+	PARAMETERS:	sample name CRC
+	RETURNS:	pointer to sample, or NULL if not found
+**************************************************************************/
+
+SfxSampleType *sfxFindSampleInAllBanksCRC(unsigned long CRC)
 {
 	int				loop;
 	SfxSampleType	*sample;
@@ -352,7 +377,7 @@ SfxSampleType *sfxFindSampleInAllBanks(char *sampleName)
 	{
 		if(sfx2Data.sfx2Banks[loop])
 		{
-			if((sample = sfxFindSampleInBank(sampleName, sfx2Data.sfx2Banks[loop])))
+			if((sample = sfxFindSampleInBankCRC(CRC, sfx2Data.sfx2Banks[loop])))
 			{
 				return sample;
 			}
@@ -360,6 +385,19 @@ SfxSampleType *sfxFindSampleInAllBanks(char *sampleName)
 	}
 
 	return NULL;
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxFindSampleInAllBanks()
+	PURPOSE:	Find a sample in all loaded banks
+	PARAMETERS:	sample name
+	RETURNS:	pointer to sample, or NULL if not found
+**************************************************************************/
+
+SfxSampleType *sfxFindSampleInAllBanks(char *sampleName)
+{
+	return sfxFindSampleInAllBanksCRC(utilStr2CRC(sampleName));
 }
 
 
@@ -661,6 +699,7 @@ int sfxPlaySample(SfxSampleType *sample, int volL, int volR, int pitch)
 	// try to find a free channel
 	for(voiceLoop = 0; voiceLoop < 24; voiceLoop ++)
 	{
+		// make sure this channel hasn't been used earlier this frame and the SPU hasn't caught up yet
 		if(SpuGetKeyStatus(1 << voiceLoop) != SPU_ON)
 		{
 			// calculate left and right volumes

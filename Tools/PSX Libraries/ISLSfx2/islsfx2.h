@@ -62,6 +62,16 @@ void sfxDestroy();
 
 
 /**************************************************************************
+	FUNCTION:	sfxUpdate()
+	PURPOSE:	update the sound queue
+	PARAMETERS:	none
+	RETURNS:	none
+**************************************************************************/
+
+void sfxUpdate();
+
+
+/**************************************************************************
 	FUNCTION:	sfxFixupSampleBankHeader()
 	PURPOSE:	fix up sample bank header already in ram
 	PARAMETERS:	pointer to sample bank header, spu base address
@@ -109,6 +119,26 @@ SfxSampleType *sfxFindSampleInBank(char *sampleName, SfxBankType *bank);
 **************************************************************************/
 
 SfxSampleType *sfxFindSampleInAllBanks(char *sampleName);
+
+
+/**************************************************************************
+	FUNCTION:	sfxFindSampleInBankCRC()
+	PURPOSE:	Find a sample in a bank
+	PARAMETERS:	sample name crc, bank to search
+	RETURNS:	pointer to sample, or NULL if not found
+**************************************************************************/
+
+SfxSampleType *sfxFindSampleInBankCRC(unsigned long CRC, SfxBankType *bank);
+
+
+/**************************************************************************
+	FUNCTION:	sfxFindSampleInAllBanksCRC()
+	PURPOSE:	Find a sample in all loaded banks
+	PARAMETERS:	sample name CRC
+	RETURNS:	pointer to sample, or NULL if not found
+**************************************************************************/
+
+SfxSampleType *sfxFindSampleInAllBanksCRC(unsigned long CRC);
 
 
 /**************************************************************************
