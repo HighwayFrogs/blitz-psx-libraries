@@ -27,8 +27,7 @@ typedef struct
 	short		queueAnimation[ANIM_QUEUE_LENGTH];
 	UBYTE		queueLoopAnimation[ANIM_QUEUE_LENGTH];
 	long		queueAnimationSpeed[ANIM_QUEUE_LENGTH];
-//	animation	*anims;
-	long		animTime;//, animTimeDelta;
+	long		animTime;
 
 	short		frame;
 	UBYTE 		exclusive;

@@ -89,13 +89,11 @@ static void actorSetTree(PSIOBJECT *obj,PSIMESH *mesh)
 
 		if (mesh->child)
 		{
-//			utilPrintf("chil->$%x\n",mesh->child);
 			obj->child	  = psiobNext;
 	   		actorSetTree(psiobNext++,mesh->child);
 		}
 		if (mesh->next)
 		{
-//			utilPrintf("next->$%x\n",mesh->next);
 			obj->next  = psiobNext;
 			actorSetTree(psiobNext++,mesh->next);
 		}
@@ -137,7 +135,6 @@ ACTOR *actorCreate(PSIMODEL *psiModel)
 	amem = (ULONG *)actor;
 	for (i=0; i<(len/4); i++)
 		*amem++ = 0;
-//	memoryShow();
 
 	actor->psiData.flags = 0;
 
@@ -268,7 +265,6 @@ void actorSetAnimationSpeed(ACTOR *actor, int speed)
 
 void actorAdjustPosition(ACTOR *actor)
 {
-//	utilPrintf("y = %d\n",actor->oldPosition.vy);
 
 	actor->oldPosition.vx = 0;//actor->position.vx;// actor->accumulator.vx;
 	actor->oldPosition.vy = 0;//actor->position.vy;//actor->accumulator.vy;
@@ -381,9 +377,7 @@ void actorMove(ACTOR *actor)
 
 void actorDraw(ACTOR *actor)
 {
-	//int i,v,rotcalc,rotate;
 	PSIOBJECT *world;
-	//register PSIMODELCTRL	*modctrl = &PSImodelctrl;
 
    	world = actor->psiData.object;
 
@@ -403,7 +397,6 @@ void actorDraw(ACTOR *actor)
 	PSIrootScale = &actor->psiData.object->scale;
 	
 	psiCalcWorldMatrix(actor->psiData.object);
-//	PSICalcMatrix(actor->object);
 
 	psiDrawSegments(&actor->psiData);
 }
@@ -471,8 +464,6 @@ void actorUpdateAnimations(ACTOR *actor)
 		//queue stuff - do this later
 		if(actorAnim->queueAnimation[0] != -1)
 		{
-//			SetAnimCallBack(temp, actorAnim->anims[actorAnim->queueAnimation[0]].animationSet);
-
 			actorAnim->currentAnimation = actorAnim->queueAnimation[0];//actorAnim;
 			actorAnim->loopAnimation = actorAnim->queueLoopAnimation[0];//loop;
 			actorAnim->animationSpeed = actorAnim->queueAnimationSpeed[0];//speed;
@@ -554,11 +545,6 @@ void actorAnimate(ACTOR *actor, int animNum, char loop, char queue, int speed, c
 		actorFlushQueue(actor);
 		return;
 	}
-
-	/*
-	if(animNum > actorAnim->numAnimations)
-		animNum = 0;
-	*/
 
 	if(speed == 0)
 	{
@@ -646,8 +632,6 @@ void actorSetAnimation(ACTOR *actor, ULONG frame)
 	world->matrix.t[1] -= actor->oldPosition.vy;
 	world->matrix.t[2] -= actor->oldPosition.vz;
 
-//	utilPrintf("add %d (%d)\n",world->matrix.t[1],actor->oldPosition.vy);
-
 	actor->oldPosition = actor->accumulator;
 
 	temp0 = world->matrix.t[0];
@@ -660,8 +644,6 @@ void actorSetAnimation(ACTOR *actor, ULONG frame)
 	world->matrix.t[1] = result.vy;
 	world->matrix.t[2] = result.vz;
 	
-	//	utilPrintf("y=%d\n",world->matrix.t[1]);
-
 	if (actorAnim->exclusive)  
 	{
 		anim = (ANIMATION*) (actor->animSegments + (actorAnim->currentAnimation*2));
@@ -735,8 +717,6 @@ void actorSetAnimation2(ACTOR *actor, ULONG frame0, ULONG frame1, ULONG blend)
 	world->matrix.t[2] = result.vz;
 	*/
 
-	//	utilPrintf("y=%d\n",world->matrix.t[1]);
-
 	if (actorAnim->exclusive)  
 	{
 		anim = (ANIMATION*) (actor->animSegments + (actorAnim->currentAnimation*2));
@@ -789,7 +769,6 @@ void actorRotate(short angx, short angy, short angz, long movex, long movey, lon
 
 UBYTE actorIsVisible(ACTOR *actor)
 {
-	//MATRIX *localM;
 	SVECTOR v;
 	long zed,diff,lx,rx,ty,by;
 	DVECTOR	scrxy1;
@@ -815,11 +794,6 @@ UBYTE actorIsVisible(ACTOR *actor)
 	{
 		return 0;								// To far away
 	}
-
-//	localM = &actor->object->matrix;				// local transformation matrix.t includes world position
-//	v.vx = localM->t[0];
-//	v.vy = localM->t[1];
-//	v.vz = localM->t[2];
 
 	gte_ldv0(&v);									// transform 'center' x,y
 	gte_rtps();
@@ -1160,7 +1134,6 @@ int actorCalcSegments(ACTOR *actor)
 	}
 
   	j = utilSqrt(q) >> 16;
-//	utilPrintf("rad=%d (%d)\n",j,actor->radius);
 
 	return j;	
 }
@@ -1175,5 +1148,5 @@ int actorCalcSegments(ACTOR *actor)
 
 void actorSetBounding(ACTOR *actor,int frame)
 {
-		actorSetBoundingRotated(actor,frame,0,0,0);
+	actorSetBoundingRotated(actor,frame,0,0,0);
 }
