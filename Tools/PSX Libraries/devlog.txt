@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+16-2-2000
+=========
+
+Small bug fix for islsfx2.lib, sfxStopChannel, and hence sfxStopSample would not always work. Obviously, calling "SpuSetKey(SPU_OFF, 1 << channel);" isn't enough, so after that is "SpuSetVoiceVolume(channel, 0, 0);", setting the volume for the channel to 0.
+
+
 14-2-2000
 =========
 
