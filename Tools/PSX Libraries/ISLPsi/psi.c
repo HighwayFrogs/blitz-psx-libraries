@@ -3059,12 +3059,12 @@ void PSISetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
 						VECTOR temp2;
 						VECTOR dest;
 						
-						temp1.vx =((int)(tmpscalekeyslast->vect.x))<<2;
-						temp1.vy =((int)(tmpscalekeyslast->vect.y))<<2;
-						temp1.vz =((int)(tmpscalekeyslast->vect.z))<<2;
-						temp2.vx =((int)(tmpscalekeys->vect.x))<<2;
-						temp2.vy =((int)(tmpscalekeys->vect.y))<<2;
-						temp2.vz =((int)(tmpscalekeys->vect.z))<<2;
+						temp1.vx =((int)(tmpscalekeyslast->vect.x));
+						temp1.vy =((int)(tmpscalekeyslast->vect.y));
+						temp1.vz =((int)(tmpscalekeyslast->vect.z));
+						temp2.vx =((int)(tmpscalekeys->vect.x));
+						temp2.vy =((int)(tmpscalekeys->vect.y));
+						temp2.vz =((int)(tmpscalekeys->vect.z));
 						
 						t = tmpscalekeyslast->time;
 						t = ((frame[loop] - t) << 12) / (tmpscalekeys->time - t);
@@ -3074,9 +3074,9 @@ void PSISetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
 						gte_ldfc(&temp2);						// load dest
 						gte_intpl();							// interpolate (8 cycles)
 						gte_stlvnl(&dest);				// store interpolated vector
-						scale[loop].vx = dest.vx;
-						scale[loop].vy = dest.vy;
-						scale[loop].vz = dest.vz;
+						scale[loop].vx = dest.vx<<2;
+						scale[loop].vy = dest.vy<<2;
+						scale[loop].vz = dest.vz<<2;
 
 					}
 
