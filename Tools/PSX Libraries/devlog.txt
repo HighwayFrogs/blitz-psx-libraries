@@ -1,6 +1,20 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+22-10-99
+========
+
+Spend most of the day trying to fix minor but important problems with the skinning library.
+
+Rewrote psiCalcLocalMatrix to use psiCalcChildMatrix. It's now exactly the same as psiCalcWorldMatrix, except it doesn't take into account the camera matrix. Wrote a quick little function, actorDrawBones, that draws the bones of a model, using the actual world co-ords of the bones in order to demonstrate using psiCalcLocalMatrix. I'm wondering if the function names are actually correct, such that psiCalcWorldMatrix should be psiCalcScreenMatrix, and psiCalcLocalMatrix should be psiCalcWorldMatrix. I'm not too sure about changing them though, because I know it'll just cause even more confusion with people already using the (non-library) psi stuff.
+
+Spend quite a while trying to track down a phantom sorting problem when using the sort tables with the PSX's order tables. Turned out it was just overflowing the order table, so stuff that should have been printed at the back was wrapping around and being printed at the front instead. Scaling the model down and moving the camera in solved this (Duh).
+
+Changed the psiLoad function so that it now takes the full path of a model, rather than just the name. Again, Tom G. was having problems with loading models in subdirectories. This should be standard, as files should be organised properly, rather than having everything in one directory.
+
+The setup overhead for a minor non-animated model seems to be quite big, I must look at seeing if this can brought down. Doesn't seem to be the animation setup, so I'll set up some timers and see what arises.
+
+
 21-10-99
 ========
 
