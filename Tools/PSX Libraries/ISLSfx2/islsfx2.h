@@ -10,7 +10,7 @@
 
 typedef struct _SfxSampleType {
 	unsigned char	inSPURam;		// is this sample in SPU ram?
-	unsigned char	pad;
+	unsigned char	flags;			// sample flags
 	unsigned short	sampleRate;		// default sample rate
 	unsigned long	spuOffset;		// offset in SPU ram
 	unsigned long	nameCRC;		// CRC of sample name
@@ -39,6 +39,9 @@ typedef struct _SfxBankType {
 #define SFX_REVERB_MODE_ECHO			7	// needs 98368 bytes workspace
 #define SFX_REVERB_MODE_DELAY			8	// needs 98368 bytes workspace
 #define SFX_REVERB_MODE_PIPE			9	// needs 15360 bytes workspace
+
+// Sample flags
+#define SAMPLEFLAGS_LOOPED		(1)
 
 
 /**************************************************************************
