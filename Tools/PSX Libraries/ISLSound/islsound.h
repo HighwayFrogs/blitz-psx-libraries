@@ -120,6 +120,16 @@ void sfxSetPitch(int channelNum, int pitch);
 
 
 /**************************************************************************
+	FUNCTION:	sfxStopChannel()
+	PURPOSE:	queues a stop request
+	PARAMETERS:	sample number
+	RETURNS:	none
+**************************************************************************/
+
+void sfxStopChannel(int sfxNum);
+
+
+/**************************************************************************
 	FUNCTION:	sfxSetGlobalVolume()
 	PURPOSE:	Set global volume
 	PARAMETERS:	volume
