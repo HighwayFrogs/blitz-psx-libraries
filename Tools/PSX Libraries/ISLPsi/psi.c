@@ -60,7 +60,9 @@ char *PSIname=0;
 long *transformedVertices __attribute__ ((section("cachedata"))) = 0;
 long *transformedDepths __attribute__ ((section("cachedata"))) = 0;
 VERT *transformedNormals __attribute__ ((section("cachedata"))) = 0;
+
 int  tfTotal = 0;
+
 #ifdef _DEBUG
 long *transformedScreenN = 0;
 LINE_F2	polyLine;
@@ -284,6 +286,7 @@ void psiCalcMaxMin(PSIDATA *psiData)
 	maxDepth = minDepth = *tfd;
 	
 	i = tfTotal;
+
 	while (i)
 	{
 		if (*tfd < minDepth)
@@ -944,7 +947,7 @@ PSIMODEL *psiLoad(char *psiName)
 	if (psiModel!=NULL)
 	{
 		utilPrintf("Already loaded file %s\n",psiName);
-		psiDisplay(psiModel);
+		//psiDisplay(psiModel);
 		return psiModel;
 
 	}
@@ -1326,7 +1329,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyFT3(si);
 				si->code |= modctrl->semitrans;
-				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT3);
+				ENDPRIM(si, depth, POLY_FT3);
 
 				op = op->next;
 				break;
@@ -1373,7 +1376,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyFT4(si);
 				si->code |= modctrl->semitrans;
- 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
+ 				ENDPRIM(si, depth, POLY_FT4);
 				op = op->next;
 				break;
 #undef si
@@ -1420,7 +1423,7 @@ static void psiDrawSortedPrimitives(int depth)
 				}
 				setPolyGT3(si);
 				si->code |= modctrl->semitrans;
-				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT3);
+				ENDPRIM(si, depth, POLY_GT3);
 				op = op->next;
 				break;
 #undef si
@@ -1482,7 +1485,7 @@ static void psiDrawSortedPrimitives(int depth)
 		
 				setPolyGT4(si);
 				si->code |= modctrl->semitrans;
- 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT4);
+ 				ENDPRIM(si, depth, POLY_GT4);
 				(int)op = op->next;
 				break;
 
@@ -1538,7 +1541,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				si->code |= modctrl->semitrans;
 		
- 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
+ 				ENDPRIM(si, depth, POLY_FT4);
 				op = op->next;
 			}
 			break;
@@ -1600,7 +1603,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyG4(si);
 				si->code |= modctrl->semitrans;
- 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G4);
+ 				ENDPRIM(si, depth, POLY_G4);
 				op = op->next;
 				break;
 #undef si
@@ -1647,7 +1650,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyG3(si);
 				si->code |= modctrl->semitrans;
-				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G3);
+				ENDPRIM(si, depth, POLY_G3);
 				op = op->next;
 				break;
 #undef si
