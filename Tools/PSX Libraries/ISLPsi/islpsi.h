@@ -183,6 +183,7 @@ typedef struct
 	USHORT		*SortOffs;
 	UBYTE		lighting;		// lighting mode
 	int			depthShift;		// 0== use default shift !0=shift value
+	UBYTE		inheritScale;	// 0 = off, !0 = on
 
 } PSIMODELCTRL;
 

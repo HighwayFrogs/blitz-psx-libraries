@@ -147,6 +147,7 @@ static void psiResetModelctrl()
 	PSImodelctrl.sprites = YES;
 	PSImodelctrl.nearclip = 100;
 	PSImodelctrl.farclip = 16384;
+	PSImodelctrl.inheritScale = 0;
 
 }
 
@@ -3107,7 +3108,10 @@ static void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 	while(world)
 	{
 	   	world->matrixscale = world->matrix;
-	   	ScaleMatrix(&world->matrixscale,&world->scale);
+
+		// if inherit scale in on, scale matrix before calculating children
+		if(PSImodelctrl.inheritScale)
+			ScaleMatrix(&world->matrixscale,&world->scale);
 		
 		gte_MulMatrix0(&parent->matrix, &world->matrix, &world->matrix);
 		gte_MulMatrix0(&parent->matrixscale, &world->matrixscale, &world->matrixscale);
@@ -3120,6 +3124,10 @@ static void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 
 		if(world->child)
 			psiCalcChildMatrix(world->child, world);
+
+		// if inherit scale is off, then scale matrix after calculating children
+		if(!PSImodelctrl.inheritScale)
+			ScaleMatrix(&world->matrixscale,&world->scale);
 		
 		world = world->next;
 	}
