@@ -518,6 +518,9 @@ void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
 	// set image CRC to zero for this texture
 	txPtr->imageCRC = 0;
 
+	// copy flags info to new texture
+	txPtr->flags = nspr->flags;
+
 	foundMatch = 0;
 
 	// reference count is one to start with

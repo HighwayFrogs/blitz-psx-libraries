@@ -595,6 +595,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					
 					((TMD_P_FT3I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_FT3I*)primitive)->clut = sprt->clut;
+					((TMD_P_FT3I*)primitive)->tile = sprt->flags;
 
 					((TMD_P_FT3I*)primitive)->in=(sizeof(TMD_P_FT3I)/4)-1;	//ilen
 		 			((TMD_P_FT3I*)primitive)->out=0x7; 						//olen   
@@ -620,6 +621,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 						
 					((TMD_P_FT4I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_FT4I*)primitive)->clut = sprt->clut;
+					((TMD_P_FT4I*)primitive)->tile = sprt->flags;
 
 					((TMD_P_FT4I*)primitive)->in=(sizeof(TMD_P_FT4I)/4)-1;	//ilen
 		 			((TMD_P_FT4I*)primitive)->out=0x9; 						//olen   
@@ -647,6 +649,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 									
 					((TMD_P_GT3I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_GT3I*)primitive)->clut = sprt->clut;
+					((TMD_P_GT3I*)primitive)->tile = sprt->flags;
 
 					((TMD_P_GT3I*)primitive)->in=(sizeof(TMD_P_GT3I)/4)-1;	//ilen
 		 			((TMD_P_GT3I*)primitive)->out=0x9; 						//olen   
@@ -671,6 +674,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 						
 					((TMD_P_GT4I*)primitive)->tpage |= sprt->tpage;
 					((TMD_P_GT4I*)primitive)->clut = sprt->clut;
+					((TMD_P_GT4I*)primitive)->tile = sprt->flags;
 
 					((TMD_P_GT4I*)primitive)->in=(sizeof(TMD_P_GT4I)/4)-1;	//ilen
 		 			((TMD_P_GT4I*)primitive)->out=0xc; 						//olen   

@@ -8,12 +8,13 @@
 #ifndef __ISLTEX_H__
 #define __ISLTEX_H__
 
-// 
+// NSPRITE flags
 #define NLASTSPR	1 
 #define NEIGHTBIT	2
 #define NSPLIT		4
 #define NBITSTREAM	8
 #define NALPHA		16
+#define NCOLOURKEY	32
 
 
 // single texture structure
@@ -30,7 +31,8 @@ typedef struct {
 	unsigned char		u3, v3;
 	int					handle;
 	unsigned long		imageCRC;
-	int					refCount;
+	unsigned short		refCount;
+	unsigned short		flags;
 } TextureType;
 
 // animated texture structure
@@ -43,7 +45,7 @@ typedef struct _TextureAnimType
 } TextureAnimType;
 
 // single texture as stored within the SPT file
-typedef struct tagNSPRITE{
+typedef struct tagNSPRITE {
 	unsigned char	*image;		// image data
 	unsigned short	*pal;		// palette data
 	unsigned char	w;			// width
@@ -52,7 +54,7 @@ typedef struct tagNSPRITE{
 	short			v;     
 	unsigned short	flags;
 	unsigned long	crc;
-}NSPRITE;
+} NSPRITE;
 
 // texture bank structure
 typedef struct _TextureBankType {
