@@ -386,8 +386,18 @@ static void padHandlePort(int port)
 
 void padHandleInput()
 {
+	int				loop;
+	unsigned short	temp;
+
 	padHandlePort(0);
 	padHandlePort(1);
+
+	for(loop = 0; loop < 8; loop ++)
+	{
+		temp = (padData.digital[loop] ^ padData2.digitalPrev[loop]);
+		padData.debounce[loop] = (temp & padData.digital[loop]);
+		padData2.digitalPrev[loop] = padData.digital[loop];
+	}
 }
 
 
@@ -401,15 +411,10 @@ void padHandleInput()
 void padHandleShock()
 {
 	int		HWport, loop;
-	unsigned short	temp;
 
 	for(loop=0; loop<8; loop++)
 	{
 		padData.analog[loop] = (padData.present[loop]==PADTYPE_ANALOG)||(padData.present[loop]==PADTYPE_DUALSHOCK);
-
-		temp = (padData.digital[loop] ^ padData2.digitalPrev[loop]);
-		padData.debounce[loop] = (temp & padData.digital[loop]);
-		padData2.digitalPrev[loop] = padData.digital[loop];
 
 		if (padData.present[loop]==PADTYPE_DUALSHOCK)
 		{
