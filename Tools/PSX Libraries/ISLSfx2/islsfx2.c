@@ -218,7 +218,7 @@ unsigned long sfxLoadSampleBankBody(char *fileName)
 	unsigned long	spuAddr;
 	unsigned long	spuWrittenSize;
 	unsigned char	*sampleData;
-	char			bodyFileName[20];
+	char			bodyFileName[64];
 	int				fileSize;
 
 	sprintf(bodyFileName, "%s.SBB", fileName);
@@ -254,8 +254,8 @@ unsigned long sfxLoadSampleBankBody(char *fileName)
 SfxBankType *sfxLoadSampleBank(char *fileName)
 {
 	SfxBankType		*newBank;
-	char			headerFileName[20];
-	char			bodyFileName[20];
+	char			headerFileName[64];
+	char			bodyFileName[64];
 	unsigned char	*sampleData;
 	int				loop;
 
