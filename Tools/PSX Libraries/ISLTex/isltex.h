@@ -1,0 +1,219 @@
+/************************************************************************************
+	ISL PSX LIBRARY	(c) 1999 Interactive Studios Ltd.
+
+	isltex.h			Texture and VRAM management
+
+************************************************************************************/
+
+#ifndef __ISLTEX_H__
+#define __ISLTEX_H__
+
+
+// single texture structure
+typedef struct {
+	unsigned char		x;
+	unsigned char		y;
+	unsigned char		w;
+	unsigned char		h;
+	unsigned short		tpage;
+	unsigned short		clut;
+	unsigned char		u0, v0;
+	unsigned char		u1, v1;
+	unsigned char		u2, v2;
+	unsigned char		u3, v3;
+	int					handle;
+} TextureType;
+
+// animated texture structure
+typedef struct _TextureAnimType
+{
+
+	TextureType		*dest;	// destination texture
+	TextureType		**anim;	// source textures
+
+} TextureAnimType;
+
+// single texture as stored within the SPT file
+typedef struct tagNSPRITE{
+	unsigned char	*image;
+	unsigned short	*pal;
+	unsigned char	w; 
+	unsigned char	h;   
+	short			u;    
+	short			v;     
+	unsigned short	flags;
+	unsigned long	crc;
+}NSPRITE;
+
+// texture bank structure
+typedef struct _TextureBankType {
+	unsigned short		numTextures;
+	NSPRITE				*pNSprite;
+	TextureType			*texture;
+	unsigned char		*used;
+	unsigned long		*CRC;
+} TextureBankType;
+
+
+
+/**************************************************************************
+	FUNCTION:	textureInitialise()
+	PURPOSE:	Initialise VRAM/texture handling
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void textureInitialise();
+
+
+/**************************************************************************
+	FUNCTION:	textureClearVRAM()
+	PURPOSE:	Clear VRAM
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void textureClearVRAM(long screenwidth);
+
+
+/**************************************************************************
+	FUNCTION:	textureUnload()
+	PURPOSE:	Unload texture from VRAM
+	PARAMETERS:	Sprite info ptr
+	RETURNS:	
+**************************************************************************/
+
+void textureUnload(TextureType *txPtr);
+
+
+/**************************************************************************
+	FUNCTION:	textureLoadBank()
+	PURPOSE:	Load texture bank
+	PARAMETERS:	Filename
+	RETURNS:	Ptr to texture bank info
+**************************************************************************/
+
+TextureBankType *textureLoadBank(char *sFile);
+
+
+/**************************************************************************
+	FUNCTION:	textureDownloadBank()
+	PURPOSE:	Download entire texture bank to VRAM
+	PARAMETERS:	Texture bank info ptr
+	RETURNS:	
+**************************************************************************/
+
+void textureDownloadBank(TextureBankType *bank);
+
+
+/**************************************************************************
+	FUNCTION:	textureDestroyBank()
+	PURPOSE:	Free system RAM data for given texture bank
+	PARAMETERS:	Texture bank info ptr
+	RETURNS:	
+**************************************************************************/
+
+void textureDestroyBank(TextureBankType *bank);
+
+
+/**************************************************************************
+	FUNCTION:	textureUnloadBank()
+	PURPOSE:	Unload given texture bank from VRAM
+	PARAMETERS:	Texture bank info ptr
+	RETURNS:	
+**************************************************************************/
+
+void textureUnloadBank(TextureBankType *bank);
+
+
+/**************************************************************************
+	FUNCTION:	textureVRAMalloc()
+	PURPOSE:	Allocate area of VRAM
+	PARAMETERS:	Width, height in blocks
+	RETURNS:	VRAM handle
+**************************************************************************/
+
+int textureVRAMalloc(short w, short h);
+
+
+/**************************************************************************
+	FUNCTION:	textureAddCLUT16()
+	PURPOSE:	Download 16-color palette to VRAM
+	PARAMETERS:	Ptr to palette
+	RETURNS:	CLUT address
+**************************************************************************/
+
+unsigned short textureAddCLUT16(unsigned short *palette);
+
+
+/**************************************************************************
+	FUNCTION:	textureFindCRCInBank()
+	PURPOSE:	Find given texture in bank
+	PARAMETERS:	Texture bank info ptr, Texture name CRC
+	RETURNS:	Texture info ptr
+**************************************************************************/
+
+TextureType *textureFindCRCInBank(TextureBankType *bank, unsigned long crc);
+
+
+/**************************************************************************
+	FUNCTION:	textureFindCRCInAllBanks()
+	PURPOSE:	Find given texture in all loaded banks
+	PARAMETERS:	Texture name CRC
+	RETURNS:	Texture info ptr
+**************************************************************************/
+
+TextureType *textureFindCRCInAllBanks(unsigned long crc);
+
+
+/**************************************************************************
+	FUNCTION:	textureReallocTextureBank()
+	PURPOSE:	Reallocate texture in system RAM (e.g. to defragement)
+	PARAMETERS:	Texture bank info ptr
+	RETURNS:	New texture bank info ptr
+**************************************************************************/
+
+TextureBankType *textureReallocTextureBank(TextureBankType *textures);
+
+
+/**************************************************************************
+	FUNCTION:	textureShowVRAM
+	PURPOSE:	Debug VRAM viewer
+	PARAMETERS:	PAL mode 1/0
+	RETURNS:	
+**************************************************************************/
+
+void textureShowVRAM(unsigned char palMode);
+
+
+/**************************************************************************
+	FUNCTION:	textureCreateAnimation
+	PURPOSE:	Create an animated texture
+	PARAMETERS:	pointer to dummy texture, pointer to array of animated textures, number of frames
+	RETURNS:	pointer to animated texture
+**************************************************************************/
+
+TextureAnimType *textureCreateAnimation(TextureType *dummy, TextureType **anim, int numFrames);
+
+
+/**************************************************************************
+	FUNCTION:	textureSetAnimation
+	PURPOSE:	Set frame of an animated texture
+	PARAMETERS:	Animated texture, frame number
+	RETURNS:	
+**************************************************************************/
+
+void textureSetAnimation(TextureAnimType *texAnim, int frameNum);
+
+
+/**************************************************************************
+	FUNCTION:	textureDestroyAnimation
+	PURPOSE:	Destroy an animated texture
+	PARAMETERS:	Animated texture
+	RETURNS:	
+**************************************************************************/
+
+void textureDestroyAnimation(TextureAnimType *texAnim);
+
+
+#endif
