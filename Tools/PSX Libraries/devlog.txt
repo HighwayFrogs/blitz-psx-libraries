@@ -6,6 +6,8 @@ Andy Sidwell's Development Log for PSX Libraries
 
 Added the "inheritScale" member to PSImodelctrl. Should allow people to choose whether they want their models to inherit scale down the hierarchy.
 
+Renamed the function VRAMfindTextureN() to textureFindTextureN() and exported it, so that Mikey's fx editor can select textures by number, rather than by name.
+
 
 10-11-99
 ========

@@ -909,7 +909,7 @@ static void VRAMviewNormal(DISPENV *dispenv, int *xOffs,int *yOffs, unsigned cha
 	PutDispEnv(dispenv);
 }
 
-static TextureType *VRAMfindTextureN(int n)
+TextureType *textureFindTextureN(int n)
 {
 	int			bankLp, texLp, texCount = 0;
 
@@ -1041,7 +1041,7 @@ static void VRAMviewTextures(int *currTex)
 	sprintf(str, "VRAM: TEXTURE VIEW");
 	fontPrint(font, -230,-110, str, 128,128,128);
 
-	tex = VRAMfindTextureN(*currTex);
+	tex = textureFindTextureN(*currTex);
 	if (tex!=NULL)
 	{
 		BEGINPRIM(ft4, POLY_FT4);
@@ -1075,7 +1075,7 @@ static void VRAMviewTextures(int *currTex)
 
 	for(loop=1; loop<5; loop++)
 	{
-		tex = VRAMfindTextureN(*currTex-loop);
+		tex = textureFindTextureN(*currTex-loop);
 		f = 100-loop*20;
 		if (tex!=NULL)
 		{
@@ -1089,7 +1089,7 @@ static void VRAMviewTextures(int *currTex)
 			ENDPRIM(ft4, 2, POLY_FT4);
 			yu -= tex->h+8;
 		}
-		tex = VRAMfindTextureN(*currTex+loop);
+		tex = textureFindTextureN(*currTex+loop);
 		if (tex!=NULL)
 		{
 			BEGINPRIM(ft4, POLY_FT4);
@@ -1115,7 +1115,7 @@ static void VRAMviewTextures(int *currTex)
 		}
 		if (padData.digital[4] & (PAD_RIGHT|PAD_DOWN))
 		{
-			if(VRAMfindTextureN(*currTex+1))
+			if(textureFindTextureN(*currTex+1))
 			{
 				*currTex = (*currTex)+1;
 				padDelay = 3;

@@ -168,6 +168,9 @@ TextureType *textureFindCRCInBank(TextureBankType *bank, unsigned long crc);
 TextureType *textureFindCRCInAllBanks(unsigned long crc);
 
 
+TextureType *textureFindTextureN(int n);
+
+
 /**************************************************************************
 	FUNCTION:	textureReallocTextureBank()
 	PURPOSE:	Reallocate texture in system RAM (e.g. to defragement)
