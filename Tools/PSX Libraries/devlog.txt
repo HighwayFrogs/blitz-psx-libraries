@@ -2,6 +2,21 @@ Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
 
+
+30-10-99
+========
+
+Playing FFVIII and being amazed by their effects. Came in and did some mad full screen stuff, bit slow but it's a start. Must put FFVIII through the analyser and see exactly what they're doing.
+
+
+29-10-99
+========
+
+Spent the last two days at Chessington World of Adventures, doing some P.R. stuff for Hasbro at the Action Man shop there.
+
+Sony has contacted us and have said they will give us a PS2 kit very soon! Way hey!
+
+
 26-10-99
 ========
 
