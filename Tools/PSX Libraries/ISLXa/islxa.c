@@ -85,7 +85,7 @@ static void XAcallback(int intr, u_char *result)
 		XAData.currChannel = *((unsigned short *)(cAddress+3)+1);
 		XAData.currChannel = (XAData.currChannel & 31744)>>10;
 
-		XAData.currSector++;
+		XAData.currSector = CdPosToInt(cAddress);
 		if((ID == 352) && (XAData.currChannel==XAData.activeChannel))	// Check for end sector marker
 		{
 	        SpuSetCommonCDVolume(0,0);
@@ -133,6 +133,7 @@ XAFileType *XAgetFileInfo(char *fileName)
 	if (CdSearchFile(&xaf->fileInfo, fName)==0)
 	{
 		printf("XA file '%s' not found\n", fName);
+		FREE(xaf);
 		return NULL;
 	}
 	xaf->startPos = CdPosToInt(&xaf->fileInfo.pos);
