@@ -1,0 +1,53 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "ISLCard"=.\ISLCard\ISLCard.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLCard", RDEBAAAA
+    .\islcard
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLFile"=.\ISLFile\ISLFile.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLFile", VDEBAAAA
+    .\islfile
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries", QDEBAAAA
+    .
+    end source code control
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
