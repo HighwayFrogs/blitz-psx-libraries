@@ -2213,12 +2213,14 @@ void psiDrawSegments(PSIDATA *psiData)
 
 	modctrl->PrimTop = (ULONG*)psiData->primitiveList;
 
+	/*
 	j = modctrl->depthShift;
 
 	if (j == 0)
 	{
 		j = DEFAULTDEPTHSHIFT;
 	}
+	*/
 
 	if (psiData->flags & ACTOR_DYNAMICSORT)
 	{
