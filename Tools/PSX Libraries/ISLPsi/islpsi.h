@@ -224,9 +224,9 @@ void psiInitSortList(int range);
 
 void psiCalcWorldMatrix(PSIOBJECT *world);
 
-void psiDrawSegments(PSIDATA *psiData);
+void psiCalcLocalMatrix(PSIOBJECT *world);
 
-void psiCalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS);
+void psiDrawSegments(PSIDATA *psiData);
 
 void psiRegisterDrawFunction(void (*drawHandler)(int));
 
