@@ -1,6 +1,21 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+3-12-99
+=======
+
+After all yesterday afternoon and all this morning, we have found a solution to the problem, if not the actual cause of the problem. In the move to the libraries, a couple of lines got left out of interupt.c, i.e. _ramsize and _stacksize.
+Setting these two variables in main.c crashed the testbed, with it calculating the memory size incorrectly, however the insertion of extra lines of code fixed the problem. Putting the extra lines into AM2 however didn't crash it at all, but their disc ran okay anyway.
+
+I'm putting it down to a compiler bug. And at least it seems we can reproduce the effect on a devkit now, without having to burn a CD everytime, the main cause of it taking us so long to find a solution.
+
+
+2-12-99
+=======
+
+A bug in Mermaid/Libraries is having the same effect as the Library memory bug, where a disc would boot on a dev-kit, but not on a console. Re-arrangement of code seems to make it run, so it's either a memory trasher, or a compiler bug.
+
+
 1-12-99
 =======
 
