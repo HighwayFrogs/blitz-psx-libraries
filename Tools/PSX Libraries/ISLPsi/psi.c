@@ -330,7 +330,7 @@ void psiSetLight(int lightNum, int r, int g, int b, int x, int y, int z)
 
 
    	lightMat=GsIDMATRIX;
-	RotMatrixYXZ(&lightRotVec,&lightMat);
+	RotMatrixYXZ_gte(&lightRotVec,&lightMat);
 	GsSetLightMatrix2(&lightMat);
 
 }
@@ -350,7 +350,7 @@ void psiInitLights()
 	lightRotVec.vx = 0;
 	lightRotVec.vy = 0;
 	lightRotVec.vz = 0;
-	RotMatrixYXZ(&lightRotVec,&lightMat);
+	RotMatrixYXZ_gte(&lightRotVec,&lightMat);
 
 	psiSetLight(0, 0,0,0, 0,0,0 );
 	psiSetLight(1, 0,0,0, 0,0,0 );
