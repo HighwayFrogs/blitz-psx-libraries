@@ -1,6 +1,16 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+10-1-2000
+=========
+
+Added near & far clipping to the PSI library. It should now near and far clip when
+
+a) drawing models that are dynamically-sorted against themselves, whether using the internal draw routine or your own (it clips polys while sorting)
+
+b) when drawing models using the inbuilt drawing routines for non-dynamically sorted models (it clips polys while drawing)
+
+
 8-12-99
 =======
 
