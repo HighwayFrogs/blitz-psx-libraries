@@ -189,7 +189,7 @@ static int fileCDreadIndex(char *fName)
 		return 1;
 	}
 	fileIO.DATsector = CdPosToInt(&fp.pos);
-	if (CdReadFile(fName, (unsigned long *)fileIO.index, 4*2048)==0)			// Read file
+	if (CdReadFile(fName, (unsigned long *)fileIO.index, 8*2048)==0)			// Read file
 	{
 		printf("Reading CD index: CdReadFile() error\n");
 		return 2;
@@ -215,7 +215,7 @@ static void fileCDInitialise(char *fileSystem)
 	strcpy(FILEIO_CDINDEX, fileSystem);
 	CdInit();
 
-	fileIO.index = MALLOC(4*2048);
+	fileIO.index = MALLOC(8*2048);
 
 	while(fileCDreadIndex(FILEIO_CDINDEX))
 	{
