@@ -625,11 +625,7 @@ void actorSetAnimation(ACTOR *actor, ULONG frame)
 	
 	PSIactorScale = &actor->size;
 
-	psiSetMoveKeyFrames(world, frame);
-
-	psiSetScaleKeyFrames(world, frame);
-
-	psiSetRotateKeyFrames(world, frame);
+	psiSetKeyFrames(world, frame);
 		
 	actor->accumulator.vx = world->matrix.t[0];
 	actor->accumulator.vy = world->matrix.t[1];
@@ -694,11 +690,7 @@ void actorSetAnimation2(ACTOR *actor, ULONG frame0, ULONG frame1, ULONG blend)
 	
 	PSIactorScale = &actor->size;
 
-	psiSetMoveKeyFrames2(world, frame0, frame1, blend);
-
-	psiSetScaleKeyFrames2(world, frame0, frame1, blend);
-
-	psiSetRotateKeyFrames2(world, frame0, frame1, blend);
+	psiSetKeyFrames2(world, frame0, frame1, blend);
 	
 	/*
 	actor->accumulator.vx = world->matrix.t[0];

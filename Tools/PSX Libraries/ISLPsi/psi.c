@@ -348,6 +348,11 @@ void psiInitLights()
 
 }
 
+void psiSetAmbient(int r, int g, int b)
+{
+	GsSetAmbient(r,g,b);
+}
+
 
 
 /**************************************************************************
@@ -676,7 +681,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 	PARAMETERS:	mesh address, start of model address
 	RETURNS:	nowt
 **************************************************************************/
-void psiFixupMesh(PSIMESH *mesh)
+static void psiFixupMesh(PSIMESH *mesh)
 {
 	int p,i;
 
@@ -806,7 +811,7 @@ PSIMODEL *psiCheck(char *psiName)
 	PARAMETERS:	pointer to PSIMODEL
 	RETURNS:	pointer to PSIMODEL
 **************************************************************************/
-static PSIMODEL *psiFixup(char *addr)
+PSIMODEL *psiFixup(char *addr)
 {
 	PSIMESH *mesh;
 	int /*lastfilelength,*/i;
@@ -1002,7 +1007,7 @@ static void PSIDrawLine(ULONG depth)
 	RETURNS:	
 **************************************************************************/
 
-void PSIDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri)
+void psiDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri)
 {
 
 	POLY_F4 *si;
@@ -1239,16 +1244,13 @@ static void psiSortPrimitives()
 static void psiDrawSortedPrimitives(int depth)
 {
 	register PACKET*		packet;
-	register long *tfv = transformedVertices;
-	register TMD_P_GT4I	*opcd;
-
-	PSIMODELCTRL	*modctrl = &PSImodelctrl;
-	//VERT	*vp = modctrl->VertTop;
-	int primsleft,lightmode;//,colr;
-	VERT 	*tfn = transformedNormals;
-//	SVECTOR 	*tfn = (SVECTOR*)transformedNormals;
-
-	ULONG *sorts = sortedIndex;
+	register long			*tfv = transformedVertices;
+	VERT 					*tfn = transformedNormals;
+	register TMD_P_GT4I		*opcd;
+	PSIMODELCTRL			*modctrl = &PSImodelctrl;
+	int						primsleft,lightmode;
+	ULONG					*sorts = sortedIndex;
+	ULONG					sortBucket = 0;
 								  
 	primsleft = sortCount;
 	if (!primsleft)
@@ -1260,7 +1262,7 @@ static void psiDrawSortedPrimitives(int depth)
 	{
 		if (opcd==0)
 		{
-			(int)opcd = *(sorts++);
+			(int)opcd = sorts[sortBucket++];
 			continue;
 		}
 
@@ -1308,7 +1310,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyFT3(si);
 				//si->code = op->cd | modctrl->semitrans;
-				ENDPRIM(si, depth, POLY_FT3);
+				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT3);
 
 				op = op->next;
 				break;
@@ -1357,7 +1359,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyFT4(si);
 				//si->code = op->cd | modctrl->semitrans;
- 				ENDPRIM(si, depth, POLY_FT4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
 				op = op->next;
 				break;
 #undef si
@@ -1404,7 +1406,7 @@ static void psiDrawSortedPrimitives(int depth)
 				}
 				setPolyGT3(si);
 				//si->code = op->cd | modctrl->semitrans;
-				ENDPRIM(si, depth, POLY_GT3);
+				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT3);
 				op = op->next;
 				break;
 #undef si
@@ -1436,6 +1438,7 @@ static void psiDrawSortedPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_ncct();
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldrgb(&op->r3);
 						gte_ldv0(&tfn[op->v3]);
 						gte_nccs();			// NormalColorCol
@@ -1464,7 +1467,7 @@ static void psiDrawSortedPrimitives(int depth)
 		
 				setPolyGT4(si);
 				//si->code = op->cd | modctrl->semitrans;
- 				ENDPRIM(si, depth, POLY_GT4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT4);
 				(int)op = op->next;
 				break;
 
@@ -1521,7 +1524,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				si->code = GPU_COM_TF4 | modctrl->semitrans;
 		
- 				ENDPRIM(si, depth, POLY_FT4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
 				op = op->next;
 			}
 			break;
@@ -1561,6 +1564,7 @@ static void psiDrawSortedPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_nct();			
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldv0(&tfn[op->v3]);
 						gte_ncs();			// NormalColorCol
 						gte_strgb(&si->r3);
@@ -1582,7 +1586,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyG4(si);
 				//si->code = op->cd | modctrl->semitrans;
- 				ENDPRIM(si, depth, POLY_G4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G4);
 				op = op->next;
 				break;
 #undef si
@@ -1631,7 +1635,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				setPolyG3(si);
 				//si->code = op->cd | modctrl->semitrans;
-				ENDPRIM(si, depth, POLY_G3);
+				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G3);
 				op = op->next;
 				break;
 #undef si
@@ -1798,7 +1802,6 @@ void psiDrawPrimitives(int depth)
 				
 				if (!(op->dummy & psiDOUBLESIDED) && (clipflag >= 0) )
 					break;								// Back face culling
-				
 
 				gte_stsxy3_gt3(si);
 			
@@ -1883,6 +1886,7 @@ void psiDrawPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_nct();
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldv0(&tfn[op->v3]);
 						gte_ncs();			
 						gte_strgb(&si->r3);
@@ -1984,7 +1988,7 @@ void psiDrawPrimitives(int depth)
 
 				gte_stopz(&clipflag);
 
-	//			if (clipflag >= 0) break; 								// Back face culling
+				// Back face culling
 				if ( !(op->dummy & psiDOUBLESIDED) && (clipflag >= 0) ) break;									// Back face culling
 				
 				gte_stsxy3_g4(si);
@@ -2007,6 +2011,7 @@ void psiDrawPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_nct();
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldv0(&tfn[op->v3]);
 						gte_ncs();			
 						gte_strgb(&si->r3);
@@ -2137,7 +2142,7 @@ void psiDrawSegments(PSIDATA *psiData)
 		world = (PSIOBJECT*)psiData->objectTable[loop];
 
 	 	gte_SetRotMatrix(&world->matrixscale);			 
-	   	gte_SetTransMatrix(&world->matrixscale);		
+	   	gte_SetTransMatrix(&world->matrixscale);	
 
 		gte_ldv0(&world->meshdata->center);
 
@@ -2145,10 +2150,15 @@ void psiDrawSegments(PSIDATA *psiData)
 
 		gte_rtps_b();
 
-		gte_stsz(&world->depth);
+		gte_stszotz(&world->depth);
+
+		transformVertexListA(world->meshdata->vertop, world->meshdata->vern, tfv, tfd );
 
 		if (modctrl->lighting)
 		{
+			gte_SetRotMatrix(&world->matrix);			 
+	   		gte_SetTransMatrix(&world->matrix);	
+			
 			np = (SVECTOR*)world->meshdata->nortop;
 			j = world->meshdata->norn;
 			
@@ -2160,7 +2170,7 @@ void psiDrawSegments(PSIDATA *psiData)
 				tfn++;
 			}
 		}
-		transformVertexListA(world->meshdata->vertop, world->meshdata->vern, tfv, tfd );
+		
 
 		tfv+=world->meshdata->vern;
 		tfd+=world->meshdata->vern;
@@ -2239,7 +2249,7 @@ void psiDrawSegments(PSIDATA *psiData)
 }
 
 
-void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame)
+static void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame)
 {		  
 	MATRIX		rotmat1;
 	SQKEYFRAME	*tmprotatekeys,*tmprotatekeyslast;
@@ -2311,7 +2321,6 @@ void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame)
 				}
 				else
 				{
-//					t =  ((frame - tmprotatekeyslast->time) << 12)/(tmprotatekeys->time - tmprotatekeyslast->time);
 					t =  tmprotatekeyslast->time;
 					t =  ((frame - t) << 12)/(tmprotatekeys->time - t);
 					ShortquaternionSlerpMatrix((SHORTQUAT *)&tmprotatekeyslast->vect,
@@ -2334,7 +2343,7 @@ void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame)
 	}
 }
 
-void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
+static void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
 {
 	SVKEYFRAME	*tmpscalekeys,*tmpscalekeyslast;
 	USHORT		oldframe=frame;
@@ -2436,10 +2445,6 @@ void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
 			}
 		}	
 
-		world->scale.vx = (( world->scale.vx * PSIactorScale->vx ) >> 12);
-		world->scale.vy = (( world->scale.vy * PSIactorScale->vy ) >> 12);
-		world->scale.vz = (( world->scale.vz * PSIactorScale->vz ) >> 12);
-
 		if(world->child)
 		{
 			psiSetScaleKeyFrames(world->child,oldframe);
@@ -2449,7 +2454,7 @@ void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
 	}
 }
 
-void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
+static void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
 {
 	
 	register SVKEYFRAME	*workingkeys,*tmpmovekeys;
@@ -2529,7 +2534,6 @@ void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
 				}
 				else
 				{
-//					t = ((frame - workingkeys->time) << 12) / (tmpmovekeys->time - workingkeys->time);
 					t = workingkeys->time;
 					t = ((frame - t) << 12) / (tmpmovekeys->time - t);
 					
@@ -2559,7 +2563,15 @@ void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
 }
 
 
-void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
+void psiSetKeyFrames(PSIOBJECT *world, ULONG frame)
+{
+	psiSetMoveKeyFrames(world, frame);
+	psiSetScaleKeyFrames(world, frame);
+	psiSetRotateKeyFrames(world, frame);
+}
+
+
+static void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 {		  
 	MATRIX		rotmat1;
 	SQKEYFRAME	*tmprotatekeys,*tmprotatekeyslast;
@@ -2589,7 +2601,6 @@ void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG 
 				quat[loop].y = tmprotatekeys->vect.y;
 				quat[loop].z = tmprotatekeys->vect.z;
 				quat[loop].w = tmprotatekeys->vect.w;
-				//ShortquaternionGetMatrix((SHORTQUAT *)&tmprotatekeys->vect, &world->matrix);
 			}
 			else
 			{
@@ -2639,7 +2650,6 @@ void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG 
 					quat[loop].y = tmprotatekeys->vect.y;
 					quat[loop].z = tmprotatekeys->vect.z;
 					quat[loop].w = tmprotatekeys->vect.w;
-					//ShortquaternionGetMatrix((SHORTQUAT *)&tmprotatekeys->vect, &world->matrix);
 				}
 				else // work out the differences 
 				{
@@ -2652,7 +2662,6 @@ void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG 
 						quat[loop].y = tmprotatekeys->vect.y;
 						quat[loop].z = tmprotatekeys->vect.z;
 						quat[loop].w = tmprotatekeys->vect.w;
-						//ShortquaternionGetMatrix((SHORTQUAT *)&tmprotatekeys->vect, &world->matrix);
 					}
 					else
 					{
@@ -2676,14 +2685,6 @@ void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG 
 						quat[loop].x = result.vx;
 						quat[loop].y = result.vy;
 						quat[loop].z = result.vz;
-
-						/*
-						ShortquaternionSlerpMatrix((SHORTQUAT *)&tmprotatekeyslast->vect,
-										(SHORTQUAT *)&tmprotatekeys->vect,
-										t,
-										&world->matrix);
-						*/
-
 					}
 				}
 			}
@@ -2782,7 +2783,7 @@ void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG 
 	}
 }
 
-void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
+static void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 {
 	SVKEYFRAME	*tmpscalekeys,*tmpscalekeyslast;
 	LONG		t;
@@ -2809,11 +2810,6 @@ void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b
 				scale[loop].vx = (tmpscalekeys->vect.x)<<2;
 				scale[loop].vy = (tmpscalekeys->vect.y)<<2;
 				scale[loop].vz = (tmpscalekeys->vect.z)<<2;
-				/*
-				world->scale.vx = (tmpscalekeys->vect.x)<<2;
-				world->scale.vy = (tmpscalekeys->vect.y)<<2;
-				world->scale.vz = (tmpscalekeys->vect.z)<<2;
-				*/
 			}
 			else
 			{
@@ -2861,11 +2857,6 @@ void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b
 					scale[loop].vx = (tmpscalekeys->vect.x)<<2;
 					scale[loop].vy = (tmpscalekeys->vect.y)<<2;
 					scale[loop].vz = (tmpscalekeys->vect.z)<<2;
-					/*
-					world->scale.vx = (tmpscalekeys->vect.x)<<2;
-					world->scale.vy = (tmpscalekeys->vect.y)<<2;
-					world->scale.vz = (tmpscalekeys->vect.z)<<2;
-					*/
 				}
 				else // work out the differences 
 				{
@@ -2876,12 +2867,6 @@ void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b
 						scale[loop].vx = (tmpscalekeys->vect.x)<<2;
 						scale[loop].vy = (tmpscalekeys->vect.y)<<2;
 						scale[loop].vz = (tmpscalekeys->vect.z)<<2;
-						/*
-						world->scale.vx = (tmpscalekeys->vect.x)<<2;
-						world->scale.vy = (tmpscalekeys->vect.y)<<2;
-						world->scale.vz = (tmpscalekeys->vect.z)<<2;
-						*/
-
 					}
 					else
 					{
@@ -2921,10 +2906,6 @@ void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b
 		gte_intpl();
 		gte_stlvnl(&world->scale);
 
-		world->scale.vx = (( world->scale.vx * PSIactorScale->vx ) >> 12);
-		world->scale.vy = (( world->scale.vy * PSIactorScale->vy ) >> 12);
-		world->scale.vz = (( world->scale.vz * PSIactorScale->vz ) >> 12);
-
 		if(world->child)
 		{
 			psiSetScaleKeyFrames2(world->child,frame0, frame1, b);
@@ -2934,7 +2915,7 @@ void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b
 	}
 }
 
-void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
+static void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 {
 	
 	register SVKEYFRAME	*workingkeys,*tmpmovekeys;
@@ -2965,12 +2946,6 @@ void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 				move[loop].vx = (tmpmovekeys->vect.x);
 				move[loop].vy = -(tmpmovekeys->vect.y);
 				move[loop].vz = (tmpmovekeys->vect.z);
-
-				/*
-				world->matrix.t[0] = (tmpmovekeys->vect.x);
-				world->matrix.t[1] = -(tmpmovekeys->vect.y);
-				world->matrix.t[2] = (tmpmovekeys->vect.z);
-				*/
 			}
 			else
 			{
@@ -3017,11 +2992,6 @@ void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 					move[loop].vx = (tmpmovekeys->vect.x);
 					move[loop].vy = -(tmpmovekeys->vect.y);
 					move[loop].vz = (tmpmovekeys->vect.z);
-					/*
-					world->matrix.t[0] = (tmpmovekeys->vect.x);
-					world->matrix.t[1] = -(tmpmovekeys->vect.y);
-					world->matrix.t[2] = (tmpmovekeys->vect.z);
-					*/
 				}
 				else // work out the differences 
 				{
@@ -3032,15 +3002,9 @@ void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 						move[loop].vx = (tmpmovekeys->vect.x);
 						move[loop].vy = -(tmpmovekeys->vect.y);
 						move[loop].vz = (tmpmovekeys->vect.z);
-						/*
-						world->matrix.t[0] = (tmpmovekeys->vect.x);
-						world->matrix.t[1] = -(tmpmovekeys->vect.y);
-						world->matrix.t[2] = (tmpmovekeys->vect.z);
-						*/
 					}
 					else
 					{
-	//					t = ((frame - workingkeys->time) << 12) / (tmpmovekeys->time - workingkeys->time);
 						t = workingkeys->time;
 						t = ((frame[loop] - t) << 12) / (tmpmovekeys->time - t);
 						
@@ -3048,8 +3012,6 @@ void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 						gte_ld_intpol_sv0(&tmpmovekeys->vect);
 
 						gte_lddp(t);							// load interpolant
-						//gte_ldlvl(&source);					// load source
-						//gte_ldfc(&dest);						// load dest
 						gte_intpl();							// interpolate (8 cycles)
 						gte_stlvnl(&dest);						// store interpolated vector
 
@@ -3079,6 +3041,14 @@ void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 }
 
 
+void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend)
+{
+	psiSetMoveKeyFrames2(world, frame0, frame1, blend);
+	psiSetScaleKeyFrames2(world, frame0, frame1, blend);
+	psiSetRotateKeyFrames2(world, frame0, frame1, blend);
+}
+
+
 /**************************************************************************
 	FUNCTION:
 	PURPOSE:	calc matrices relative to camera
@@ -3086,28 +3056,26 @@ void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 	RETURNS:	
 **************************************************************************/
 
-void PSICalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
+void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 {
 
 	while(world)
 	{
 	   	world->matrixscale = world->matrix;
 	   	ScaleMatrix(&world->matrixscale,&world->scale);
+		
+		gte_MulMatrix0(&parent->matrix, &world->matrix, &world->matrix);
+		gte_MulMatrix0(&parent->matrixscale, &world->matrixscale, &world->matrixscale);
+		gte_SetRotMatrix(&parent->matrixscale);
+		gte_SetTransMatrix(&parent->matrixscale);
+		gte_ldlvl(&world->matrixscale.t);
+		gte_rtirtr();
+		gte_stlvl(&world->matrixscale.t);
+			
 
-  		gte_MulMatrix0(&parent->matrix, &world->matrix, &world->matrix);
-  		gte_MulMatrix0(&parent->matrix, &world->matrixscale, &world->matrixscale);
-
-  		gte_SetRotMatrix(&parent->matrixscale);
-  		gte_SetTransMatrix(&parent->matrixscale);
-  		gte_ldlvl(&world->matrix.t);
-  		gte_rtirtr();
-  		gte_stlvl(&world->matrixscale.t);
-  
-  		if(world->child)
-		{
-			PSICalcChildMatrix(world->child, world);
-		}
-
+		if(world->child)
+			psiCalcChildMatrix(world->child, world);
+		
 		world = world->next;
 	}
 }
@@ -3122,16 +3090,10 @@ void PSICalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 void psiCalcWorldMatrix(PSIOBJECT *world)
 {
 	cameraAndGlobalscale = GsWSMATRIX;
-	ScaleMatrix(&cameraAndGlobalscale, PSIrootScale);
-
-//	while(world)
-//	{
+	ScaleMatrix(&cameraAndGlobalscale, PSIactorScale);
 	world->matrixscale = world->matrix;
 	ScaleMatrix(&world->matrixscale,&world->scale);
-
-	gte_MulMatrix0(&cameraAndGlobalscale, &world->matrix, &world->matrix);
-//	gte_MulMatrix0(&cameraAndGlobalscale, &world->matrixscale, &world->matrixscale);
-	gte_MulMatrix0(&GsWSMATRIX, &world->matrixscale, &world->matrixscale);
+	gte_MulMatrix0(&cameraAndGlobalscale, &world->matrixscale, &world->matrixscale);
 	gte_SetRotMatrix(&GsWSMATRIX);
 	gte_SetTransMatrix(&GsWSMATRIX);
 	gte_ldlvl(&world->matrixscale.t);
@@ -3139,13 +3101,9 @@ void psiCalcWorldMatrix(PSIOBJECT *world)
 	gte_stlvl(&world->matrixscale.t);
 
 	if(world->child)
-	{
-		PSICalcChildMatrix(world->child,world);
-	}
-
-//		world = world->next;
-//	}
+		psiCalcChildMatrix(world->child, world);
 }
+
 
 /**************************************************************************
 	FUNCTION:

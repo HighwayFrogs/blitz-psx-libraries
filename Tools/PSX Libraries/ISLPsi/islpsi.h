@@ -186,6 +186,9 @@ typedef struct
 
 } PSIMODELCTRL;
 
+
+// control variables
+
 extern PSIMODELCTRL	PSImodelctrl;
 
 extern VECTOR *PSIactorScale;
@@ -199,7 +202,15 @@ void psiInitialise();
 
 void psiDestroy();
 
+PSIMODEL *psiLoad(char *psiName);
+
+PSIMODEL *psiFixup(char *addr);
+
+void psiInitLights();
+
 void psiSetLight(int lightNum, int r, int g, int b, int x, int y, int z);
+
+void psiSetAmbient(int r, int g, int b);
 
 void psiDisplay(PSIMODEL* psiModel);
 
@@ -207,27 +218,11 @@ PSIOBJECT *psiObjectScan(PSIOBJECT *obj, char *name);
 
 PSIMODEL *psiCheck(char *psiName);
 
-PSIMODEL *psiLoad(char *psiName);
-
-void psiDrawLine(ULONG depth);
-
 void psiDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri);
 
-void psiUpdateAnimation();
+void psiSetKeyFrames(PSIOBJECT *world, ULONG frame);
 
-void psiDebug();
-
-void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame);
-
-void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame);
-
-void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame);
-
-void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
-
-void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
-
-void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
+void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
 
 void psiInitSortList(int range);
 
