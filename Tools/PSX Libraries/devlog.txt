@@ -1,6 +1,13 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+
+13-1-2000
+=========
+
+The sound library has a problem, where it won't finished DMA'ing samples to SPU RAM second time around. Switching to CPU transfer seems to have fixed the problem, but it's a bit slower. I'll have a proper look and see if I can fix it better at some point, as I'm a bit busy with PS2 Babel at the moment.
+
+
 11-1-2000
 =========
 
