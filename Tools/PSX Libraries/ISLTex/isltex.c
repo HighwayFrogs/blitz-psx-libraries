@@ -373,7 +373,8 @@ unsigned short textureAddCLUT16(unsigned short *palette)
 
 void textureRemoveCLUT16(unsigned short clut)
 {
-	int	pal, area, found = 0;
+	int	pal, area, page, found = 0;
+	RECT	rect;
 
 	for(pal=0; pal<VRAM_PALETTES; pal++)
 	{
@@ -383,7 +384,7 @@ void textureRemoveCLUT16(unsigned short clut)
 			{
 #ifdef _DEBUG
 				palsused--;
-				//printf("Palette removed: Currently used: %d\n", palsused);
+//				printf("Palette removed: Currently used: %d\n", palsused);
 #endif
 				VRAMpalBlock[pal] = 0;
 				VRAMpalCLUT[pal] = 0;
@@ -396,6 +397,16 @@ void textureRemoveCLUT16(unsigned short clut)
 				{
 //					printf("Freed palette area 0x%x\n", VRAMpalHandle[area]);
 					textureVRAMfree(VRAMpalHandle[area],32,1);	// Free empty palette area
+					rect.x = VRAM_CALCVRAMX(VRAMpalHandle[area]);
+					rect.y = VRAM_CALCVRAMY(VRAMpalHandle[area]);
+					rect.w = 64;
+					rect.h = 8;
+					page = VRAM_GETPAGE(VRAMpalHandle[area]);
+					if ((page+page/VRAM_PAGECOLS) & 1)
+						ClearImage(&rect, 64,64,64);
+					else
+						ClearImage(&rect, 100,100,100);
+
 					VRAMpalHandle[area] = 0;
 				}
 				return;
@@ -665,16 +676,16 @@ void textureUnload(TextureType *txPtr)
 						}
 					}
 				}
-
-				// remove palette
-				if(txPtr->tpage & (1 << 7))
-					textureRemoveCLUT256(txPtr->clut);
-				else
-					textureRemoveCLUT16(txPtr->clut);
-
-				return;
 			}
 		}
+
+		// remove palette
+		if(txPtr->tpage & (1 << 7))
+			textureRemoveCLUT256(txPtr->clut);
+		else
+			textureRemoveCLUT16(txPtr->clut);
+
+		return;
 	}
 
 	page = VRAM_GETPAGE(txPtr->handle);
