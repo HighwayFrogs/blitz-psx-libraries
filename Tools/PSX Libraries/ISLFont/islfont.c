@@ -252,7 +252,8 @@ void fontPrint(psFont *font, short x,short y, char *text, unsigned char r, unsig
 			{
 				letter = &font->txPtr[loop];
 				if ((x>-350)&&(x<320))
-					fontDispChar(letter, x,y-((c>127)?(1):(0)), r,g,b, font->alpha);
+					fontDispChar(letter, x,y, r,g,b, font->alpha);
+					//fontDispChar(letter, x,y-((c>127)?(1):(0)), r,g,b, font->alpha);
 				x += font->pixelwidth[loop]+2;
 			}
 		}
@@ -458,7 +459,8 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 			{
 				letter = &font->txPtr[loop];
 				if ((x>-350)&&(x<320))
-					fontDispChar(letter, x,y-((c>127)?(1):(0)), r,g,b,font->alpha);
+					fontDispChar(letter, x,y, r,g,b,font->alpha);
+					//fontDispChar(letter, x,y-((c>127)?(1):(0)), r,g,b,font->alpha);
 				x += font->pixelwidth[loop]+2;
 			}
 		}
