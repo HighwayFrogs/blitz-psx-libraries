@@ -907,7 +907,7 @@ int sfxGetFreeSoundMemory()
 	}
 	
 	printf("sfxGetFreeSoundMemory:\n----------------------\nTotal: %d bytes used (%d bytes available)\n", sfx2Data.sfx2AllocatedMemory, (512*1024)-sfx2Data.sfx2AllocatedMemory);
-	printf("Samples: %d bytes used\n", (512*1024)-reverbAmount-0x1010);
+	printf("Samples: %d bytes used\n", sfx2Data.sfx2AllocatedMemory-reverbAmount-0x1010);
 	printf("Reverb: %d bytes used\n", reverbAmount);
 	return (512*1024)-sfx2Data.sfx2AllocatedMemory;
 }
