@@ -1,5 +1,5 @@
 !if $(DEBUG) == 1
-OPT = -D_DEBUG -c -O0 -comments-c++ -Wall
+OPT = -D_DEBUG -c -O2 -comments-c++ -Wall
 !else
 OPT = -c -O2 -comments-c++ -Wall
 !endif
@@ -36,6 +36,7 @@ Release\islpsi.lib: psi.obj asm.obj quatern.obj
 	del quatern.obj
 !endif
 
-psi.obj: psi.c psi.h
+psi.obj: psi.c psi.h psitypes.h
 asm.obj: asm.s
 quatern.obj: quatern.c quatern.h
+

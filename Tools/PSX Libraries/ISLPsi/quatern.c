@@ -16,6 +16,10 @@
 #include "islpsi.h"
 #include "psi.h"
 
+typedef struct{
+	SHORT x,y,z,w;
+}SHORTQUAT;
+
 
 
 #define IQEPSILON	4096

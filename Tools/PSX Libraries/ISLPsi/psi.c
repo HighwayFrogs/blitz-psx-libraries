@@ -14,12 +14,16 @@
 #include <stdio.h>
 #include "..\shell\shell.h"
 #include "islpsi.h"
-#include "psi.h"
+#include "psitypes.h"
 #include "quatern.h"
 #include "..\islmem\islmem.h"
 #include "..\islfile\islfile.h"
 #include "..\isltex\isltex.h"
 #include "..\islutil\islutil.h"
+
+typedef struct{
+	SHORT x,y,z,w;
+}SHORTQUAT;
 
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -47,7 +51,7 @@ GsF_LIGHT	flatLight[3];
 MATRIX		lightMat;
 SVECTOR		lightRotVec;
 
-SHORTQUAT squat={ 0,0,0,1 };
+
 
 PSIMODEL *currentPSI;
 char *PSIname=0;
@@ -57,14 +61,10 @@ long *transformedVertices = 0;
 long *transformedDepths = 0;
 VERT *transformedNormals = 0;
 int  tfTotal = 0;
-#ifdef SHOWNORM
+#ifdef _DEBUG
 long *transformedScreenN = 0;
+LINE_F2	polyLine;
 #endif
-
-long	clipflag  __attribute__ ((section("cachedata"))) = 0;
-
-RGBCD ambience={ 128,128,128,0};
-
 
 int	biggestVertexModel=0;
 int	biggestPrimModel=0;
@@ -100,8 +100,6 @@ POLY_FT4 *testsi;
 
 #define DEFAULTDEPTHSHIFT 1
 
-ACTORLIST	actorList;
-
 typedef struct {
 	char tname[32];
 } PSITEXTURES;
@@ -110,30 +108,27 @@ PSITEXTURES	*currentTextureList;
 
 PSIMODELCTRL	PSImodelctrl;
 
+int maxDepthRange=0;
 
-void MATHS_Rotate(short angx, short angy, short angz, long movex, long movey, long movez, VECTOR *result)
-{																
-	SVECTOR  MATHS_ang;											
-	VECTOR   MATHS_move;										
-	MATRIX   MATHS_rotMat;										
-																
-	MATHS_ang.vx = (angx);										
-	MATHS_ang.vy = (angy);										
-	MATHS_ang.vz = (angz);										
-																
-	MATHS_move.vx = (movex);								
-	MATHS_move.vy = (movey);									
-	MATHS_move.vz = (movez);									
-																
-	MATHS_rotMat = GsIDMATRIX;									
-	RotMatrixYXZ_gte(&MATHS_ang, &MATHS_rotMat);				
-	ApplyMatrixLV(&MATHS_rotMat, &MATHS_move, (result));		
+ULONG *sortedIndex=0;//[DEPTHINIT];
+int sortCount=0;
 
+long maxDepth=0;
+long minDepth=0;
+int depthRange=0;
+
+static void (*customDrawFunction)(int) = 0;
+
+
+void psiRegisterDrawFunction(void (*drawHandler)(int))
+{
+	customDrawFunction = drawHandler;
 }
+
 
 /***************************************************************************************************/
 
-void PSIResetModelctrl()
+static void psiResetModelctrl()
 {
 	PSImodelctrl.depthoverride = 0;
 	PSImodelctrl.specialmode = OFF;
@@ -153,11 +148,10 @@ void PSIResetModelctrl()
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
-
-void DrawNormals()
+/*
+#ifdef _DEBUG
+static void DrawNormals()
 {
-#ifdef SHOWNORM
-
 	int i;
 	ACTOR *actor;
 	VERT *verts;
@@ -241,17 +235,7 @@ void DrawNormals()
 	FREE(newvects);
 #endif
 }
-/**************************************************************************/
-/**************************************************************************/
-
-int maxDepthRange=0;
-
-ULONG *sortedIndex=0;//[DEPTHINIT];
-int sortCount=0;
-
-long maxDepth=0;
-long minDepth=0;
-int depthRange=0;
+*/
 
 /**************************************************************************
 	FUNCTION:	
@@ -260,7 +244,7 @@ int depthRange=0;
 	RETURNS:	
 **************************************************************************/
 
-void PSIInitSortList(int range)
+void psiInitSortList(int range)
 {
 	if ( range<= maxDepthRange )
 		return;
@@ -273,19 +257,23 @@ void PSIInitSortList(int range)
 	sortedIndex = (ULONG*)MALLOC( range*sizeof(ULONG));
 }
 
+
 /**************************************************************************
 	FUNCTION:	CalcMaxMin	
 	PURPOSE:	run thru transformed depth list, find max and min values
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
-void actorCalcMaxMin(ACTOR *actor)
+
+void psiCalcMaxMin(PSIDATA *psiData)
 {
 	long *tfd = transformedDepths;
 	int i;
 	
 
-	for (i=0; i<maxDepthRange; i++) sortedIndex[i]=0;
+	for (i=0; i<maxDepthRange; i++)
+		sortedIndex[i]=0;
+
 	sortCount=0;
 	maxDepth = minDepth = *tfd;
 	
@@ -303,7 +291,7 @@ void actorCalcMaxMin(ACTOR *actor)
 	if (depthRange>maxDepthRange)
 	{
 		printf("PROGRAM HALTED. \nDEPTH RANGE EXCEEDED !\nINCREASE MAXDEPTHRANGE TO %d (=%d)\n\n",depthRange,maxDepthRange);
-		printf("Object Mesh Name = >%s<\n",actor->modelName);
+		printf("Object Mesh Name = >%s<\n",psiData->modelName);
 		for (;;);
 	}
 	if (depthRange > biggestSortDepth)
@@ -316,7 +304,7 @@ void actorCalcMaxMin(ACTOR *actor)
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
-void PSISetLight(int lightNum, int r, int g, int b, int x, int y, int z)
+void psiSetLight(int lightNum, int r, int g, int b, int x, int y, int z)
 {
 
 	flatLight[lightNum].vx = x;
@@ -342,7 +330,7 @@ void PSISetLight(int lightNum, int r, int g, int b, int x, int y, int z)
 
 GsCOORDINATE2 lighting;
 
-void PSIInitLights()
+void psiInitLights()
 {
 
    	lightMat=GsIDMATRIX;
@@ -351,11 +339,9 @@ void PSIInitLights()
 	lightRotVec.vz = 0;
 	RotMatrixYXZ(&lightRotVec,&lightMat);
 
-	PSISetLight(0, 255,255,255, 256,0,0 );	// white light, left->right
-
-//	PSISetLight(0, 0,0,0, 0,0,0 );
-	//PSISetLight(1, 0,0,0, 0,0,0 );
-	//PSISetLight(2, 0,0,0, 0,0,0 );
+	psiSetLight(0, 0,0,0, 0,0,0 );
+	psiSetLight(1, 0,0,0, 0,0,0 );
+	psiSetLight(2, 0,0,0, 0,0,0 );
 	
  	GsSetAmbient(1024,1024,1024);
 	GsSetLightMode(0);
@@ -365,23 +351,23 @@ void PSIInitLights()
 
 
 /**************************************************************************
-	Function 	: InitPSI()
+	Function 	: psiInitialise()
 	Purpose 	: initialises the linked list of actors and local vars
 	Parameters 	: none
 	Returns 	: none
 	Info 		:
 **************************************************************************/
-void PSIInitialise()
+void psiInitialise()
 {
 
-	PSIResetModelctrl();
+	psiResetModelctrl();
 
-	PSIInitSortList(256);
+	psiInitSortList(256);
 
-	PSIInitLights();
+	psiInitLights();
 
-	actorList.numEntries = 0;
-	actorList.head.next = actorList.head.prev = &actorList.head;
+	//actorList.numEntries = 0;
+	//actorList.head.next = actorList.head.prev = &actorList.head;
 
 	transformedVertices = 0;
 	transformedDepths = 0;
@@ -392,77 +378,22 @@ void PSIInitialise()
 	psiModelListLen = 0;
 	pilLibraryLen = 0;
 
-
-}
-/**************************************************************************
-	Function 	: actorAdd()
-	Purpose 	: adds an actor to the linked list
-	Parameters 	: pointer to actor
-	Returns 	: none
-	Info 		:
-**************************************************************************/
-void actorAdd(ACTOR *actor)
-{
-	ACTOR *ptr;
-
-	ptr = actorList.head.next;
-
-	if(actor->next == NULL)
-	{
-		actorList.numEntries++;
-		actor->next = ptr;
-		actor->prev = ptr->prev;
-		ptr->prev->next = actor;
-		ptr->prev = actor;		
-	}
-}
-
-/**************************************************************************
-	Function 	: SubActor()
-	Purpose 	: removes an actor from the linked list
-	Parameters 	: pointer to actor
-	Returns 	: none
-	Info 		:
-**************************************************************************/
-void actorSub(ACTOR *actor)
-{
-
-	if(actor->next != NULL)
-	{
-		actor->prev->next = actor->next;
-		actor->next->prev = actor->prev;
-		actorList.numEntries--;
-		actor->next = NULL;
-	}
-
-}
-/**************************************************************************
-	FUNCTION:	FreeActor
-	PURPOSE:	free all memory used by actor structure
-	PARAMETERS:	ACTOR *
-	RETURNS:	
-**************************************************************************/
-void actorFree(ACTOR *actor)
-{
-	FREE(actor->objectTable);
-	actorSub(actor);
-	FREE(actor);
 }
 
 
+
+
+
 /**************************************************************************
-	Function 	: PSIDestroy()
+	Function 	: psiDestroy()
 	Purpose 	: free all memory used by PSI
 	Parameters 	: 
 	Returns 	: 
 	Info 		:
 **************************************************************************/
-void PSIDestroy()
+void psiDestroy()
 {
 
-	while (actorList.numEntries)
-		actorFree(actorList.head.next);
-	
 	FREE(transformedNormals);
 	FREE(transformedDepths);
 	FREE(transformedVertices);
@@ -488,6 +419,7 @@ void PSIDestroy()
 	
 	if (sortedIndex)
 		FREE(sortedIndex);
+
 	sortedIndex = NULL;
 	maxDepthRange = 0;
 
@@ -495,13 +427,13 @@ void PSIDestroy()
 }
 
 /**************************************************************************
-	FUNCTION:	PSIObjectScan
+	FUNCTION:	psiObjectScan
 	PURPOSE:	Scan object heirarchy for name
 	PARAMETERS:	ASSUMES *name IS UPPER CASE !!
 	RETURNS:	
 **************************************************************************/
 
-PSIOBJECT *PSIObjectScan(PSIOBJECT *obj, char *name)
+PSIOBJECT *psiObjectScan(PSIOBJECT *obj, char *name)
 {
 
 
@@ -509,35 +441,25 @@ PSIOBJECT *PSIObjectScan(PSIOBJECT *obj, char *name)
 	
 	while (obj)
 	{
-//		utilPrintf("<%s>\n",obj->meshdata->name);
-		
 		utilUpperStr(obj->meshdata->name);
 
-		if ( strcmp( obj->meshdata->name, name )==0 ) return obj;
+		if ( strcmp( obj->meshdata->name, name )==0 )
+			return obj;
 		
-		if ( obj->child ){
-			 result = PSIObjectScan(obj->child,name);
-			 if (result) return result;
+		if ( obj->child )
+		{
+			 result = psiObjectScan(obj->child,name);
+			 if (result)
+				 return result;
 		}
+
 		obj = obj->next;
 
 	}	
+
 	return NULL;
 }
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	ASSUMES *name IS UPPER CASE !!
-	RETURNS:	
-**************************************************************************/
 
-PSIOBJECT *PSIFindObject(ACTOR *actor, char *name)
-{
-
-
-	utilPrintf("looking for %s\n",name);
-	return PSIObjectScan(actor->object,name);
-}
 
 /**************************************************************************
 	FUNCTION:	SetPSIObject
@@ -547,129 +469,7 @@ PSIOBJECT *PSIFindObject(ACTOR *actor, char *name)
 **************************************************************************/
 
 
-PSIOBJECT *psiobNext;
-ULONG 	*segTable;
 
-
-void PSISetTree(PSIOBJECT *obj,PSIMESH *mesh)
-{
-
-		*segTable = (ULONG)obj;
-		segTable++;
-
-		obj->meshdata = mesh;
-
-		if (mesh->child)
-		{
-//			utilPrintf("chil->$%x\n",mesh->child);
-			obj->child	  = psiobNext;
-	   		PSISetTree(psiobNext++,mesh->child);
-		}
-		if (mesh->next)
-		{
-//			utilPrintf("next->$%x\n",mesh->next);
-			obj->next  = psiobNext;
-	   		PSISetTree(psiobNext++,mesh->next);
-		}
-}
-
-
-/**************************************************************************
-	FUNCTION:	CreateActor
-	PURPOSE:	create an actor structure from PSIModel data
-	PARAMETERS:	PSIModel*
-	RETURNS:	ACTOR*
-**************************************************************************/
-ACTOR *actorCreate(PSIMODEL *psiModel)
-{
-
-	ULONG len,parts,i;
-	ULONG *amem;
-	ACTOR *actor;
-	PSIOBJECT *psiobRoot;
-	PSIMESH *meshRoot;
-	char actorName[32];
-
-	if (psiModel==NULL) return 0;
-
-	parts = psiModel->noofmeshes;			// number of objects in this model
-
-	len = parts * sizeof(PSIOBJECT);
-	len += sizeof (ACTOR);
-
-	utilPrintf("New actor: %d bytes\n",len);
-	
-	sprintf(actorName,"ACTOR:%s",(char*)psiModel+4);
-	actor = (ACTOR*)MALLOC( len);
-	
-	// flush memory
-	amem = (ULONG*)actor;
-	for (i=0; i<(len/4); i++) *amem++ = 0;
-//	memoryShow();
-
-	actor->flags = 0;
-	if (psiModel->flags & 1) actor->flags = ACTOR_BONED;
-
-
-
-	actor->modelName = &psiModel->name[0];
-
-	actor->numObjects = parts;
-
-	// list of pointers to model objects/meshes
-	actor->objectTable = (ULONG*)MALLOC( parts*sizeof(int));
-
-	// set primitive pointer
-	actor->primitiveList = psiModel->primOffset;
-
-	// set prim counter
-	actor->noofPrims = psiModel->noofPrims;
-
-	actor->noofVerts = psiModel->noofVerts;
-
-
-	meshRoot = (PSIMESH*)psiModel->firstMesh;
-
-	//	set anim frame pointers
-	actor->animation.numAnimations = psiModel->animSegments;
-	actor->animSegments = (USHORT*)psiModel->animSegmentList;	// offest to frame list
-
-	// set up actor structure
-
-	psiobRoot = (PSIOBJECT*)((char*)actor + sizeof(ACTOR));		// object structs follow actor struct
-	psiobNext = psiobRoot+1;
-
-	actor->object = psiobRoot;									// pointer to 1st object
-
-	// fill in next & child pointers
-	segTable = actor->objectTable;
-	PSISetTree(psiobRoot,meshRoot);
-
-	actorAdd(actor);											// add actor to actorList
-
-	actorInitAnim(actor);										// initialise animation structure
-
-	actor->animFrames = psiModel->animEnd;						// total noof frames of animation
-
-	actor->radius = psiModel->radius;
-	
-	PSIInitSortList( (actor->radius*2)+8 );	 					// make enough room to z sort polys
-	actor->size.vx = actor->size.vy = actor->size.vz = 4096;
-
-	if (PSIObjectScan(actor->object,"MOTION"))
-	{
-		utilPrintf("motion bone found\n");
-		actor->flags |= ACTOR_MOTIONBONE;
-	}
-	else utilPrintf("motion bone NOT found\n");
-
-	actor->flags |= ACTOR_DYNAMICSORT;							// by default
-
-	PSISetBoundingRotated(actor,0,0,0,0);						// fill in bounding box info
-
-	return actor;
-
-}
 
 /**************************************************************************
 	FUNCTION:	PageTexture
@@ -677,21 +477,17 @@ ACTOR *actorCreate(PSIMODEL *psiModel)
 	PARAMETERS:	index number+1
 	RETURNS:	pointer to texture TextureType
 **************************************************************************/
-TextureType* PageTexture(USHORT ix)
+
+static TextureType* PageTexture(USHORT ix)
 {
 	TextureType *sprt;
 
-	if (!ix) return 0;
+	if (!ix)
+		return 0;
 
 	ix--;
 
 	sprt = textureFindCRCInAllBanks(utilStr2CRC((char*)&currentTextureList[ix]) );
-/*	if (strcmp((char*)&currentTextureList[ix], "ACMN8A" )==0)
-	{
-		utilPrintf("    texture->%s<- $%x\n",(char*)&currentTextureList[ix],sprt );
-		iansprt=sprt;
-	}
-*/
 	
 	return sprt;
 
@@ -710,7 +506,7 @@ int TF3count=0;
 int F4count=0;
 int F3count=0;
 
-void PSIFixupPrims(PSIMODEL *psiModel)
+static void psiFixupPrims(PSIMODEL *psiModel)
 {
 	TextureType *sprt;
 	int p,a;
@@ -726,125 +522,147 @@ void PSIFixupPrims(PSIMODEL *psiModel)
 		{
 			
 			s = ((TMD_P_GT4I*)primitive)->cd;	// code
-			switch (s &(0xff-2)){
+			switch (s &(0xff-2))
+			{
 
 				case GPU_COM_G3:
-				case GPU_COM_F3:	a = sizeof(TMD_P_FG3I );
-
-							 		((TMD_P_FG3I*)primitive)->in=(sizeof(TMD_P_FG3I)/4)-1;	//ilen
-		 							((TMD_P_FG3I*)primitive)->out=0xc; 						//olen   
-									if (((TMD_P_FG3I*)primitive)->dummy & psiTRANSPAR ) ((TMD_P_FG3I*)primitive)->cd |=2;
-									((TMD_P_FG3I*)primitive)->dummy &= psiDOUBLESIDED; 
-									F3count++;							  
-									break;
+				case GPU_COM_F3:	
+					a = sizeof(TMD_P_FG3I );
+			 		((TMD_P_FG3I*)primitive)->in=(sizeof(TMD_P_FG3I)/4)-1;	//ilen
+					((TMD_P_FG3I*)primitive)->out=0xc; 						//olen   
+					
+					if (((TMD_P_FG3I*)primitive)->dummy & psiTRANSPAR )
+						((TMD_P_FG3I*)primitive)->cd |=2;
+					
+					((TMD_P_FG3I*)primitive)->dummy &= psiDOUBLESIDED; 
+					F3count++;							  
+					break;
 
 				case GPU_COM_G4:
-				case GPU_COM_F4:	a = sizeof(TMD_P_FG4I );
-							 		((TMD_P_FG4I*)primitive)->in=(sizeof(TMD_P_FG4I)/4)-1;	//ilen
-		 							((TMD_P_FG4I*)primitive)->out=0x8; 						//olen   
-									if (((TMD_P_FG4I*)primitive)->dummy & psiTRANSPAR ) ((TMD_P_FG4I*)primitive)->cd |=2;
-									((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
-									F4count++;
-									break;
+				case GPU_COM_F4:	
+					a = sizeof(TMD_P_FG4I );
+					((TMD_P_FG4I*)primitive)->in=(sizeof(TMD_P_FG4I)/4)-1;	//ilen
+		 			((TMD_P_FG4I*)primitive)->out=0x8; 						//olen   
+					
+					if (((TMD_P_FG4I*)primitive)->dummy & psiTRANSPAR )
+						((TMD_P_FG4I*)primitive)->cd |=2;
+					
+					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					
+					F4count++;
+					break;
 
-				case GPU_COM_TF3:	a = sizeof(TMD_P_FT3I );
-									sprt = PageTexture( ((TMD_P_FT3I*)primitive)->clut ); // clut = texture index number
-									if (((TMD_P_FT3I*)primitive)->tpage) ((TMD_P_FT3I*)primitive)->cd |= 2;
-									((TMD_P_FT3I*)primitive)->tpage |= sprt->tpage;
-									((TMD_P_FT3I*)primitive)->clut = sprt->clut;
+				case GPU_COM_TF3:	
+					a = sizeof(TMD_P_FT3I );
+					sprt = PageTexture( ((TMD_P_FT3I*)primitive)->clut ); // clut = texture index number
+					
+					if (((TMD_P_FT3I*)primitive)->tpage) 
+						((TMD_P_FT3I*)primitive)->cd |= 2;
+					
+					((TMD_P_FT3I*)primitive)->tpage |= sprt->tpage;
+					((TMD_P_FT3I*)primitive)->clut = sprt->clut;
 
-							 		((TMD_P_FT3I*)primitive)->in=(sizeof(TMD_P_FT3I)/4)-1;	//ilen
-		 							((TMD_P_FT3I*)primitive)->out=0x7; 						//olen   
+					((TMD_P_FT3I*)primitive)->in=(sizeof(TMD_P_FT3I)/4)-1;	//ilen
+		 			((TMD_P_FT3I*)primitive)->out=0x7; 						//olen   
+					((TMD_P_FT3I*)primitive)->tu0 += sprt->x;
+					((TMD_P_FT3I*)primitive)->tu1 += sprt->x;
+					((TMD_P_FT3I*)primitive)->tu2 += sprt->x;
 
-									((TMD_P_FT3I*)primitive)->tu0 += sprt->x;
-									((TMD_P_FT3I*)primitive)->tu1 += sprt->x;
-									((TMD_P_FT3I*)primitive)->tu2 += sprt->x;
+					((TMD_P_FT3I*)primitive)->tv0 += sprt->y;
+					((TMD_P_FT3I*)primitive)->tv1 += sprt->y;
+					((TMD_P_FT3I*)primitive)->tv2 += sprt->y;
 
-									((TMD_P_FT3I*)primitive)->tv0 += sprt->y;
-									((TMD_P_FT3I*)primitive)->tv1 += sprt->y;
-									((TMD_P_FT3I*)primitive)->tv2 += sprt->y;
-
-									TF3count++;
-									((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
-									break;
+					TF3count++;
+					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					break;
 
 				case GPU_COM_TF4SPR:
-				case GPU_COM_TF4:	a = sizeof(TMD_P_FT4I );
-									sprt = PageTexture( ((TMD_P_FT4I*)primitive)->clut ); // clut= texture index number
+				case GPU_COM_TF4:	
+					a = sizeof(TMD_P_FT4I );
+					sprt = PageTexture( ((TMD_P_FT4I*)primitive)->clut ); // clut= texture index number
 
-									if (((TMD_P_FT4I*)primitive)->tpage) ((TMD_P_FT4I*)primitive)->cd |= 2;
-									((TMD_P_FT4I*)primitive)->tpage |= sprt->tpage;
-									((TMD_P_FT4I*)primitive)->clut = sprt->clut;
+					if (((TMD_P_FT4I*)primitive)->tpage) 
+						((TMD_P_FT4I*)primitive)->cd |= 2;
+						
+					((TMD_P_FT4I*)primitive)->tpage |= sprt->tpage;
+					((TMD_P_FT4I*)primitive)->clut = sprt->clut;
 
-							 		((TMD_P_FT4I*)primitive)->in=(sizeof(TMD_P_FT4I)/4)-1;	//ilen
-		 							((TMD_P_FT4I*)primitive)->out=0x9; 						//olen   
+					((TMD_P_FT4I*)primitive)->in=(sizeof(TMD_P_FT4I)/4)-1;	//ilen
+		 			((TMD_P_FT4I*)primitive)->out=0x9; 						//olen   
 
-									((TMD_P_FT4I*)primitive)->tu0 += sprt->x;
-									((TMD_P_FT4I*)primitive)->tu1 += sprt->x;
-									((TMD_P_FT4I*)primitive)->tu2 += sprt->x;
-									((TMD_P_FT4I*)primitive)->tu3 += sprt->x;
+					((TMD_P_FT4I*)primitive)->tu0 += sprt->x;
+					((TMD_P_FT4I*)primitive)->tu1 += sprt->x;
+					((TMD_P_FT4I*)primitive)->tu2 += sprt->x;
+					((TMD_P_FT4I*)primitive)->tu3 += sprt->x;
 
-									((TMD_P_FT4I*)primitive)->tv0 += sprt->y;
-									((TMD_P_FT4I*)primitive)->tv1 += sprt->y;
-									((TMD_P_FT4I*)primitive)->tv2 += sprt->y;
-									((TMD_P_FT4I*)primitive)->tv3 += sprt->y;
+					((TMD_P_FT4I*)primitive)->tv0 += sprt->y;
+					((TMD_P_FT4I*)primitive)->tv1 += sprt->y;
+					((TMD_P_FT4I*)primitive)->tv2 += sprt->y;
+					((TMD_P_FT4I*)primitive)->tv3 += sprt->y;
 
-									TF4count++;
-									((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
-									break;
+					TF4count++;
+					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					break;
 
-				case GPU_COM_TG3:	a = sizeof(TMD_P_GT3I );
-									sprt = PageTexture( ((TMD_P_GT3I*)primitive)->clut ); // clut= texture index number
-									if (((TMD_P_GT3I*)primitive)->tpage) ((TMD_P_GT3I*)primitive)->cd |= 2;
-									((TMD_P_GT3I*)primitive)->tpage |= sprt->tpage;
-									((TMD_P_GT3I*)primitive)->clut = sprt->clut;
-
-							 		((TMD_P_GT3I*)primitive)->in=(sizeof(TMD_P_GT3I)/4)-1;	//ilen
-		 							((TMD_P_GT3I*)primitive)->out=0x9; 						//olen   
-
-									((TMD_P_GT3I*)primitive)->tu0 += sprt->x;
-									((TMD_P_GT3I*)primitive)->tu1 += sprt->x;
-									((TMD_P_GT3I*)primitive)->tu2 += sprt->x;
-
-									((TMD_P_GT3I*)primitive)->tv0 += sprt->y;
-									((TMD_P_GT3I*)primitive)->tv1 += sprt->y;
-									((TMD_P_GT3I*)primitive)->tv2 += sprt->y;
-
-									TG3count++;
-									((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
-									break;
-
-				case GPU_COM_TG4:	a = sizeof(TMD_P_GT4I );
-									sprt = PageTexture( ((TMD_P_GT4I*)primitive)->clut ); // clut= texture index number
-
-									if (((TMD_P_GT4I*)primitive)->tpage) ((TMD_P_GT4I*)primitive)->cd |= 2;
-									((TMD_P_GT4I*)primitive)->tpage |= sprt->tpage;
-									((TMD_P_GT4I*)primitive)->clut = sprt->clut;
-
-							 		((TMD_P_GT4I*)primitive)->in=(sizeof(TMD_P_GT4I)/4)-1;	//ilen
-		 							((TMD_P_GT4I*)primitive)->out=0xc; 						//olen   
-
-									((TMD_P_GT4I*)primitive)->tu0 += sprt->x;
-									((TMD_P_GT4I*)primitive)->tu1 += sprt->x;
-									((TMD_P_GT4I*)primitive)->tu2 += sprt->x;
-									((TMD_P_GT4I*)primitive)->tu3 += sprt->x;
-
-									((TMD_P_GT4I*)primitive)->tv0 += sprt->y;
-									((TMD_P_GT4I*)primitive)->tv1 += sprt->y;
-									((TMD_P_GT4I*)primitive)->tv2 += sprt->y;
-									((TMD_P_GT4I*)primitive)->tv3 += sprt->y;
+				case GPU_COM_TG3:	
+					a = sizeof(TMD_P_GT3I );
+					sprt = PageTexture( ((TMD_P_GT3I*)primitive)->clut ); // clut= texture index number
+					
+					if (((TMD_P_GT3I*)primitive)->tpage) 
+						((TMD_P_GT3I*)primitive)->cd |= 2;
 									
-									TG4count++;
-									((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					((TMD_P_GT3I*)primitive)->tpage |= sprt->tpage;
+					((TMD_P_GT3I*)primitive)->clut = sprt->clut;
+
+					((TMD_P_GT3I*)primitive)->in=(sizeof(TMD_P_GT3I)/4)-1;	//ilen
+		 			((TMD_P_GT3I*)primitive)->out=0x9; 						//olen   
+
+					((TMD_P_GT3I*)primitive)->tu0 += sprt->x;
+					((TMD_P_GT3I*)primitive)->tu1 += sprt->x;
+					((TMD_P_GT3I*)primitive)->tu2 += sprt->x;
+
+					((TMD_P_GT3I*)primitive)->tv0 += sprt->y;
+					((TMD_P_GT3I*)primitive)->tv1 += sprt->y;
+					((TMD_P_GT3I*)primitive)->tv2 += sprt->y;
+
+					TG3count++;
+					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					break;
+
+				case GPU_COM_TG4:	
+					a = sizeof(TMD_P_GT4I );
+					sprt = PageTexture( ((TMD_P_GT4I*)primitive)->clut ); // clut= texture index number
+
+					if (((TMD_P_GT4I*)primitive)->tpage) 
+						((TMD_P_GT4I*)primitive)->cd |= 2;
+						
+					((TMD_P_GT4I*)primitive)->tpage |= sprt->tpage;
+					((TMD_P_GT4I*)primitive)->clut = sprt->clut;
+
+					((TMD_P_GT4I*)primitive)->in=(sizeof(TMD_P_GT4I)/4)-1;	//ilen
+		 			((TMD_P_GT4I*)primitive)->out=0xc; 						//olen   
+
+					((TMD_P_GT4I*)primitive)->tu0 += sprt->x;
+					((TMD_P_GT4I*)primitive)->tu1 += sprt->x;
+					((TMD_P_GT4I*)primitive)->tu2 += sprt->x;
+					((TMD_P_GT4I*)primitive)->tu3 += sprt->x;
+
+					((TMD_P_GT4I*)primitive)->tv0 += sprt->y;
+					((TMD_P_GT4I*)primitive)->tv1 += sprt->y;
+					((TMD_P_GT4I*)primitive)->tv2 += sprt->y;
+					((TMD_P_GT4I*)primitive)->tv3 += sprt->y;
+									
+					TG4count++;
+					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+					break;
 
 
-									break;
-
-
-				default:	a = 0;
-							utilPrintf("FATAL: don't know that kind of prim...($%x)\n",s);
-							for (;;);
-							break;
+				default:	
+					a = 0;
+					utilPrintf("FATAL: don't know that kind of prim...($%x)\n",s);
+					
+					for (;;);
+					break;
 
 			}
 			primitive += a;
@@ -858,7 +676,7 @@ void PSIFixupPrims(PSIMODEL *psiModel)
 	PARAMETERS:	mesh address, start of model address
 	RETURNS:	nowt
 **************************************************************************/
-void PSIFixupMesh(PSIMESH *mesh)
+void psiFixupMesh(PSIMESH *mesh)
 {
 	int p,i;
 
@@ -874,41 +692,37 @@ void PSIFixupMesh(PSIMESH *mesh)
 
 	// sortlist pointers
 	p = (int)mesh;
-	for (i=0; i<8; i++)	(int)mesh->sortlistptr[i] = p + (int)mesh->sortlistptr[i];
+
+	for (i=0; i<8; i++)	
+		(int)mesh->sortlistptr[i] = p + (int)mesh->sortlistptr[i];
 
 	// child and next pointers
 	if (mesh->child)
 	{
 		(int)mesh->child = (int)mesh + (int)mesh->child;
-		PSIFixupMesh(mesh->child);
+		psiFixupMesh(mesh->child);
 	}
 	if (mesh->next)
 	{
 		(int)mesh->next = (int)mesh + (int)mesh->next;
-		PSIFixupMesh(mesh->next);
+		psiFixupMesh(mesh->next);
 	}
 }
 
 
 /**************************************************************************
-	FUNCTION:	DisplayPSI()
+	FUNCTION:	psiDisplay()
 	PURPOSE:	display PSIMODEL stats
 	PARAMETERS:	PSIMODEL*
 	RETURNS:	nowt
 **************************************************************************/
-void PSIDisplay(PSIMODEL* psiModel)
+void psiDisplay(PSIMODEL* psiModel)
 {
-
 	utilPrintf("Loading model '%s'\n",psiModel->name);
-
 	utilPrintf("PSI Verion no. %d\n",psiModel->version);
-
 	utilPrintf("%d meshes\n",psiModel->noofmeshes);
-
 	utilPrintf("%d vertices\n",psiModel->noofVerts);
-
 	utilPrintf("%d polys\n",psiModel->noofPrims);
-
 	utilPrintf("%d textures.\n",psiModel->noofTextures);
 }
 
@@ -919,11 +733,13 @@ void PSIDisplay(PSIMODEL* psiModel)
 	RETURNS:	
 **************************************************************************/
 
-char *PSIConstructName(char *psiName)
+char *psiConstructName(char *psiName)
 {
 	int i;
 	
-	for ( i=0; i<8; i++) if ( (psiName[i]==0) || (psiName[i]==32) || (psiName[i]=='.') )break;
+	for ( i=0; i<8; i++) 
+		if ( (psiName[i]==0) || (psiName[i]==32) || (psiName[i]=='.') )
+			break;
 
 	psiName[i] = '.';
 	psiName[i+1] = 'P';
@@ -932,6 +748,7 @@ char *PSIConstructName(char *psiName)
 	psiName[i+4] = 0;
 
 	utilUpperStr(psiName);
+
 	return &psiName[0];
 	
 }
@@ -942,7 +759,7 @@ char *PSIConstructName(char *psiName)
 	RETURNS:	
 **************************************************************************/
 
-long PSICRCName(char *psiName)
+long psiCRCName(char *psiName)
 {
 	int i;
 	char str[16];
@@ -955,6 +772,7 @@ long PSICRCName(char *psiName)
 		if ( (psiName[i]==0) || (psiName[i]==32) || (psiName[i]=='.') )break;
 	}
 	str[i] = 0;
+
 	return utilStr2CRC(&str[0]);
 }
 
@@ -966,27 +784,29 @@ long PSICRCName(char *psiName)
 	RETURNS:	pointer to PSIMODEL / null
 **************************************************************************/
 
-PSIMODEL *PSICheck(char *psiName)
+PSIMODEL *psiCheck(char *psiName)
 {
 	int i,crc;
 
-	crc = PSICRCName(psiName);
+	crc = psiCRCName(psiName);
 
 	for ( i=0; i<psiModelListLen; i++)
 	{
-		if ( psiModelListCRC[i] == crc ) return psiModelList[i];
+		if ( psiModelListCRC[i] == crc )
+			return psiModelList[i];
 	}
+
 	return NULL;
 }
 
 
 /**************************************************************************
-	FUNCTION:	PSIFixup()
+	FUNCTION:	psiFixup()
 	PURPOSE:	initialise a psi file, fix up ponters and load textures
 	PARAMETERS:	pointer to PSIMODEL
 	RETURNS:	pointer to PSIMODEL
 **************************************************************************/
-PSIMODEL *PSIFixup(char *addr)
+static PSIMODEL *psiFixup(char *addr)
 {
 	PSIMESH *mesh;
 	int /*lastfilelength,*/i;
@@ -1021,7 +841,7 @@ PSIMODEL *PSIFixup(char *addr)
 			 FREE(transformedVertices);
 			 FREE(transformedDepths);
 			 FREE(transformedNormals);
-#ifdef SHOWNORM
+#ifdef _DEBUG
 			FREE(transformedScreenN);
 #endif
 		}
@@ -1030,7 +850,7 @@ PSIMODEL *PSIFixup(char *addr)
 		transformedNormals = (VERT*)MALLOC( i*sizeof(VERT));
 		biggestVertexModel = i;
 
-#ifdef SHOWNORM
+#ifdef _DEBUG
 		transformedScreenN = (long*)MALLOC( i*sizeof(SVECTOR));
 #endif
 	}
@@ -1049,16 +869,16 @@ PSIMODEL *PSIFixup(char *addr)
 
 	mesh = (PSIMESH*)psiModel->firstMesh;
 
-	PSIFixupMesh(mesh);
+	psiFixupMesh(mesh);
 
-	PSIFixupPrims(psiModel);
+	psiFixupPrims(psiModel);
 
 //	utilPrintf("Load PSI done\n");
 
 	// add to loaded model list (for checking re-loads)
 	psiModelList[psiModelListLen] = psiModel;
 //	strncpy( psiModelListNames[psiModelListLen], PSIname, 16);
-	psiModelListCRC[psiModelListLen] = PSICRCName( PSIname );
+	psiModelListCRC[psiModelListLen] = psiCRCName( PSIname );
 	psiModelListLen++;
 
 	return psiModel;
@@ -1072,7 +892,7 @@ PSIMODEL *PSIFixup(char *addr)
 **************************************************************************/
 
 
-PSIMODEL *PSILoad(char *psiName)
+PSIMODEL *psiLoad(char *psiName)
 {
 	char *addr;
 	//PSIMESH *mesh;
@@ -1080,27 +900,32 @@ PSIMODEL *PSILoad(char *psiName)
 	PSIMODEL *psiModel;
 
 
-	if (sizeof(PSIMODEL) != 192) utilPrintf("\nWARNING: PSIMODEL structure length invalid (%d != 192)\n\n",sizeof(PSIMODEL));
+	if (sizeof(PSIMODEL) != 192)
+		utilPrintf("\nWARNING: PSIMODEL structure length invalid (%d != 192)\n\n",sizeof(PSIMODEL));
 	
 
-	psiModel = PSICheck(psiName);		// already loaded ?
+	psiModel = psiCheck(psiName);		// already loaded ?
 	if (psiModel!=NULL)
 	{
 		utilPrintf("Already loaded file %s\n",psiName);
-		PSIDisplay(psiModel);
+		psiDisplay(psiModel);
 		return psiModel;
 
 	}
 
 	PSIname = psiName;
 
-	if (psiModelListLen>=MAXMODELS) { utilPrintf("jees ! how many models do you expect me to load ?\n"); return 0; }
+	if (psiModelListLen>=MAXMODELS) 
+	{
+		utilPrintf("jees ! how many models do you expect me to load ?\n"); 
+		return 0; 
+	}
 
 
-	psiName = PSIConstructName(psiName);
+	psiName = psiConstructName(psiName);
 	addr = (void *)fileLoad(psiName, &lastfilelength);
 	
-	return PSIFixup(addr);
+	return psiFixup(addr);
 }
 
 /**************************************************************************
@@ -1111,7 +936,7 @@ PSIMODEL *PSILoad(char *psiName)
 **************************************************************************/
 
 
-void *PSILoadPIL(char *pilName)
+void *psiLoadPIL(char *pilName)
 {
 	char *addr;
 	int psiM;
@@ -1137,7 +962,7 @@ void *PSILoadPIL(char *pilName)
 		PSIname = (char*)(psiM);
 		(char*)crcs = (char*)(psiM+16);
 //		utilPrintf("CRC=%x\n",*crcs);
-		PSIFixup( (char*)(psiM+20) );
+		psiFixup( (char*)(psiM+20) );
 	}
 	
 	pilLibraryList[pilLibraryLen] = (long*)addr;
@@ -1154,10 +979,10 @@ void *PSILoadPIL(char *pilName)
 	PARAMETERS:	Depth value
 	RETURNS:	
 **************************************************************************/
-
+/*
 LINE_F2	polyLine;
 
-void PSIDrawLine(ULONG depth)
+static void PSIDrawLine(ULONG depth)
 {
 	LINE_F2	*si;
 	
@@ -1168,12 +993,15 @@ void PSIDrawLine(ULONG depth)
 	si->code = 0x40|PSImodelctrl.semitrans;
   	ENDPRIM(si, depth & 1023, LINE_F2);
 }
+*/
+
 /**************************************************************************
 	FUNCTION:	DrawBox()
 	PURPOSE:	Add box to packet draw list
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
+
 void PSIDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri)
 {
 
@@ -1208,14 +1036,15 @@ Get_Screenxy(VERT *v0,LONG *xy){
 	PARAMETERS:	
 	RETURNS:	
 **************************************************************************/
-void PSISortPrimitives()
+
+static void psiSortPrimitives()
 {
 	register long *tfd = transformedDepths;
 	register long *tfv = transformedVertices;
 	register TMD_P_GT4I	*opcd;
 	PSIMODELCTRL	*modctrl = &PSImodelctrl;
 	int				*sl;
-	//long			clipflag;
+	long			clipflag;
 
 
 	long deep;
@@ -1407,14 +1236,14 @@ void PSISortPrimitives()
 	RETURNS:	
 **************************************************************************/
 
-void PSIDrawSortedPrimitives(int depth)
+static void psiDrawSortedPrimitives(int depth)
 {
 	register PACKET*		packet;
 	register long *tfv = transformedVertices;
 	register TMD_P_GT4I	*opcd;
 
 	PSIMODELCTRL	*modctrl = &PSImodelctrl;
-	VERT	*vp = modctrl->VertTop;
+	//VERT	*vp = modctrl->VertTop;
 	int primsleft,lightmode;//,colr;
 	VERT 	*tfn = transformedNormals;
 //	SVECTOR 	*tfn = (SVECTOR*)transformedNormals;
@@ -1821,12 +1650,12 @@ void PSIDrawSortedPrimitives(int depth)
 	RETURNS:	
 **************************************************************************/
 
-void PSIDrawPrimitives(int depth)
+void psiDrawPrimitives(int depth)
 {
 	register PACKET*		packet;
 	register long *tfv = transformedVertices;
 	register TMD_P_GT4I	*opcd;
-	//long	 clipflag;
+	long	 clipflag;
 	PSIMODELCTRL	*modctrl = &PSImodelctrl;
 	VERT	*vp = modctrl->VertTop;
 	int prims,primsleft,lightmode;
@@ -2277,7 +2106,7 @@ void PSIDrawPrimitives(int depth)
 	RETURNS:	
 **************************************************************************/
 
-void PSIDrawSegments(ACTOR *actor)
+void psiDrawSegments(PSIDATA *psiData)
 {
 	register long	*tfv = transformedVertices;
 	register long	*tfd = transformedDepths;
@@ -2289,13 +2118,13 @@ void PSIDrawSegments(ACTOR *actor)
 	int loop,obs,i,j;
 	VERT	*tfn;
 
-#ifdef SHOWNORM
+#ifdef _DEBUG
 	register long	*tfns = transformedScreenN;
 #endif
 
 	
-	world = actor->object;
-	obs = actor->numObjects;
+	world = psiData->object;
+	obs = psiData->numObjects;
 
 	// transform all the vertices (by heirarchy)
 	// tfv == one long list of transformed vertices
@@ -2305,7 +2134,7 @@ void PSIDrawSegments(ACTOR *actor)
 
 	for (loop = 0; loop < obs; loop++)
 	{
-		world = (PSIOBJECT*)actor->objectTable[loop];
+		world = (PSIOBJECT*)psiData->objectTable[loop];
 
 	 	gte_SetRotMatrix(&world->matrixscale);			 
 	   	gte_SetTransMatrix(&world->matrixscale);		
@@ -2346,7 +2175,7 @@ void PSIDrawSegments(ACTOR *actor)
 	// draw all the primitives (by heirarchy)
 	// tfv = transformedNormals;
 
-	modctrl->PrimTop = (ULONG*)actor->primitiveList;
+	modctrl->PrimTop = (ULONG*)psiData->primitiveList;
 
 //	i = PSIIsVisible(actor);
 //	utilPrintf("viz=%d\n",i);
@@ -2358,10 +2187,10 @@ void PSIDrawSegments(ACTOR *actor)
 		j = DEFAULTDEPTHSHIFT;
 	}
 
-	if (actor->flags & ACTOR_DYNAMICSORT)
+	if (psiData->flags & ACTOR_DYNAMICSORT)
 	{
-	 	actorCalcMaxMin(actor);
-		world = (PSIOBJECT*)actor->objectTable[0];
+	 	psiCalcMaxMin(psiData);
+		world = (PSIOBJECT*)psiData->objectTable[0];
 
 		if (modctrl->depthoverride)
 		{
@@ -2372,17 +2201,20 @@ void PSIDrawSegments(ACTOR *actor)
 			depth = world->depth;
 		}
 		
-		modctrl->PrimLeft = actor->noofPrims;
+		modctrl->PrimLeft = psiData->noofPrims;
 		modctrl->VertTop = world->meshdata->vertop;
-		PSISortPrimitives();
+		psiSortPrimitives();
 		modctrl->polysdrawn = sortCount;
-		PSIDrawSortedPrimitives(depth & 1023);
+		if(customDrawFunction)
+			customDrawFunction(depth & 1023);
+		else
+			psiDrawSortedPrimitives(depth & 1023);
 	}
 	else
 	{
 		for (loop = 0; loop < obs; loop++)
 		{
-			world = (PSIOBJECT*)actor->objectTable[loop];
+			world = (PSIOBJECT*)psiData->objectTable[loop];
 	
 			if (modctrl->depthoverride)
 			{
@@ -2396,18 +2228,18 @@ void PSIDrawSegments(ACTOR *actor)
 			modctrl->VertTop = world->meshdata->vertop;
 		 	modctrl->SortOffs = world->meshdata->sortlistptr[s];
 			modctrl->PrimLeft = world->meshdata->sortlistsize[s];
-			PSIDrawPrimitives(depth);
+			psiDrawPrimitives(depth);
 		}
 	}
 	
 
-#ifdef SHOWNORM
-	DrawNormals();
+#ifdef _DEBUG
+	//DrawNormals();
 #endif
 }
 
 
-void PSISetRotateKeyFrames(PSIOBJECT *world, ULONG frame,int root)
+void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame)
 {		  
 	MATRIX		rotmat1;
 	SQKEYFRAME	*tmprotatekeys,*tmprotatekeyslast;
@@ -2496,15 +2328,13 @@ void PSISetRotateKeyFrames(PSIOBJECT *world, ULONG frame,int root)
 		
 		if(world->child)
 		{
-			root++;
-			PSISetRotateKeyFrames(world->child,frame,root);
-			root--;
+			psiSetRotateKeyFrames(world->child,frame);
 		}
 		world = world->next;
 	}
 }
 
-void PSISetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
+void psiSetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
 {
 	SVKEYFRAME	*tmpscalekeys,*tmpscalekeyslast;
 	USHORT		oldframe=frame;
@@ -2612,14 +2442,14 @@ void PSISetScaleKeyFrames(PSIOBJECT *world, ULONG frame)
 
 		if(world->child)
 		{
-			PSISetScaleKeyFrames(world->child,oldframe);
+			psiSetScaleKeyFrames(world->child,oldframe);
 		}
 
 		world = world->next;
 	}
 }
 
-void PSISetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
+void psiSetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
 {
 	
 	register SVKEYFRAME	*workingkeys,*tmpmovekeys;
@@ -2721,7 +2551,7 @@ void PSISetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
 		}	
 		if(world->child)
 		{
-			PSISetMoveKeyFrames(world->child,frame);
+			psiSetMoveKeyFrames(world->child,frame);
 		}
 		
 		world = world->next;
@@ -2729,7 +2559,7 @@ void PSISetMoveKeyFrames(PSIOBJECT *world, ULONG frame)
 }
 
 
-void PSISetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
+void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 {		  
 	MATRIX		rotmat1;
 	SQKEYFRAME	*tmprotatekeys,*tmprotatekeyslast;
@@ -2946,13 +2776,13 @@ void PSISetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
 		
 		if(world->child)
 		{
-			PSISetRotateKeyFrames2(world->child,frame0, frame1, b);
+			psiSetRotateKeyFrames2(world->child,frame0, frame1, b);
 		}
 		world = world->next;
 	}
 }
 
-void PSISetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
+void psiSetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 {
 	SVKEYFRAME	*tmpscalekeys,*tmpscalekeyslast;
 	LONG		t;
@@ -3097,14 +2927,14 @@ void PSISetScaleKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
 
 		if(world->child)
 		{
-			PSISetScaleKeyFrames2(world->child,frame0, frame1, b);
+			psiSetScaleKeyFrames2(world->child,frame0, frame1, b);
 		}
 
 		world = world->next;
 	}
 }
 
-void PSISetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
+void psiSetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b)
 {
 	
 	register SVKEYFRAME	*workingkeys,*tmpmovekeys;
@@ -3241,182 +3071,11 @@ void PSISetMoveKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, int b)
 
 		if(world->child)
 		{
-			PSISetMoveKeyFrames2(world->child, frame0, frame1, b);
+			psiSetMoveKeyFrames2(world->child, frame0, frame1, b);
 		}
 		
 		world = world->next;
 	}
-}
-
-
-/**************************************************************************
-	FUNCTION:	SetAnimation()
-	PURPOSE:	Set keyframe information for current object frame
-	PARAMETERS:	Model structure, frame number
-	RETURNS:	
-**************************************************************************/
-
-
-void PSISetAnimation(ACTOR *actor, ULONG frame)
-{
-	PSIOBJECT *world;
-	ACTOR_ANIMATION *actorAnim = &actor->animation;
-	animation *anim;
-	long temp0,temp1,temp2;
-	VECTOR result;
-
-	world = actor->object;
-	
-	PSIactorScale = &actor->size;
-
-	PSISetMoveKeyFrames(world, frame);
-
-	PSISetScaleKeyFrames(world, frame);
-
-	PSISetRotateKeyFrames(world, frame,0);
-	
-	
-	actor->accumulator.vx = world->matrix.t[0];
-	actor->accumulator.vy = world->matrix.t[1];
-	actor->accumulator.vz = world->matrix.t[2];
-
-	world->matrix.t[0] -= actor->oldPosition.vx;
-	world->matrix.t[1] -= actor->oldPosition.vy;
-	world->matrix.t[2] -= actor->oldPosition.vz;
-
-//	utilPrintf("add %d (%d)\n",world->matrix.t[1],actor->oldPosition.vy);
-
-	actor->oldPosition = actor->accumulator;
-
-	temp0 = world->matrix.t[0];
-	temp1 = world->matrix.t[1];
-	temp2 = world->matrix.t[2];
-	
-	MATHS_Rotate(world->rotate.vx,world->rotate.vy,world->rotate.vz,temp0,temp1,temp2,&result);
-
-	world->matrix.t[0] = result.vx;
-	world->matrix.t[1] = result.vy;
-	world->matrix.t[2] = result.vz;
-	
-
-	//	utilPrintf("y=%d\n",world->matrix.t[1]);
-
-	if (actorAnim->exclusive)  
-	{
-		anim = (animation*) (actor->animSegments + (actorAnim->currentAnimation*2));
-		if(actorAnim->frame >= anim->animEnd)
-		{
-			actorAnim->frame = anim->animStart;
-			actorAnim->animTime = anim->animStart<<ANIMSHIFT;
-			actorAdjustPosition(actor);
-		}
-		else 
-		{
-			if(actorAnim->frame < anim->animStart)
-			{
-				actorAnim->frame = anim->animEnd;
-				actorAnim->animTime = anim->animEnd <<ANIMSHIFT;
-				actorAdjustPosition(actor);
-			}
-		}
-	}		
-		// Store Root Bone movement
-		// Use Basic Position - IE Set root bone to zero
-
-
-}
-
-void PSISetAnimation2(ACTOR *actor, ULONG frame0, ULONG frame1, ULONG blend)
-{
-	PSIOBJECT *world;
-	ACTOR_ANIMATION *actorAnim = &actor->animation;
-	animation *anim;
-	long temp0,temp1,temp2;
-	VECTOR result;
-
-	world = actor->object;
-	
-	PSIactorScale = &actor->size;
-
-	PSISetMoveKeyFrames2(world, frame0, frame1, blend);
-
-	PSISetScaleKeyFrames2(world, frame0, frame1, blend);
-
-	PSISetRotateKeyFrames2(world, frame0, frame1, blend);
-	
-	/*
-	actor->accumulator.vx = world->matrix.t[0];
-	actor->accumulator.vy = world->matrix.t[1];
-	actor->accumulator.vz = world->matrix.t[2];
-
-	world->matrix.t[0] -= actor->oldPosition.vx;
-	world->matrix.t[1] -= actor->oldPosition.vy;
-	world->matrix.t[2] -= actor->oldPosition.vz;
-
-//	utilPrintf("add %d (%d)\n",world->matrix.t[1],actor->oldPosition.vy);
-
-	actor->oldPosition = actor->accumulator;
-
-	temp0 = world->matrix.t[0];
-	temp1 = world->matrix.t[1];
-	temp2 = world->matrix.t[2];
-	
-	MATHS_Rotate(world->rotate.vx,world->rotate.vy,world->rotate.vz,temp0,temp1,temp2,&result);
-
-	world->matrix.t[0] = result.vx;
-	world->matrix.t[1] = result.vy;
-	world->matrix.t[2] = result.vz;
-	*/
-
-	//	utilPrintf("y=%d\n",world->matrix.t[1]);
-
-	if (actorAnim->exclusive)  
-	{
-		anim = (animation*) (actor->animSegments + (actorAnim->currentAnimation*2));
-		if(actorAnim->frame >= anim->animEnd)
-		{
-			actorAnim->frame = anim->animStart;
-			actorAnim->animTime = anim->animStart<<ANIMSHIFT;
-			actorAdjustPosition(actor);
-		}
-		else 
-		{
-			if(actorAnim->frame < anim->animStart)
-			{
-				actorAnim->frame = anim->animEnd;
-				actorAnim->animTime = anim->animEnd <<ANIMSHIFT;
-				actorAdjustPosition(actor);
-			}
-		}
-	}		
-		// Store Root Bone movement
-		// Use Basic Position - IE Set root bone to zero
-
-
-}
-
-/**************************************************************************
-	FUNCTION:	updateAnimation()
-	PURPOSE:	Set keyframe information for current object frame
-	PARAMETERS:	Model structure, frame number
-	RETURNS:	
-**************************************************************************/
-
-void PSIUpdateAnimation()
-{
-	int loop;
-	ACTOR *actor;
-	
-	loop = actorList.numEntries;
-	actor = actorList.head.next;
-	while (loop)
-	{
-
-		actorUpdateAnimations(actor);
-		actor = actor->next;
-		loop--;
-
-	}	
 }
 
 
@@ -3427,7 +3086,7 @@ void PSIUpdateAnimation()
 	RETURNS:	
 **************************************************************************/
 
-void PSICalcChildMatrix(PSIOBJECT *world,PSIOBJECT *parent)
+void PSICalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 {
 
 	while(world)
@@ -3446,7 +3105,7 @@ void PSICalcChildMatrix(PSIOBJECT *world,PSIOBJECT *parent)
   
   		if(world->child)
 		{
-			PSICalcChildMatrix(world->child,world);
+			PSICalcChildMatrix(world->child, world);
 		}
 
 		world = world->next;
@@ -3460,7 +3119,7 @@ void PSICalcChildMatrix(PSIOBJECT *world,PSIOBJECT *parent)
 	RETURNS:	
 **************************************************************************/
 
-void PSICalcWorldMatrix(PSIOBJECT *world)
+void psiCalcWorldMatrix(PSIOBJECT *world)
 {
 	cameraAndGlobalscale = GsWSMATRIX;
 	ScaleMatrix(&cameraAndGlobalscale, PSIrootScale);
@@ -3495,7 +3154,7 @@ void PSICalcWorldMatrix(PSIOBJECT *world)
 	RETURNS:	
 **************************************************************************/
 
-void PSICalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS)
+void psiCalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS)
 {
 
 	while(world)
@@ -3529,785 +3188,16 @@ void PSICalcLocalMatrix(PSIOBJECT *world,MATRIX *parentM,MATRIX *parentMS)
 
 		if(world->child)
 		{
-			PSICalcLocalMatrix(world->child,&world->matrix,&world->matrixscale);
+			psiCalcLocalMatrix(world->child,&world->matrix,&world->matrixscale);
 		}
 
 		world = world->next;
 	}
 }
 
-/**************************************************************************
-	FUNCTION:
-	PURPOSE:	find min and max xyz from model 'pose'
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
 
-int PSICalcSegments(ACTOR *actor)
+void psiDebug()
 {
-	register PSIOBJECT	*world;
-	int loop,obs,i,j,q,x,y,z,s;
-	long flg;
-	VECTOR	tfv;
-	short *verts;
-	SVECTOR v;
-	BOUNDINGBOX *corners;
-
-	q = 0;
-	obs = actor->numObjects;
-	corners = &actor->bounding;
-
-	corners->minX = corners->maxX = 0;
-	corners->minY = corners->maxY = 0;
-	corners->minZ = corners->maxZ = 0;
-
-	for (loop = 0; loop < obs; loop++)
-	{
-		world = (PSIOBJECT*)actor->objectTable[loop];
-
-	 	gte_SetRotMatrix(&world->matrixscale);
-	   	gte_SetTransMatrix(&world->matrixscale);
-
-		verts=(short*)world->meshdata->vertop;
-		j = world->meshdata->vern;
-
-		for (i=0; i < j; i++)
-		{
-
-			v.vx = *(verts++);
-			v.vy = *(verts++);
-			v.vz = *(verts++);
-
-			RotTrans(&v,&tfv,&flg);
-			
-			verts++;
-
-			x = tfv.vx;
-			y = tfv.vy;
-			z = tfv.vz;
-
-
-			if ( x < corners->minX ) corners->minX = x;
-			if ( x > corners->maxX ) corners->maxX = x;
-			if ( y < corners->minY ) corners->minY = y;
-			if ( y > corners->maxY ) corners->maxY = y;
-			if ( z < corners->minZ ) corners->minZ = z;
-			if ( z > corners->maxZ ) corners->maxZ = z;
-							 
-
-			s = abs(x*x) + abs(y*y) + abs(z*z);
-
-			if (s>q)
-			{
-				q = s;
-			}
-		}
-	}
-
-  	j = utilSqrt(q) >> 16;
-//	utilPrintf("rad=%d (%d)\n",j,actor->radius);
-
-	return j;	
-}
-
-/**************************************************************************
-	FUNCTION:	PSISetBoundingRotated
-	PURPOSE:	set bounding box values for animation frame & rotations
-	PARAMETERS:	
-	RETURNS:	sets values in actor structure's bounding box
-**************************************************************************/
-void PSISetBoundingRotated(ACTOR *actor,int frame,int rotX,int rotY, int rotZ)
-{
-	int x,y,z;
-
-	// save rotations
-	
-	x = actor->object->rotate.vx;	
-	y = actor->object->rotate.vy;	
-	z = actor->object->rotate.vz;	
-
-	actor->object->rotate.vx = rotX;		
-	actor->object->rotate.vy = rotY;
-	actor->object->rotate.vz = rotZ;
-
-	// set the model 'pose'
-	PSISetAnimation(actor, frame);
-
-	PSIrootScale = &actor->object->scale;
-	PSICalcLocalMatrix(actor->object,0,0);
-
-	PSICalcSegments(actor);
-
-	// restore rotations
-		
-	actor->object->rotate.vx = x;		
-	actor->object->rotate.vy = y;
-	actor->object->rotate.vz = z;
-}
-
-/**************************************************************************
-	FUNCTION:	PSISetBounding
-	PURPOSE:	as PSISetBoundingRotated but forces 0 rotation
-	PARAMETERS:	
-	RETURNS:	sets values in actor structure's bounding box
-**************************************************************************/
-void PSISetBounding(ACTOR *actor,int frame)
-{
-		PSISetBoundingRotated(actor,frame,0,0,0);
-}
-
-/**************************************************************************
-	FUNCTION:
-	PURPOSE:	using actor's preset radius, see if it's screen vivible
-	PARAMETERS:	
-	RETURNS:	true / false
-**************************************************************************/
-
-UBYTE PSIIsVisible(ACTOR *actor)
-{
-	//MATRIX *localM;
-	SVECTOR v;
-	long zed,diff,lx,rx,ty,by;
-	DVECTOR	scrxy1;
-	DVECTOR	scrxy2;
-
-	gte_SetRotMatrix(&GsWSMATRIX);					// load viewpoint matrices
-	gte_SetTransMatrix(&GsWSMATRIX);
-
-	v.vx = actor->position.vx;						// use actor's world position
-	v.vy = actor->position.vy;
-	v.vz = actor->position.vz;
-
-	gte_ldv0(&v);									// RotTrans world position
-	gte_rt();
-	gte_stsz(&zed);
-	if ( zed <= 0)
-	{
-		return FALSE;					// return if 'behind' camera
-	}
-  
-
-	if ((zed-actor->radius)>PSImodelctrl.farclip)
-	{
-		return FALSE;								// To far away
-	}
-
-//	localM = &actor->object->matrix;				// local transformation matrix.t includes world position
-//	v.vx = localM->t[0];
-//	v.vy = localM->t[1];
-//	v.vz = localM->t[2];
-
-	gte_ldv0(&v);									// transform 'center' x,y
-	gte_rtps();
-	gte_stsxy(&scrxy1);
-
-	v.vx += actor->radius;							// add model radius
-	gte_ldv0(&v);									// transform radial x,y
-	gte_rtps();
-	gte_stsxy(&scrxy2);
-	
-	diff = abs(scrxy1.vx- scrxy2.vx);				// screen distance to outer edge of radius
-
-	lx = (scrxy1.vx - diff);
-	rx = (scrxy1.vx + diff);
-	diff /= 2;
-	ty = (scrxy1.vy - diff);
-	by = (scrxy1.vy + diff);
-
-	if ( 	(lx < 320) &&
-			(rx > -320)   &&
-			(ty < 120) &&
-			(by > -120 ))
-	{
-		return TRUE;
-	}
-
-	return FALSE;
-
-
-}
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	move actor at actor->position
-	PARAMETERS:	ACTOR *
-	RETURNS:	
-**************************************************************************/
-
-void PSIMoveActor(ACTOR *actor)
-{
-	int i,v,rotcalc,rotate;
-	PSIOBJECT *world;
-	register PSIMODELCTRL	*modctrl = &PSImodelctrl;
-
-   	world = actor->object;
-
-	if ( !(actor->flags & ACTOR_DYNAMICSORT) )
-	{
-		v = 0;
-		if (-PSImodelctrl.whichcamera->vpy < actor->position.vy)
-		{
-			v=4;
-		}
-
-		rotcalc=utilCalcAngle(	PSImodelctrl.whichcamera->vpx - actor->position.vx,
-							PSImodelctrl.whichcamera->vpz - actor->position.vz)&0xffff;
-		rotate=world->rotate.vy+2048; 
-
-		i = utilCalcAngle(	PSImodelctrl.whichcamera->vpx - actor->position.vx,
-						PSImodelctrl.whichcamera->vpz - actor->position.vz)&0xffff;
-		i=((((rotcalc+rotate)&4095)/1024))&3;
-		i += v;
-		modctrl->sorttable=i;
-	}
-
-	PSISetAnimation(actor, actor->animation.frame);
-
-
-	if (actor->flags&ACTOR_MOTIONBONE)
-	{
-		if (actor->flags&ACTOR_HOLDMOTION)
-		{
-			world->matrix.t[0] = actor->position.vx;
-			world->matrix.t[1] = actor->position.vy;
-			world->matrix.t[2] = actor->position.vz;
-		}
-		else
-		{
-			world->matrix.t[0] += actor->position.vx;
-			world->matrix.t[1] += actor->position.vy;
-			world->matrix.t[2] += actor->position.vz;
-			actor->position.vx = world->matrix.t[0];
-			actor->position.vy = world->matrix.t[1];
-			actor->position.vz = world->matrix.t[2];
-		}
-	}
-}
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	draw actor at actor->position
-	PARAMETERS:	ACTOR *
-	RETURNS:	
-**************************************************************************/
-
-void PSIDrawActor(ACTOR *actor)
-{
-	//int i,v,rotcalc,rotate;
-	PSIOBJECT *world;
-	//register PSIMODELCTRL	*modctrl = &PSImodelctrl;
-
-   	world = actor->object;
-
-	if(actor->flags&ACTOR_MOTIONBONE)
-	{
-		world->matrix.t[0] = actor->position.vx;
-		world->matrix.t[1] = actor->position.vy;
-		world->matrix.t[2] = actor->position.vz;
-	}
-	else
-	{
-		world->matrix.t[0] += actor->position.vx;
-		world->matrix.t[1] += actor->position.vy;
-		world->matrix.t[2] += actor->position.vz;
-	}
-
-	PSIrootScale = &actor->object->scale;
-	
-	PSICalcWorldMatrix(actor->object);
-//	PSICalcMatrix(actor->object);
-
-	PSIDrawSegments(actor);
-}
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	draw all actors in actorList
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void PSIDraw()
-{
-
-	int loop;
-	PSIOBJECT *world;
-	ACTOR *tempActor;
-
- 	GsSetAmbient(ambience.r<<4,ambience.g<<4,ambience.b<<4);
-
-	loop = actorList.numEntries;
-	tempActor = actorList.head.next;
-	
-	while (loop)
-	{
-		world = tempActor->object;
-		if (loop==1)
-		{
-			world->rotate.vy = squat.y;
-		}
-
-		PSIMoveActor(tempActor);
-
-		PSIDrawActor(tempActor);
-
-		tempActor = tempActor->next;
-		loop--;
-	}
-}
-
-
-
-void PSIDebug()
-{
-
-}
-
-/**************************************************************************/
-// ANIMATION FUNCTIONS
-/**************************************************************************/
-
-
-
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorInitAnim(ACTOR *actor)
-{
-	actor->animation.currentAnimation = -1;
-
-	actor->animation.queueAnimation[0] = -1;
-	actor->animation.queueAnimation[1] = -1;
-	actor->animation.queueAnimation[2] = -1;
-	actor->animation.queueAnimation[3] = -1;
-	actor->animation.queueAnimation[4] = -1;
-	actor->animation.loopAnimation = YES;//NO;
-	actor->animation.numberQueued = 0;
-	actor->animation.animTime = 0;
-	actor->animation.reachedEndOfAnimation = FALSE;
-}
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorFlushQueue(ACTOR *actor)
-{
-	int i;
-
-	actor->animation.numberQueued = 0;
-
-	for(i = 0;i < ANIM_QUEUE_LENGTH;i++)
-	{
-		actor->animation.queueAnimation[i] = -1;
-		actor->animation.queueAnimationSpeed[i] = 1;
-	}
-}
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorAnimate(ACTOR *actor, int animNum, char loop, char queue, int speed, char skipendframe)
-{
-	ACTOR_ANIMATION *actorAnim = &actor->animation;
-	animation *anim;
-	int	actualSpeed;
-
-	
-	if(actorAnim->numAnimations == 0)
-	{
-		return;
-	}
-
-	if( animNum >= actorAnim->numAnimations )
-	{
-		utilPrintf("anim index number out of range.\n");
-		return;
-	}
-
-	
-	if( (actorAnim->currentAnimation == animNum) &&
-		(queue == NO) && 
-		(actorAnim->reachedEndOfAnimation == FALSE) &&
-		( speed == actorAnim->animationSpeed) )
-	{
-		actorAnim->loopAnimation = loop;
-		actorFlushQueue(actor);
-		return;
-	}
-
-//	if(animNum > actorAnim->numAnimations) animNum = 0;
-
-	if(speed == 0)
-	{
-		actualSpeed = 256;
-	}
-	else
-	{
-		actualSpeed = speed;
-	}
-
-	actorAnim->exclusive = skipendframe;
-	
-	if(queue == NO)
-	{
-		actorAdjustPosition(actor);
-		actorAnim->currentAnimation = animNum;
-		actorAnim->loopAnimation = loop;
-		actorAnim->animationSpeed = actualSpeed;
-		actorAnim->reachedEndOfAnimation = FALSE;
-		anim = (animation*)(actor->animSegments + (actorAnim->currentAnimation*2));
-		actorAnim->animTime = anim->animStart << ANIMSHIFT;
-		actorAnim->frame = anim->animStart;
-		actorFlushQueue(actor);
-		if(actualSpeed < 0)
-		{
-			actorAnim->animTime = anim->animEnd << ANIMSHIFT;
-		}
-	}
-	else
-	{
-		if(actorAnim->currentAnimation == -1)
-		{
-			actorAnim->currentAnimation = animNum;
-			actorAnim->loopAnimation = loop;
-			actorAnim->animationSpeed = actualSpeed;
-		}
-		else
-		{
-			if(actorAnim->numberQueued == 5)
-			{
-				return;
-			}
-			actorAnim->queueAnimation[actorAnim->numberQueued] = animNum;
-			actorAnim->queueLoopAnimation[actorAnim->numberQueued] = loop;
-			actorAnim->queueAnimationSpeed[actorAnim->numberQueued] = actualSpeed;
-			actorAnim->numberQueued++;
-		}
-	}
-
-}
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorSetAnimationSpeed(ACTOR *actor, int speed)
-{
-	actor->animation.animationSpeed = speed;
-}
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorAdjustPosition(ACTOR *actor)
-{
-//	utilPrintf("y = %d\n",actor->oldPosition.vy);
-
-	actor->oldPosition.vx = 0;//actor->position.vx;// actor->accumulator.vx;
-	actor->oldPosition.vy = 0;//actor->position.vy;//actor->accumulator.vy;
-	actor->oldPosition.vz = 0;//actor->position.vz;//actor->accumulator.vz;
-	
-
-	actor->accumulator.vx = 0;
-	actor->accumulator.vy = 0;
-	actor->accumulator.vz = 0;
-
-//	actor->position = actor->oldPosition;
-
-//	actor->position.vx = actor->position.vy = actor->position.vz = 0;
-
-}
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorUpdateAnimations(ACTOR *actor)
-{
-	ACTOR_ANIMATION *actorAnim = &actor->animation;
-	animation *anim;
-	int i;
-
-	//reject all objects which have no animation
-	if(actorAnim->numAnimations == 0)
-		return;
-
-	if(actorAnim->currentAnimation < 0)
-		return;
-
-	anim = (animation*) (actor->animSegments + (actorAnim->currentAnimation*2));
-	
-	actorAnim->reachedEndOfAnimation = FALSE;
-	actorAnim->animTime += actorAnim->animationSpeed;
-
-	actorAnim->frame = actorAnim->animTime >> ANIMSHIFT;
-	
-	if( ((actorAnim->frame > anim->animEnd) || (actorAnim->frame < anim->animStart)) &&
-	 (actorAnim->loopAnimation == NO))
-	{
-		actorAnim->frame = Bound(actorAnim->frame,anim->animStart,anim->animEnd);
-		actorAnim->animTime = actorAnim->frame << ANIMSHIFT;
-		actorAnim->reachedEndOfAnimation = actorAnim->currentAnimation+1;
-
-		//queue stuff - do this later
-		if(actorAnim->queueAnimation[0] != -1)
-		{
-//			SetAnimCallBack(temp, actorAnim->anims[actorAnim->queueAnimation[0]].animationSet);
-
-			actorAnim->currentAnimation = actorAnim->queueAnimation[0];//actorAnim;
-			actorAnim->loopAnimation = actorAnim->queueLoopAnimation[0];//loop;
-			actorAnim->animationSpeed = actorAnim->queueAnimationSpeed[0];//speed;
-			if(actorAnim->animationSpeed < 0)
-			{
-				actorAnim->animTime = actor->animSegments[actorAnim->currentAnimation*2 +1] <<ANIMSHIFT;
-			}
-			else
-			{
-				actorAnim->animTime = actor->animSegments[actorAnim->currentAnimation*2] <<ANIMSHIFT;
-			}
-
-			for(i = 0;i < ANIM_QUEUE_LENGTH - 1;i++)
-			{
-				actorAnim->queueAnimation[i] = actorAnim->queueAnimation[i + 1];
-				actorAnim->queueLoopAnimation[i] = actorAnim->queueLoopAnimation[i + 1];
-				actorAnim->queueAnimationSpeed[i] = actorAnim->queueAnimationSpeed[i + 1];
-			}
-			actorAnim->queueAnimation[ANIM_QUEUE_LENGTH - 1] = -1;
-			actorAnim->queueLoopAnimation[ANIM_QUEUE_LENGTH - 1] = -1;
-			actorAnim->queueAnimationSpeed[ANIM_QUEUE_LENGTH - 1] = -1;
-			if(actorAnim->numberQueued >0) 
-			{
-				actorAnim->numberQueued--;
-			}
-		}
-	}
-	else
-	{
-		if(actorAnim->frame > anim->animEnd)
-		{
-			actorAnim->frame = anim->animStart;
-			actorAnim->animTime = anim->animStart<<ANIMSHIFT;
-			actorAdjustPosition(actor);
-		}
-		else 
-		{
-			if(actorAnim->frame < anim->animStart)
-			{
-				actorAnim->frame = anim->animEnd;
-				actorAnim->animTime = anim->animEnd <<ANIMSHIFT;
-				actorAdjustPosition(actor);
-			}
-		}
-	}
-}
-
-/**************************************************************************
-	FUNCTION:	
-	PURPOSE:	
-	PARAMETERS:	
-	RETURNS:	
-**************************************************************************/
-void actorDrawRadiusBox(ACTOR *actor)
-{
-
-	BOUNDINGBOX *corners;
-	SVECTOR v;
-	//long lx,rx,ty,by,ison;
-	DVECTOR scrxy1,scrxy2;
-
-//	PSISetBoundingRotated(actor,actor->animation.frame,actor->object->rotate.vx,actor->object->rotate.vy,actor->object->rotate.vz);
-//	PSISetBounding(actor,0);
-
-	gte_SetRotMatrix(&GsWSMATRIX);
-	gte_SetTransMatrix(&GsWSMATRIX);
-
-	corners = &actor->bounding;
-//////////////
-	corners->maxX = actor->radius;
-	corners->maxY = actor->radius;
-	corners->maxZ = actor->radius;
-
-	corners->minX = -actor->radius;
-	corners->minY = -actor->radius;
-	corners->minZ = -actor->radius;
-
-////////////
-
-
-	polyLine.r0 = 240;
-	polyLine.g0 = 0;
-	polyLine.b0 = 240;
-
-	v.vx = corners->minX+actor->position.vx;
-	v.vy = corners->minY+actor->position.vy;
-	v.vz = corners->minZ+actor->position.vz;
-	gte_ldv0(&v);
-	gte_rtps();
-	gte_stsxy(&scrxy1);
-	polyLine.x0 = scrxy1.vx;
-	polyLine.y0 = scrxy1.vy;
-
-		v.vx = corners->minX+actor->position.vx;
-		v.vy = corners->minY+actor->position.vy;
-		v.vz = corners->maxZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-		v.vx = corners->maxX+actor->position.vx;
-		v.vy = corners->minY+actor->position.vy;
-		v.vz = corners->minZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-	
-		v.vx = corners->minX+actor->position.vx;
-		v.vy = corners->maxY+actor->position.vy;
-		v.vz = corners->minZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-	v.vx = corners->maxX+actor->position.vx;
-	v.vy = corners->maxY+actor->position.vy;
-	v.vz = corners->minZ+actor->position.vz;
-	gte_ldv0(&v);
-	gte_rtps();
-	gte_stsxy(&scrxy1);
-	polyLine.x0 = scrxy1.vx;
-	polyLine.y0 = scrxy1.vy;
-
-		v.vx = corners->minX+actor->position.vx;
-		v.vy = corners->maxY+actor->position.vy;
-		v.vz = corners->minZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-		v.vx = corners->maxX+actor->position.vx;
-		v.vy = corners->minY+actor->position.vy;
-		v.vz = corners->minZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-	
-		v.vx = corners->maxX+actor->position.vx;
-		v.vy = corners->maxY+actor->position.vy;
-		v.vz = corners->maxZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-
-	v.vx = corners->maxX+actor->position.vx;
-	v.vy = corners->minY+actor->position.vy;
-	v.vz = corners->maxZ+actor->position.vz;
-	gte_ldv0(&v);
-	gte_rtps();
-	gte_stsxy(&scrxy1);
-	polyLine.x0 = scrxy1.vx;
-	polyLine.y0 = scrxy1.vy;
-
-		v.vx = corners->maxX+actor->position.vx;
-		v.vy = corners->minY+actor->position.vy;
-		v.vz = corners->minZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-		v.vx = corners->minX+actor->position.vx;
-		v.vy = corners->minY+actor->position.vy;
-		v.vz = corners->maxZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-	
-		v.vx = corners->maxX+actor->position.vx;
-		v.vy = corners->maxY+actor->position.vy;
-		v.vz = corners->maxZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-	v.vx = corners->minX+actor->position.vx;
-	v.vy = corners->maxY+actor->position.vy;
-	v.vz = corners->maxZ+actor->position.vz;
-	gte_ldv0(&v);
-	gte_rtps();
-	gte_stsxy(&scrxy1);
-	polyLine.x0 = scrxy1.vx;
-	polyLine.y0 = scrxy1.vy;
-
-		v.vx = corners->maxX+actor->position.vx;
-		v.vy = corners->maxY+actor->position.vy;
-		v.vz = corners->maxZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
-		v.vx = corners->minX+actor->position.vx;
-		v.vy = corners->maxY+actor->position.vy;
-		v.vz = corners->minZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-	
-		v.vx = corners->minX+actor->position.vx;
-		v.vy = corners->minY+actor->position.vy;
-		v.vz = corners->maxZ+actor->position.vz;
-		gte_ldv0(&v);
-		gte_rtps();
-		gte_stsxy(&scrxy2);
-		polyLine.x1 = scrxy2.vx;
-		polyLine.y1 = scrxy2.vy;
-		PSIDrawLine(0);
-
 
 }
 

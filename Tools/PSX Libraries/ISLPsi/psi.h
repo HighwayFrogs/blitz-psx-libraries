@@ -1,16 +1,11 @@
 
-#ifndef _PSI_H_
-#define _PSI_H_
+
+#ifndef __PSITYPES_H__
+#define __PSITYPES_H__
 
 
 
 #define GPU_COM_TF4SPR (0x64)
-
-
-//#define TOOMANYPOLYS(A,B) 	(A+(LONG)GsOUT_PACKET_P)>(ULONG)(CurrentPolyList->topofdrawlist[CurrentPolyList->dblbuf])
-
-#define MAXDEPTH (0x0fff)
-#define MAXPACKETSIZE	24
 
 #define YES		1
 #define TRUE	1
@@ -157,35 +152,5 @@ typedef struct {
 #define psiTRANSPAR		2
 //#define GOURAUD     	512
 
-typedef struct{
-	SHORT x,y,z,w;
-}SHORTQUAT;
 
-#define ANIMSHIFT 8
-
-
-typedef struct {
-	short animStart;
-	short animEnd;
-	} animation;
-
-
-
-typedef struct 
-{
-	ACTOR	head;
-	int	 	numEntries;
-}ACTORLIST;
-
-extern ACTORLIST	actorList;
-
-#define ACTOR_DYNAMICSORT 1
-#define ACTOR_HOLDMOTION 2
-#define ACTOR_BONED		 4
-#define ACTOR_MOTIONBONE 8
-
-
-extern VECTOR *PSIactorScale;
-extern VECTOR *PSIrootScale;
-
-#endif
+#endif //__PSITYPES_H__
