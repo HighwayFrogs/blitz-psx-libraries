@@ -62,7 +62,7 @@ int memoryInitialise(unsigned long base, unsigned long size, unsigned long maxAl
 	pool.maxAllocs = maxAllocs;
 	memoryReset();
 	printf("\nmemoryInitialise: base = 0x%x, size = 0x%x", base, size);
-	printf("\nmemoryInitialise: pool.base = 0x%x, pool.size = 0x%x, pool top = 0x%x\n",pool.base, pool.size, pool.base+pool.size);
+	printf("\nmemoryInitialise: pool.base = 0x%x, pool.size = 0x%x, pool.top = 0x%x\n",pool.base, pool.size, pool.base+pool.size);
 	return 0;
 }
 
@@ -92,7 +92,6 @@ static void ShowMemBytes(char *buf, unsigned char *src, int nbytes)
 void memoryDestroy()
 {
 	int		loop;
-	char	buf[40];
 
 #ifdef _DEBUG
 	printf("\nmemoryDestroy: usage peaked @ %d bytes (%d Kb)", pool.peak, pool.peak>>10);
@@ -102,8 +101,6 @@ void memoryDestroy()
 	{
 		if (pool.blocks[loop].inuse)
 		{
-			//ShowMemBytes(buf, (unsigned char *)(pool.base+pool.size-pool.blocks[loop].size-pool.blocks[loop].offset), 32);
-
 			printf("\nmemoryDestroy: leak @ 0x%x, size %d", 
 					pool.base+pool.size-pool.blocks[loop].size-pool.blocks[loop].offset,
 					pool.blocks[loop].size);

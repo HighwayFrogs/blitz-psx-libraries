@@ -17,10 +17,14 @@
 // FlatPacker magic number
 #define FLA_MAGIC			0x32414c46			// Magic number 'FLA2' INTEL
 
-static char FILEIO_PCROOT[64]; //	"C:\\PSX\\ACTION\\CD\\"
-static char FILEIO_CDINDEX[64]; //	"\\ACTION.DAT;1"
+#ifdef _DEBUG
+static char FILEIO_PCROOT[64];	//	"C:\\PSX\\MYGAME\\CD\\"
+#else
+static char FILEIO_CDINDEX[64]; //	"\\MYGAME.DAT;1"
+#endif
 
-typedef struct _FileIODataType {
+typedef struct _FileIODataType
+{
 	int				DATsector;
 	unsigned char	*index;
 	unsigned char	CDresult[8];
@@ -207,9 +211,14 @@ static void fileCDInitialise(char *fileSystem)
 {
 	strcpy(FILEIO_CDINDEX, fileSystem);
 	CdInit();
+
 	fileIO.index = MALLOC(4*2048);
+
 	while(fileCDreadIndex(FILEIO_CDINDEX))
+	{
 		printf("Problem reading CD index - retry\n");
+	}
+
 	printf("Read CD index\n");
 }
 
