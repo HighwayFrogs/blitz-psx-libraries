@@ -44,6 +44,7 @@ typedef struct _StrDataType
 		u_short		y;
 		u_short		width;						// Stream width and height.
 		u_short		height;
+		u_short		dispX, dispY;				// display environment offsets
 		u_long		endFrame;					// Last frame No.
 		u_long		vlcBufSize;					// Size of each VLC buffer (including header).
 		u_short		volume;						// Left and Right ADPCM volume.

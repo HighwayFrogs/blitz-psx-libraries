@@ -227,15 +227,14 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 	if(palMode)
 	{
 		FRAME_Y = 256;
-		SCREEN_X = 0;
-		SCREEN_Y = 18;
 	}
 	else
 	{
 		FRAME_Y = 240;
-		SCREEN_X = 0;
-		SCREEN_Y = 0;
 	}
+
+	SCREEN_X = str->dispX;
+	SCREEN_Y = str->dispY;
 
 	vlc_table_ptr = MALLOC(sizeof(DECDCTTAB));
     DecDCTvlcBuild(&vlc_table_ptr[0]);			// expand compressed vlc parameter data
