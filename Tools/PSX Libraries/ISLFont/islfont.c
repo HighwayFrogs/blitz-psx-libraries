@@ -156,7 +156,7 @@ static void fontDispChar(TextureType *tex, short x,short y, unsigned char r, uns
 	setSemiTrans(ft4, alpha);
 	ft4->tpage = tex->tpage;
 	if(alpha)
-		SETSEMIPRIM(ft4, SEMITRANS_ADD);
+		SETSEMIPRIM(ft4, alpha);
 	ft4->clut = tex->clut;
 	ENDPRIM(ft4, 0, POLY_FT4);
 }
