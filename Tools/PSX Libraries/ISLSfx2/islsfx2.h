@@ -273,13 +273,13 @@ int sfxSetChannelReverb(int channel, int status);
 
 
 /**************************************************************************
-	FUNCTION:	sfxGetChannelReverb
-	PURPOSE:	Get reverb status for a channel
-	PARAMETERS:	channel number (0 - 23)
-	RETURNS:	1 if on, 0 if off, -1 if failure
+	FUNCTION:	sfxGetFreeSoundMemory
+	PURPOSE:	Print the amount of free SPU ram
+	PARAMETERS:	
+	RETURNS:	free ram in bytes
 **************************************************************************/
 
-int sfxGetChannelReverb(int channel);
+int sfxGetFreeSoundMemory();
 
 
 #endif //__ISLSFX2_H__

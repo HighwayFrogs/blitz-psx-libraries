@@ -27,6 +27,7 @@ typedef struct _Sfx2Data {
 	int				sfx2SampleVolume;				// global sample volume (0 - 255)
 	int				sfx2Reverb;						// reverb active
 	SfxSampleType	*sfx2Active[24];				// last played sample on this channel
+	int				sfx2AllocatedMemory;			// amount of memory allocated
 } Sfx2Data;
 
 static Sfx2Data sfx2Data;
@@ -91,6 +92,38 @@ void sfxInitialise(int reverbMode)
 #endif
 			SpuReserveReverbWorkArea(SPU_ON);
 			sfx2Data.sfx2Reverb = reverbMode;
+			switch(reverbMode)
+			{
+			case SFX_REVERB_MODE_ROOM:
+				sfx2Data.sfx2AllocatedMemory = 9920 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_SMALL_STUDIO:
+				sfx2Data.sfx2AllocatedMemory = 8000 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_MEDIUM_STUDIO:
+				sfx2Data.sfx2AllocatedMemory = 18496 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_LARGE_STUDIO:
+				sfx2Data.sfx2AllocatedMemory = 28640 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_HALL:
+				sfx2Data.sfx2AllocatedMemory = 44512 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_SPACE:
+				sfx2Data.sfx2AllocatedMemory = 63168 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_ECHO:
+			case SFX_REVERB_MODE_DELAY:
+				sfx2Data.sfx2AllocatedMemory = 98368 + 0x1010;
+				break;
+			case SFX_REVERB_MODE_PIPE:
+				sfx2Data.sfx2AllocatedMemory = 15360 + 0x1010;
+				break;
+			}
+		}
+		else
+		{
+			sfx2Data.sfx2AllocatedMemory = 0x1010;
 		}
 	}
 
@@ -194,10 +227,14 @@ unsigned long sfxLoadSampleBankBody(char *fileName)
 	if(sampleData)
 	{
 		spuAddr = SpuMalloc(fileSize);
-		SpuSetTransferStartAddr(spuAddr);
-		spuWrittenSize = SpuWrite(sampleData, fileSize);
-		SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-		FREE(sampleData);
+		if(spuAddr)
+		{
+			SpuSetTransferStartAddr(spuAddr);
+			spuWrittenSize = SpuWrite(sampleData, fileSize);
+			SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+			FREE(sampleData);
+			sfx2Data.sfx2AllocatedMemory += fileSize;
+		}
 		return spuAddr;
 	}
 	else
@@ -364,6 +401,7 @@ SfxSampleType *sfxDownloadSample(SfxSampleType *sample)
 #endif
 			sample->inSPURam = 1;
 			sample->spuOffset = spuAddr;
+			sfx2Data.sfx2AllocatedMemory += sample->sampleSize;
 			return sample;
 		}
 
@@ -440,6 +478,7 @@ SfxSampleType *sfxUnloadSample(SfxSampleType *sample)
 
 	// free the spu ram
 	SpuFree(sample->spuOffset);
+	sfx2Data.sfx2AllocatedMemory -= sample->sampleSize;
 	// clear flags
 	sample->inSPURam = 0;
 	sample->spuOffset = 0;
@@ -821,4 +860,54 @@ int sfxGetChannelReverb(int channel)
 	}
 
 	return -1;
+}
+
+
+/**************************************************************************
+	FUNCTION:	sfxGetFreeSoundMemory
+	PURPOSE:	Print the amount of free SPU ram
+	PARAMETERS:	
+	RETURNS:	free ram in bytes
+**************************************************************************/
+
+int sfxGetFreeSoundMemory()
+{
+	int	reverbAmount = 0;
+
+	switch(sfx2Data.sfx2Reverb)
+	{
+	case SFX_REVERB_MODE_OFF:
+		reverbAmount = 0;
+		break;
+	case SFX_REVERB_MODE_ROOM:
+		reverbAmount = 9920;
+		break;
+	case SFX_REVERB_MODE_SMALL_STUDIO:
+		reverbAmount = 8000;
+		break;
+	case SFX_REVERB_MODE_MEDIUM_STUDIO:
+		reverbAmount = 18496;
+		break;
+	case SFX_REVERB_MODE_LARGE_STUDIO:
+		reverbAmount = 28640;
+		break;
+	case SFX_REVERB_MODE_HALL:
+		reverbAmount = 44512;
+		break;
+	case SFX_REVERB_MODE_SPACE:
+		reverbAmount = 63168;
+		break;
+	case SFX_REVERB_MODE_ECHO:
+	case SFX_REVERB_MODE_DELAY:
+		reverbAmount = 98368;
+		break;
+	case SFX_REVERB_MODE_PIPE:
+		reverbAmount = 15360;
+		break;
+	}
+	
+	printf("sfxGetFreeSoundMemory:\n----------------------\nTotal: %d bytes used (%d bytes available)\n", sfx2Data.sfx2AllocatedMemory, (512*1024)-sfx2Data.sfx2AllocatedMemory);
+	printf("Samples: %d bytes used\n", (512*1024)-reverbAmount-0x1010);
+	printf("Reverb: %d bytes used\n", reverbAmount);
+	return (512*1024)-sfx2Data.sfx2AllocatedMemory;
 }
