@@ -230,4 +230,6 @@ void psiDrawSegments(PSIDATA *psiData);
 
 void psiRegisterDrawFunction(void (*drawHandler)(int));
 
+void psiRegisterDrawFunction2(void (*drawHandler)(int));
+
 #endif //__ISLPSI_H__

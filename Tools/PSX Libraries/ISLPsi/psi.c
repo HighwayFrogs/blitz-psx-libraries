@@ -118,11 +118,17 @@ long minDepth=0;
 int depthRange=0;
 
 static void (*customDrawFunction)(int) = 0;
+static void (*customDrawFunction2)(int) = 0;
 
 
 void psiRegisterDrawFunction(void (*drawHandler)(int))
 {
 	customDrawFunction = drawHandler;
+}
+
+void psiRegisterDrawFunction2(void (*drawHandler)(int))
+{
+	customDrawFunction2 = drawHandler;
 }
 
 
@@ -2247,11 +2253,13 @@ void psiDrawSegments(PSIDATA *psiData)
 			modctrl->VertTop = world->meshdata->vertop;
 		 	modctrl->SortOffs = world->meshdata->sortlistptr[s];
 			modctrl->PrimLeft = world->meshdata->sortlistsize[s];
-			psiDrawPrimitives(depth);
+			if(customDrawFunction2)
+				customDrawFunction2(depth);
+			else
+				psiDrawPrimitives(depth);
 		}
 	}
 	
-
 #ifdef _DEBUG
 	//DrawNormals();
 #endif
