@@ -1,4 +1,4 @@
-
+// include you other stuff first, e.g. global.h or whatever
 
 #include <psitypes.h>
 
@@ -13,11 +13,11 @@ extern int sortCount;
 /**************************************************************************
 	FUNCTION:	customDrawSortedPrimitives
 	PURPOSE:	draw dynamic sorted polys
-	PARAMETERS:	
+	PARAMETERS:	depth to draw at
 	RETURNS:	
 **************************************************************************/
 
-static void customDrawSortedPrimitives(int depth)
+void customDrawSortedPrimitives(int depth)
 {
 	register PACKET*		packet;
 	register long			*tfv = transformedVertices;
