@@ -844,58 +844,47 @@ void actorRotate(short angx, short angy, short angz, long movex, long movey, lon
 
 UBYTE actorIsVisible(ACTOR *actor)
 {
-	SVECTOR v;
-	long zed,diff,lx,rx,ty,by;
-	DVECTOR	scrxy1;
-	DVECTOR	scrxy2;
+	VERT	v[3];
+	DVECTOR	scrXY[3];
+	long	scrZ[3];
+	LINE_F2	*line;
 
-	gte_SetRotMatrix(&GsWSMATRIX);					// load viewpoint matrices
+	gte_SetRotMatrix(&GsWSMATRIX);		// load viewpoint matrices
 	gte_SetTransMatrix(&GsWSMATRIX);
 
-	v.vx = actor->position.vx;						// use actor's world position
-	v.vy = actor->position.vy;
-	v.vz = actor->position.vz;
+	v[0].vx = actor->position.vx;		// use actor's world position
+	v[0].vy = actor->position.vy - actor->radius;
+	v[0].vz = actor->position.vz;
 
-	gte_ldv0(&v);									// RotTrans world position
-	gte_rt();
-	gte_stsz(&zed);
-	if ( zed <= 0)
+	v[1].vx = v[0].vx + actor->radius;
+	v[1].vy = v[0].vy + actor->radius;
+	v[1].vz = v[0].vz;
+
+	v[2].vx = v[0].vx - actor->radius;
+	v[2].vy = v[0].vy - actor->radius;
+	v[2].vz = v[0].vz;
+
+	gte_ldv3c(&v[0]);
+	gte_rtpt();
+	gte_stsxy3c(&scrXY[0]);
+	gte_stsz3c(&scrZ[0]);
+
+	if (scrZ[0] <= 0)
 	{
 		return 0;					// return if 'behind' camera
 	}
-  
 
-	if ((zed-actor->radius)>PSImodelctrl.farclip)
+	if ((scrZ[0]-actor->radius)>PSImodelctrl.farclip)
 	{
-		return 0;								// To far away
+		return 0;					// Too far away
 	}
 
-	gte_ldv0(&v);									// transform 'center' x,y
-	gte_rtps();
-	gte_stsxy(&scrxy1);
-
-	v.vx += actor->radius;							// add model radius
-	gte_ldv0(&v);									// transform radial x,y
-	gte_rtps();
-	gte_stsxy(&scrxy2);
-	
-	diff = abs(scrxy1.vx- scrxy2.vx);				// screen distance to outer edge of radius
-
-	lx = (scrxy1.vx - diff);
-	rx = (scrxy1.vx + diff);
-	diff /= 2;
-	ty = (scrxy1.vy - diff);
-	by = (scrxy1.vy + diff);
-
-	if ( 	(lx < 320) &&
-			(rx > -320)   &&
-			(ty < 120) &&
-			(by > -120 ))
+	if( (scrXY[1].vx < -256) || (scrXY[1].vy < -128) || (scrXY[2].vx > 256) || (scrXY[2].vy > 128))
 	{
-		return 1;
+		return 0;					// Off screen
 	}
 
-	return 0;
+	return 1;
 }
 
 

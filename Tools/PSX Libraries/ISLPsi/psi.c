@@ -389,6 +389,9 @@ void psiInitialise()
 	psiModelListLen = 0;
 	pilLibraryLen = 0;
 
+	customDrawFunction = 0;
+	customDrawFunction2 = 0;
+
 }
 
 
