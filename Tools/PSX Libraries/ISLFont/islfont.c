@@ -79,6 +79,8 @@ static void fontDownload(psFont *font, char *fontdata, int character)
    	txPtr->v3 = txPtr->y+font->height-1;
 	txPtr->clut = font->clut;
 	txPtr->handle = handle;
+	txPtr->imageCRC = 0;
+	txPtr->refCount = 1;
 }
 
 
