@@ -1,6 +1,16 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+25-10-99
+========
+
+Added psiRegisterDrawFunction2(), which lets you use your own draw function for non-dynamically sorted models.
+
+Finished documenting the exported functions for islpsi.lib.
+
+Paul Holman & Alister Bodin from SCEE are visiting this afternoon. Erk!
+
+
 22-10-99
 ========
 
