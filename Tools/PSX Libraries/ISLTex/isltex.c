@@ -16,6 +16,7 @@
 #include "..\islfile\islfile.h"
 #include "..\islpad\islpad.h"
 #include "..\islfont\islfont.h"
+#include "..\islutil\islutil.h"
 #include "..\shell\shell.h"
 
 extern psFont	*font;
@@ -158,15 +159,18 @@ void textureVRAMfree(int handle, short w, short h)
 	RETURNS:
 **************************************************************************/
 
-void textureInit256ClutSpace()
+void textureInit256ClutSpace(int numCluts)
 {
 	int		page, x,i;
+
+	// get multiple of 8
+	numCluts = (numCluts + 7) / 8;
 
 	for(page = 0; page < 4; page ++)
 	{
 		for(x = 0; x < VRAM_PAGEW; x ++)
 		{
-			for(i = 0; i < (VRAM_256PALETTES / 8); i ++)
+			for(i = 0; i < numCluts; i ++)
 			{
 				VRAMblock[page][VRAM_SETXY(x, i)] = 1;
 			}
@@ -188,7 +192,7 @@ void textureInit256ClutSpace()
 	RETURNS:	
 **************************************************************************/
 
-void textureInitialise()
+void textureInitialise(int num256Cluts)
 {
 	int		page;
 	RECT	rect;
@@ -224,7 +228,16 @@ void textureInitialise()
 		DrawSync(0);
 	}
 
-	textureInit256ClutSpace();
+	// allocate some space for 256 colour cluts if needed
+	if(num256Cluts)
+	{
+		textureInit256ClutSpace(num256Cluts);
+	}
+
+	// reset the palette counter
+#ifdef _DEBUG
+	palsused = 0;
+#endif
 
 }
 
@@ -286,7 +299,7 @@ unsigned short textureAddCLUT16(unsigned short *palette)
 			VRAMpalCLUT[pal] = getClut(rect.x,rect.y);
 #ifdef _DEBUG
 			palsused++;
-			printf("Palette added: Currently used: %d\n", palsused);
+			//printf("Palette added: Currently used: %d\n", palsused);
 #endif
 			return VRAMpalCLUT[pal];
 		}
@@ -308,7 +321,7 @@ void textureRemoveCLUT16(unsigned short clut)
 			{
 #ifdef _DEBUG
 				palsused--;
-				printf("Palette removed: Currently used: %d\n", palsused);
+				//printf("Palette removed: Currently used: %d\n", palsused);
 #endif
 				VRAMpalBlock[pal] = 0;
 				VRAMpalCLUT[pal] = 0;

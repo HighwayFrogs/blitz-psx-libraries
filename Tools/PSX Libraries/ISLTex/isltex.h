@@ -61,11 +61,11 @@ typedef struct _TextureBankType {
 /**************************************************************************
 	FUNCTION:	textureInitialise()
 	PURPOSE:	Initialise VRAM/texture handling
-	PARAMETERS:	
+	PARAMETERS:	Number of 256 colour cluts to allocate
 	RETURNS:	
 **************************************************************************/
 
-void textureInitialise();
+void textureInitialise(int num256Cluts);
 
 
 /**************************************************************************
@@ -168,6 +168,13 @@ TextureType *textureFindCRCInBank(TextureBankType *bank, unsigned long crc);
 TextureType *textureFindCRCInAllBanks(unsigned long crc);
 
 
+/**************************************************************************
+	FUNCTION:	textureFindTextureN()
+	PURPOSE:	Find given texture by number
+	PARAMETERS:	Texture number
+	RETURNS:	Texture info ptr
+**************************************************************************/
+
 TextureType *textureFindTextureN(int n);
 
 
@@ -219,6 +226,11 @@ void textureSetAnimation(TextureAnimType *texAnim, int frameNum);
 **************************************************************************/
 
 void textureDestroyAnimation(TextureAnimType *texAnim);
+
+// useful macros for finding textures by name
+
+#define textureFindInBank(b,n)		textureFindCRCInBank((b),utilStr2CRC((n)))
+#define textureFindInAllBanks(n)	textureFindCRCInAllBanks(utilStr2CRC((n)))
 
 
 #endif
