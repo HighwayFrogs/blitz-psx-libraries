@@ -112,6 +112,8 @@ void actorMove(ACTOR *actor);
 
 void actorDraw(ACTOR *actor);
 
+void actorDrawBones(ACTOR *actor);
+
 void actorRotate(short angx, short angy, short angz, long movex, long movey, long movez, VECTOR *result);
 
 void actorSetAnimation(ACTOR *actor, ULONG frame);

@@ -5,6 +5,7 @@
 
 ************************************************************************************/
 
+#include "global.h"
 #include "actor.h"
 
 ACTORLIST	actorList;
@@ -409,6 +410,77 @@ void actorDraw(ACTOR *actor)
 	psiDrawSegments(&actor->psiData);
 }
 
+void drawBones(PSIOBJECT *world, PSIOBJECT *parent)
+{
+	LINE_F2	*line;
+	VERT	worldPos, parentPos;
+	long	worldXY, parentXY;
+
+	while(world)
+	{
+		worldPos.vx = world->matrixscale.t[0];
+		worldPos.vy = world->matrixscale.t[1];
+		worldPos.vz = world->matrixscale.t[2];
+		
+		parentPos.vx = parent->matrixscale.t[0];
+		parentPos.vy = parent->matrixscale.t[1];
+		parentPos.vz = parent->matrixscale.t[2];
+
+		gte_ldv0(&worldPos);
+		gte_rtps();
+		gte_stsxy(&worldXY);
+
+		gte_ldv0(&parentPos);
+		gte_rtps();
+		gte_stsxy(&parentXY);
+
+		BEGINPRIM(line, LINE_F2);
+		*(u_long *)&line->x0 = *(u_long *)&worldXY;
+		*(u_long *)&line->x1 = *(u_long *)&parentXY;
+		setRGB0(line, 255, 255, 255);
+		setLineF2(line);
+		ENDPRIM(line, 0, LINE_F2);
+
+		if(world->child)
+			drawBones(world->child, world);
+
+		world = world->next;
+	}
+}
+
+
+
+void actorDrawBones(ACTOR *actor)
+{
+	PSIOBJECT *world;
+
+   	world = actor->psiData.object;
+
+	if(actor->psiData.flags & ACTOR_MOTIONBONE)
+	{
+		world->matrix.t[0] = actor->position.vx;
+		world->matrix.t[1] = actor->position.vy;
+		world->matrix.t[2] = actor->position.vz;
+	}
+	else
+	{
+		world->matrix.t[0] += actor->position.vx;
+		world->matrix.t[1] += actor->position.vy;
+		world->matrix.t[2] += actor->position.vz;
+	}
+
+	PSIrootScale = &world->scale;
+	
+	psiCalcLocalMatrix(world);
+
+	if(world->child)
+	{
+		gte_SetRotMatrix(&GsWSMATRIX);
+		gte_SetTransMatrix(&GsWSMATRIX);
+		drawBones(world->child, world);
+	}
+}
+
 
 /**************************************************************************
 	FUNCTION:	actorUpdateAnimation()
@@ -627,6 +699,8 @@ void actorSetAnimation(ACTOR *actor, ULONG frame)
 	PSIactorScale = &actor->size;
 
 	psiSetKeyFrames(world, frame);
+
+	/*
 		
 	actor->accumulator.vx = world->matrix.t[0];
 	actor->accumulator.vy = world->matrix.t[1];
@@ -647,6 +721,7 @@ void actorSetAnimation(ACTOR *actor, ULONG frame)
 	world->matrix.t[0] = result.vx;
 	world->matrix.t[1] = result.vy;
 	world->matrix.t[2] = result.vz;
+	*/
 	
 	if (actorAnim->exclusive)  
 	{
@@ -1048,7 +1123,7 @@ void actorSetBoundingRotated(ACTOR *actor,int frame,int rotX,int rotY, int rotZ)
 	actorSetAnimation(actor, frame);
 
 	PSIrootScale = &actor->psiData.object->scale;
-	psiCalcLocalMatrix(actor->psiData.object,0,0);
+	psiCalcLocalMatrix(actor->psiData.object);
 
 	actorCalcSegments(actor);
 
