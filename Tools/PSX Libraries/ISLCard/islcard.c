@@ -162,7 +162,7 @@ int cardRead(char *memCardName, void *gameSaveData, int gameSaveDataSize)
 				printf("Error loading game (%d)\n", res);
 #endif
 				PadStartCom();
-				return result;
+				return res;
 			}
 			data = buffer;
 			crc = utilBlockCRC(buffer, gameSaveDataSize);
