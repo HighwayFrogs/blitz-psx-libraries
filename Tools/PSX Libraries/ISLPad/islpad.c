@@ -115,7 +115,6 @@ void padInitialise(unsigned char multiTap)
 	for(loop=0; loop<8; loop++)
 	{
 		padData.digital[loop] = 0;
-		padData2.digitalPrev[loop] = 0;
 		padData.debounce[loop] = 0;
 		padData.analogX[loop] = 128;
 		padData.analogY[loop] = 128;
@@ -125,6 +124,9 @@ void padInitialise(unsigned char multiTap)
 		padData.analogYS[loop] = 0;
 		padData.analogX2S[loop] = 0;
 		padData.analogY2S[loop] = 0;
+
+		padData2.digitalPrev[loop] = 0;
+		padData2.newShock[loop] = 0;
 	}
 }
 
@@ -185,17 +187,23 @@ static void padHandlePort(int port)
 		switch(state)										// Handle (dis)connection states
 		{
 		case PadStateDiscon:
+			if(padData2.newShock[padNo] < 1)
+			{
 #ifdef _DEBUG
-			printf("  Controller disconnected\n");
+				printf("  Controller disconnected\n");
 #endif
-  			padData.present[padNo] = PADTYPE_NONE;
-			padData2.state[padNo] = PadStateDiscon;
+  				padData.present[padNo] = PADTYPE_NONE;
+				padData2.state[padNo] = PadStateDiscon;
+			}
 			continue;
 		case PadStateFindPad:
+			if(padData2.newShock[padNo] < 1)
+			{
 #ifdef _DEBUG
-			printf("  Find controller connection (checking)\n");
+				printf("  Find controller connection (checking)\n");
 #endif
-			padData2.state[padNo] = PadStateFindPad;
+				padData2.state[padNo] = PadStateFindPad;
+			}
 			continue;
 		case PadStateFindCTP1:
 			if (padData2.state[padNo]!=PadStateStable)
