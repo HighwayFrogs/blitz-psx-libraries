@@ -757,18 +757,17 @@ char *psiConstructName(char *psiName)
 {
 	int i;
 	
-	for ( i=0; i<8; i++) 
-		if ( (psiName[i]==0) || (psiName[i]==32) || (psiName[i]=='.') )
+	for (i = 0; i < 32; i ++)
+		if ( (psiName[i] == 0) || (psiName[i] == 32) || (psiName[i] == '.') )
 			break;
 
 	psiName[i] = '.';
-	psiName[i+1] = 'P';
-	psiName[i+2] = 'S';
-	psiName[i+3] = 'I';
-	psiName[i+4] = 0;
+	psiName[i + 1] = 'P';
+	psiName[i + 2] = 'S';
+	psiName[i + 3] = 'I';
+	psiName[i + 4] = 0;
 
 	utilUpperStr(psiName);
-
 	return &psiName[0];
 	
 }
@@ -781,20 +780,35 @@ char *psiConstructName(char *psiName)
 
 long psiCRCName(char *psiName)
 {
-	int i;
-	char str[16];
+	int i,j,slen;
+	char str[64];
 
-	
 	utilUpperStr(psiName);
-	/*
-	for ( i=0; i<8; i++)
+	
+	for (i = 0; i < 63; i ++)
 	{
 		str[i] = psiName[i];
-		if ( (psiName[i]==0) || (psiName[i]==32) || (psiName[i]=='.') )break;
+		if ( (psiName[i] == 0) || (psiName[i] == 32) || (psiName[i] == '.') )
+			break;
 	}
 	str[i] = 0;
-	*/
+	slen = i - 1;
 
+	for (i = slen; i >= 0; i --)
+	{
+		if ( ((str[i] < 'A') || (str[i] > 'Z')) &&
+			 ((str[i] < '0') || (str[i] > '9')) )		 break;
+	}
+
+	if (i >= 0)
+	{
+		j = i + 1;
+		for (i = 0; i < slen; i ++)
+		{
+		 str[i] = str[i + j];
+		}
+	}
+	
 	return utilStr2CRC(&str[0]);
 }
 
@@ -812,7 +826,7 @@ static PSIMODEL *psiCheck(char *psiName)
 
 	crc = psiCRCName(psiName);
 
-	for ( i=0; i<psiModelListLen; i++)
+	for (i = 0; i < psiModelListLen; i ++)
 	{
 		if ( psiModelListCRC[i] == crc )
 			return psiModelList[i];
@@ -2127,10 +2141,11 @@ void psiDrawSegments(PSIDATA *psiData)
 	int loop,obs,i,j;
 	VERT	*tfn;
 
+	/*
 #ifdef _DEBUG
 	register long	*tfns = transformedScreenN;
 #endif
-
+*/
 	
 	world = psiData->object;
 	obs = psiData->numObjects;
