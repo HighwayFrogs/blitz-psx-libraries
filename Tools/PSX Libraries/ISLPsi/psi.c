@@ -3112,31 +3112,41 @@ void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend)
 
 static void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 {
-
+	// while we have siblings
 	while(world)
 	{
+		// get a copy of the local transformation matrix
 		world->matrixscale = world->matrix;
+		// scale it by our local scale
 		ScaleMatrix(&world->matrixscale, &world->scale);
+		// multiply our local matrix by our parents (e.g. now in world space, but unscaled)
 		gte_MulMatrix0(&parent->matrix, &world->matrix, &world->matrix);
 		
 		if(PSImodelctrl.inheritScale)
 		{
+			// if we want to inherit scale from our parent, multiply by our parents scaled matrix
 			gte_MulMatrix0(&parent->matrixscale, &world->matrixscale, &world->matrixscale);
 		}
 		else
 		{
-			ScaleMatrix(&world->matrixscale, PSIactorScale);
+			// multiply by our parents unscaled matrix
 			gte_MulMatrix0(&parent->matrix, &world->matrixscale, &world->matrixscale);
+			// and by the camera & global scale matrix, cuz we dont inherit it
+			gte_MulMatrix0(&cameraAndGlobalscale, &world->matrixscale, &world->matrixscale);
 		}
 
+		// transform our position vector by our parents scaled matrix
 		gte_SetRotMatrix(&parent->matrixscale);
 		gte_SetTransMatrix(&parent->matrixscale);
 		gte_ldlvl(&world->matrixscale.t);
 		gte_rtirtr();
 		gte_stlvl(&world->matrixscale.t);
 
+		// calculate our children if we have any
 		if(world->child)
 			psiCalcChildMatrix(world->child, world);
+
+		// go to next object
 
 		world = world->next;
 	}
