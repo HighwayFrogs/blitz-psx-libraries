@@ -1,6 +1,11 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+1-12-99
+=======
+
+Tidied up the docs and header file for the sound library, it was in a complete state from before it was changed to entirely queue based. It's all up to date now, so it should be okay.
+
 
 30-11-99
 ========
