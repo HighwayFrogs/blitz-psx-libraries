@@ -5,9 +5,11 @@ Andy Sidwell's Development Log for PSX Libraries
 26-10-99
 ========
 
-
-
 Added actorDraw2() at the request of Recoil, for setting up and drawing non-animated, non-hierarchical meshes. Doesn't seem to make that much difference, but if it keeps them happy...
+
+Did some more tidying up on the psi header files, all psi functions now have description comments.
+
+Found a bug in the sound library which meant it wouldn't even compile, fixed it (conflicting definitions for sfxPlaySound(), that darn Tom I bet!)
 
 
 25-10-99
