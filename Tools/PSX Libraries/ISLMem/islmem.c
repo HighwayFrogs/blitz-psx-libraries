@@ -61,6 +61,8 @@ int memoryInitialise(unsigned long base, unsigned long size, unsigned long maxAl
 	pool.blocks = (AllocBlockType *)base;
 	pool.maxAllocs = maxAllocs;
 	memoryReset();
+	printf("\nmemoryInitialise: base = 0x%x, size = 0x%x", base, size);
+	printf("\nmemoryInitialise: pool.base = 0x%x, pool.size = 0x%x, pool top = 0x%x\n",pool.base, pool.size, pool.base+pool.size);
 	return 0;
 }
 
