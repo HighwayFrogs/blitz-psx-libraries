@@ -57,9 +57,9 @@ PSIMODEL *currentPSI;
 char *PSIname=0;
 
 //#define transformedNormals  ((long*) getScratchAddr(0))
-long *transformedVertices __attribute__ ((section("cachedata"))) = 0;
-long *transformedDepths __attribute__ ((section("cachedata"))) = 0;
-VERT *transformedNormals __attribute__ ((section("cachedata"))) = 0;
+long *transformedVertices; //__attribute__ ((section("cachedata"))) = 0;
+long *transformedDepths; //__attribute__ ((section("cachedata"))) = 0;
+VERT *transformedNormals;// __attribute__ ((section("cachedata"))) = 0;
 
 int  tfTotal = 0;
 
@@ -95,8 +95,6 @@ int pilLibraryLen = 0;
 	:							\
 	: "r"( r0 ) )
 
-TMD_P_FT4I *testpol;
-POLY_FT4 *testsi;
 
 #define ADD2POINTER(a,b) ( (void *) ( (int)(a) + (int)(b))  )
 
@@ -1125,12 +1123,15 @@ static void psiSortPrimitives()
 		{
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_FT3I*)opcd)
-			case GPU_COM_TF3:
-						
+
+		case GPU_COM_TF3:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
+
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
-				
+
 				deep = (tfd[op->v2] - minDepth);
 
 				gte_stopz(&clipflag);
@@ -1141,14 +1142,17 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount ++;
 				}
-				op ++;
-				break;
+			}
+			op ++;
+			break;
 
 #undef op			
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_FT4I*)opcd)
-			case GPU_COM_TF4:
-			
+
+		case GPU_COM_TF4:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
@@ -1163,13 +1167,17 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount ++;
 				}
-				op ++;
-				break;
+			}
+			op ++;
+			break;
+
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_GT3I*)opcd)
-			case GPU_COM_TG3:
 
+		case GPU_COM_TG3:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
@@ -1184,14 +1192,16 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount ++;
 				}
-				
-				op ++;
-				break;
+			}				
+			op ++;
+			break;
+
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op opcd
-			case GPU_COM_TG4:
-
+		case GPU_COM_TG4:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
@@ -1206,31 +1216,36 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount ++;
 				}
+			}
+			op ++;
+			break;
 
-				op ++;
-				break;
 #undef op
 
 /*-----------------------------------------------------------------------------------------------------------------*/
 
 #define op ((TMD_P_FT4I*)opcd)
-			case GPU_COM_TF4SPR :
-			
+		case GPU_COM_TF4SPR:
+			if((tfd[op->v0] > modctrl->nearclip) && (tfd[op->v0] < modctrl->farclip))
+			{
 				deep = (tfd[op->v0] - minDepth);
 
 				op->next = sl[deep];
 				sl[deep] = (int)op;
 				sortCount++;
+			}
+			op++;
+			break;
 
-				op++;
-				break;
 #undef op
 
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_FG4I*)opcd)
-			case GPU_COM_G4:
-			case GPU_COM_F4:
-   		
+
+		case GPU_COM_G4:
+		case GPU_COM_F4:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
@@ -1246,14 +1261,17 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount ++;
 				}
-				op ++;
-				break;
+			}
+			op ++;
+			break;
+
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_FG3I*)opcd)
-			case GPU_COM_G3:
-			case GPU_COM_F3:
-
+		case GPU_COM_G3:
+		case GPU_COM_F3:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
@@ -1268,12 +1286,14 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount ++;
 				}
-				op ++;
-				break;
+			}
+			op ++;
+			break;
+
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
-			default:
-				break;
+		default:
+			break;
 		}
 		primsleft --;
 	}
@@ -1291,6 +1311,7 @@ static void psiDrawSortedPrimitives(int depth)
 {
 	register PACKET*		packet;
 	register long			*tfv = transformedVertices;
+	register long			*tfd = transformedDepths;
 	VERT 					*tfn = transformedNormals;
 	register TMD_P_GT4I		*opcd;
 	PSIMODELCTRL			*modctrl = &PSImodelctrl;
@@ -1298,6 +1319,9 @@ static void psiDrawSortedPrimitives(int depth)
 	ULONG					*sorts = sortedIndex;
 	ULONG					sortBucket = 0;
 	VERT					*vp = modctrl->VertTop;
+	int						gteH;
+
+	gte_ReadGeomScreen(&gteH);
 								  
 	primsleft = sortCount;
 	if (!primsleft)
@@ -1521,50 +1545,34 @@ static void psiDrawSortedPrimitives(int depth)
 #define op ((TMD_P_FT4I*)opcd)
 
 			case GPU_COM_TF4SPR :
-				{
-				SHORT		spritez;
-				int		width, height;
-
-				si = (POLY_FT4*)packet;
-				op = (TMD_P_FT4I*)(opcd);
+			{
+				int			width, height;
 
 				BEGINPRIM(si, POLY_FT4);
 
-				testpol = op;
-				testsi = si;
+/*
+	We can't use the "quick" scaling method in skinned objects, since we don't know which
+	bone the sprite is attached to, hence we can't rtps the vertex and get the scaled width/height,
+	so we have to do the scaling based on the distance ourselves.
+*/
 
-	// scaling-and-transform-in-one-go code from the Action Man people...
-				width = op->v2;
-				gte_SetLDDQB(0);			// clear offset control reg (C2_DQB)
-				gte_ldv0(&vp[op->v0]);		// Load centre point
-				gte_SetLDDQA(width);		// shove sprite width into control reg (C2_DQA)
-				gte_rtps();					// do the rtps
-				gte_stsxy(&si->x0);			// get screen x and y
-				gte_stsz(&spritez);		// get order table z
-	// end of scaling-and-transform
+				width = ((op->v2 * gteH) / tfd[op->v0]) / 2;
+				height = ((op->v3 * gteH) / tfd[op->v0]) / 4;
 
+ 				*(u_long *)&si->r0 = *(u_long *)&op->r0;			// Texture coords / colors
+				*(u_long *)&si->u0 = *(u_long *)&op->tu0;
+				*(u_long *)&si->u1 = *(u_long *)&op->tu1;
+				*(u_long *)&si->u2 = *(u_long *)&op->tu2;
+				*(u_long *)&si->u3 = *(u_long *)&op->tu3;
 
-				if (spritez < 20) break;
-
-				gte_stopz(&width);		// get scaled width of sprite
-				width >>= 17;
-
- 				*(u_long *) & si->r0 = *(u_long *) & op->r0;			// Texture coords / colors
-				*(u_long *) & si->u0 = *(u_long *) & op->tu0;
-				*(u_long *) & si->u1 = *(u_long *) & op->tu1;
-				*(u_long *) & si->u2 = *(u_long *) & op->tu2;
-				*(u_long *) & si->u3 = *(u_long *) & op->tu3;
-
-				si->x1 = si->x3=si->x0+width;
-				si->x0 = si->x2=si->x0-width;
-			
- 		 		height = width>>1;//(LONG)(width*(3))/spritez;
-			
-				si->y2 = si->y3=si->y0+height;
-				si->y0 = si->y1=si->y0-height;
+				si->x1 = si->x3 = ((DVECTOR *)tfv)[op->v0].vx + width;
+				si->x0 = si->x2 = ((DVECTOR *)tfv)[op->v0].vx - width;
+		 	
+				si->y2 = si->y3 = ((DVECTOR *)tfv)[op->v0].vy + height;
+				si->y0 = si->y1 = ((DVECTOR *)tfv)[op->v0].vy - height;
 				setPolyFT4(si);
 
-				si->code = op->cd | modctrl->semitrans;
+				si->code |= modctrl->semitrans;
 		
  				ENDPRIM(si, depth, POLY_FT4);
 				op = op->next;
@@ -1585,9 +1593,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 				*(u_long *)  (&si->x3) = *(u_long *) (&tfv[op->v3]);
  
-				
 				gte_stsxy3_g4(si);
-
 
 				switch (lightmode)
 				{
@@ -1698,6 +1704,7 @@ void psiDrawPrimitives(int depth)
 {
 	register PACKET*		packet;
 	register long *tfv = transformedVertices;
+	register long *tfd = transformedDepths;
 	register TMD_P_GT4I	*opcd;
 	long	 clipflag;
 	PSIMODELCTRL	*modctrl = &PSImodelctrl;
@@ -1705,6 +1712,12 @@ void psiDrawPrimitives(int depth)
 	int prims,primsleft,lightmode;
 	USHORT *sorts;
 	VERT 	*tfn = transformedNormals;
+	int		gteH;
+	
+	gte_ReadGeomScreen(&gteH);
+
+
+
 
 
 	prims = (int)modctrl->PrimTop;
@@ -1721,8 +1734,9 @@ void psiDrawPrimitives(int depth)
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_FT3*)packet)
 #define op ((TMD_P_FT3I*)opcd)
-			case GPU_COM_TF3:
-
+		case GPU_COM_TF3:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				BEGINPRIM(si, POLY_FT3);
 
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
@@ -1767,14 +1781,16 @@ void psiDrawPrimitives(int depth)
 
  				ENDPRIM(si, depth & 1023, POLY_FT3);
 				modctrl->polysdrawn++;
-				break;
+			}
+			break;
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_FT4*)packet)
 #define op ((TMD_P_FT4I*)opcd)
-			case GPU_COM_TF4:
-
+		case GPU_COM_TF4:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				BEGINPRIM(si, POLY_FT4);
    			
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
@@ -1822,14 +1838,16 @@ void psiDrawPrimitives(int depth)
 				modctrl->polysdrawn++;
  			
  				ENDPRIM(si, depth & 1023, POLY_FT4);
-				break;
+			}
+			break;
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_GT3*)packet)
 #define op ((TMD_P_GT3I*)opcd)
-			case GPU_COM_TG3:
-			
+		case GPU_COM_TG3:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))	
+			{
 				BEGINPRIM(si, POLY_GT3);
 
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
@@ -1879,15 +1897,17 @@ void psiDrawPrimitives(int depth)
 				modctrl->polysdrawn++;
 
 				ENDPRIM(si, depth & 1023, POLY_GT3);
-				break;
+			}
+			break;
  		
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_GT4*)packet)
 #define op opcd
-			case GPU_COM_TG4:
-		
+		case GPU_COM_TG4:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				BEGINPRIM(si, POLY_GT4);
 
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
@@ -1900,7 +1920,7 @@ void psiDrawPrimitives(int depth)
 					
 				gte_stopz(&clipflag);
 				
-				if (clipflag >= 0) break;								// Back face culling
+				if (!(op->dummy & psiDOUBLESIDED) && (clipflag >= 0) ) break;			// Back face culling
 
 				gte_stsxy3_gt4(si);
 				
@@ -1952,76 +1972,56 @@ void psiDrawPrimitives(int depth)
 				setPolyGT4(si);
 				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, depth & 1023, POLY_GT4);
-				break;
+			}
+			break;
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_FT4*)packet)
 #define op ((TMD_P_FT4I*)opcd)
-			case GPU_COM_TF4SPR :
-		   	{
-				SHORT		spritez;
-				int		width, height;
-
-				si = (POLY_FT4*)packet;
-				op = (TMD_P_FT4I*)(opcd);
+		case GPU_COM_TF4SPR :
+			if((tfd[op->v0] > modctrl->nearclip) && (tfd[op->v0] < modctrl->farclip))
+			{
+				int			width, height;
 
 				BEGINPRIM(si, POLY_FT4);
 
-				testpol = op;
-				testsi = si;
+/*
+	We can't use the "quick" scaling method in skinned objects, since we don't know which
+	bone the sprite is attached to, hence we can't rtps the vertex and get the scaled width/height,
+	so we have to do the scaling based on the distance ourselves.
+*/
 
-	// scaling-and-transform-in-one-go code from the Action Man people...
-				width = op->v1;
-				gte_SetLDDQB(0);			// clear offset control reg (C2_DQB)
-				gte_ldv0(&vp[op->v0]);		// Load centre point
-				gte_SetLDDQA(width);		// shove sprite width into control reg (C2_DQA)
-				gte_rtps();					// do the rtps
-				gte_stsxy(&si->x0);			// get screen x and y
-				gte_stsz(&spritez);		// get order table z
-	// end of scaling-and-transform
+				width = ((op->v2 * gteH) / tfd[op->v0]) / 2;
+				height = ((op->v3 * gteH) / tfd[op->v0]) / 4;
 
+ 				*(u_long *)&si->r0 = *(u_long *)&op->r0;			// Texture coords / colors
+				*(u_long *)&si->u0 = *(u_long *)&op->tu0;
+				*(u_long *)&si->u1 = *(u_long *)&op->tu1;
+				*(u_long *)&si->u2 = *(u_long *)&op->tu2;
+				*(u_long *)&si->u3 = *(u_long *)&op->tu3;
 
-	// tbd - make this ditch according to on-screen SIZE
-	// limit to "max poly depth", and we can ditch the "MAXDEPTH" "and" below...
-
-
-				if (spritez < 20)
-					break;
-
-				gte_stopz(&width);		// get scaled width of sprite
-				width >>= 17;
-
-			
-
- 				*(u_long *) & si->r0 = *(u_long *) & op->r0;			// Texture coords / colors
-				*(u_long *) & si->u0 = *(u_long *) & op->tu0;
-				*(u_long *) & si->u1 = *(u_long *) & op->tu1;
-				*(u_long *) & si->u2 = *(u_long *) & op->tu2;
-				*(u_long *) & si->u3 = *(u_long *) & op->tu3;
-
-				si->x1 = si->x3=si->x0+width;
-				si->x0 = si->x2=si->x0-width;
-			
- 		 		height = width>>1;//(LONG)(width*(3))/spritez;
-			
-				si->y2 = si->y3=si->y0+height;
-				si->y0 = si->y1=si->y0-height;
-
+				si->x1 = si->x3 = ((DVECTOR *)tfv)[op->v0].vx + width;
+				si->x0 = si->x2 = ((DVECTOR *)tfv)[op->v0].vx - width;
+		 	
+				si->y2 = si->y3 = ((DVECTOR *)tfv)[op->v0].vy + height;
+				si->y0 = si->y1 = ((DVECTOR *)tfv)[op->v0].vy - height;
 				setPolyFT4(si);
-				si->code = op->cd | modctrl->semitrans;
 
-				ENDPRIM(si, depth & 1023, POLY_FT4);
-				break;
-			}	
+				si->code |= modctrl->semitrans;
+		
+ 				ENDPRIM(si, depth & 1023, POLY_FT4);
+			}
+			break;
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_G4*)packet)
 #define op ((TMD_P_FG4I*)opcd)
-			case GPU_COM_G4:
-			case GPU_COM_F4:
-				
+		case GPU_COM_G4:
+		case GPU_COM_F4:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				BEGINPRIM(si, POLY_G4);
    			
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
@@ -2080,16 +2080,18 @@ void psiDrawPrimitives(int depth)
 				modctrl->polysdrawn++;
 
 				ENDPRIM(si, depth & 1023, POLY_G4);
-				break;
+			}
+			break;
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define si ((POLY_G3*)packet)
 #define op ((TMD_P_FG3I*)opcd)
 			
-			case GPU_COM_G3:
-			case GPU_COM_F3:
-
+		case GPU_COM_G3:
+		case GPU_COM_F3:
+			if((tfd[op->v2] > modctrl->nearclip) && (tfd[op->v2] < modctrl->farclip))
+			{
 				BEGINPRIM(si, POLY_G3);
    			
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
@@ -2137,7 +2139,8 @@ void psiDrawPrimitives(int depth)
 				si->code = op->cd | modctrl->semitrans;
 
 				ENDPRIM(si, depth & 1023, POLY_G3);
-				break;
+			}
+			break;
 #undef si
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
@@ -2605,6 +2608,496 @@ void psiSetKeyFrames(PSIOBJECT *world, ULONG frame)
 	psiSetMoveKeyFrames(world, frame);
 	psiSetScaleKeyFrames(world, frame);
 	psiSetRotateKeyFrames(world, frame);
+}
+
+static void psiSetRotateKeyFrames3(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b, PSIOBJECT *root)
+{		  
+	MATRIX		rotmat1;
+	SQKEYFRAME	*tmprotatekeys,*tmprotatekeyslast;
+	long		keystep;
+	long		t;
+	PSIMESH		*mesh;
+	ULONG		frame[2];
+	SHORTQUAT	quat[2];
+	int			loop;
+	VECTOR		result;
+
+	frame[0] = frame0;
+	frame[1] = frame1;
+	
+	while(world)
+	{
+		mesh = world->meshdata;
+
+		for(loop = 0; loop < 2; loop ++)
+		{
+			tmprotatekeys = mesh->rotatekeys;
+			
+			if ((!frame[loop]) || (mesh->numRotateKeys<=1))
+			{
+				// get quaternion rather than a matrix
+				quat[loop].x = tmprotatekeys->vect.x;
+				quat[loop].y = tmprotatekeys->vect.y;
+				quat[loop].z = tmprotatekeys->vect.z;
+				quat[loop].w = tmprotatekeys->vect.w;
+			}
+			else
+			{
+				////////////////////////////////////////////
+				// bin search
+				////////////////////////////////////////////
+				keystep = mesh->numRotateKeys / 2;
+
+				tmprotatekeys = &mesh->rotatekeys[keystep];
+				
+				if ( keystep>1 )
+				{
+					keystep /= 2;
+				}
+				
+				while (frame[loop] != tmprotatekeys->time)
+				{
+
+					if (frame[loop] > tmprotatekeys->time)
+					{
+						if ( frame[loop] <= tmprotatekeys[1].time )
+						{
+							tmprotatekeys++;
+							break;
+						}
+						else
+						{
+							tmprotatekeys += keystep;
+						}
+					}
+					else
+					{
+						tmprotatekeys -= keystep;
+					}
+
+					if ( keystep>1 )
+					{
+						keystep /= 2;
+					}
+				}
+				////////////////////////////////////////////
+				
+				if (tmprotatekeys->time == frame[loop]) // it's on the keyframe 
+				{
+					// get quaternion rather than a matrix
+					quat[loop].x = tmprotatekeys->vect.x;
+					quat[loop].y = tmprotatekeys->vect.y;
+					quat[loop].z = tmprotatekeys->vect.z;
+					quat[loop].w = tmprotatekeys->vect.w;
+				}
+				else // work out the differences 
+				{
+					tmprotatekeyslast = tmprotatekeys - 1;
+
+					if((tmprotatekeys->vect.x == tmprotatekeyslast->vect.x) && (tmprotatekeys->vect.y == tmprotatekeyslast->vect.y) && (tmprotatekeys->vect.z == tmprotatekeyslast->vect.z) && (tmprotatekeys->vect.w == tmprotatekeyslast->vect.w))
+					{
+						// get quaternion rather than a matrix
+						quat[loop].x = tmprotatekeys->vect.x;
+						quat[loop].y = tmprotatekeys->vect.y;
+						quat[loop].z = tmprotatekeys->vect.z;
+						quat[loop].w = tmprotatekeys->vect.w;
+					}
+					else
+					{
+						// calculate blended quaternion rather than a matrix
+
+						t =  ((frame[loop] - tmprotatekeyslast->time) << 12)/(tmprotatekeys->time - tmprotatekeyslast->time);
+						t =  tmprotatekeyslast->time;
+						t =  ((frame[loop] - t) << 12)/(tmprotatekeys->time - t);
+
+						
+
+						gte_ld_intpol_sv1(&tmprotatekeyslast->vect);	// load x, y, z
+						gte_ld_intpol_sv0(&tmprotatekeys->vect);		// load x, y, z
+						gte_lddp(t);			// load interpolant
+						gte_intpl();			// interpolate (8 cycles)
+					
+						quat[loop].w = (((4096 - t) * tmprotatekeyslast->vect.w) + (t * tmprotatekeys->vect.w)) / 4096;
+					
+						gte_stlvnl(&result);	// put interpolated x y & z into result
+
+						quat[loop].x = result.vx;
+						quat[loop].y = result.vy;
+						quat[loop].z = result.vz;
+					}
+				}
+			}
+		}
+
+		// get matrix from blended quaternions
+		//ShortquaternionSlerpMatrix(&quat[0],&quat[1],b,&world->matrix);
+		{
+			LONG	s, xs,ys,zs, wx,wy,wz, xx,xy,xz, yy,yz,zz/*, cosom, tempcalc*/;
+			VECTOR	source, sqrin, sqrout;
+
+			/*
+			// calc cosine (dot product)
+			cosom = (quat[0].x * quat[1].x + quat[0].y * quat[1].y + quat[0].z * quat[1].z
+			+ quat[0].w * quat[1].w);
+
+			// adjust signs (if necessary)
+			
+			if (cosom < 0)
+			{
+				//cosom = -cosom;
+				quat[1].x = -quat[1].x;
+				quat[1].y = -quat[1].y;
+				quat[1].z = -quat[1].z;
+				quat[1].w = -quat[1].w;
+			}
+			*/
+			   
+			// "from" and "to" quaternions are very close 
+			//  ... so we can do a linear interpolation
+			
+			gte_ld_intpol_sv1(&quat[0]);
+			gte_ld_intpol_sv0(&quat[1]);
+
+			gte_lddp(b);			// load interpolant
+			gte_intpl();			// interpolate (8 cycles)
+			
+			// interpolate w manually while we wait for the GTE
+			source.vx = ((4096 - b) * quat[0].w);
+			source.vx += (b * quat[1].w);
+			source.vx /= 4096;
+
+			gte_stlvnl(&sqrin);		// put interpolated x y & z into sqrin
+
+			gte_ldlvl(&sqrin);		// load interpolated x y & z
+			gte_sqr0();				// square (5 cycles)
+			
+			// square w while we wait for the GTE
+			source.vy = source.vx * source.vx;
+
+			gte_stlvnl(&sqrout);	// put into sqrout
+
+			s = sqrout.vx + sqrout.vy + sqrout.vz + source.vy;
+
+			s = (s >> 12);
+				
+			s = (s > 1) ? (33554432 / s) : (33554432);
+			
+			xs = (sqrin.vx * s) >> 12;
+			ys = (sqrin.vy * s) >> 12;
+			zs = (sqrin.vz * s) >> 12;
+
+			wx = (source.vx * xs) >> 12;
+			wy = (source.vx * ys) >> 12;
+			wz = (source.vx * zs) >> 12;
+
+			xx = (sqrin.vx * xs) >> 12;
+			xy = (sqrin.vx * ys) >> 12;
+			xz = (sqrin.vx * zs) >> 12;
+
+			yy = (sqrin.vy * ys) >> 12;
+			yz = (sqrin.vy * zs) >> 12;
+			zz = (sqrin.vz * zs) >> 12;
+
+			world->matrix.m[0][0] = 4096 - (yy + zz);
+			world->matrix.m[0][1] = xy + wz;
+			world->matrix.m[0][2] = xz - wy;
+
+			world->matrix.m[1][0] = xy - wz;
+			world->matrix.m[1][1] = 4096 - (xx + zz);
+			world->matrix.m[1][2] = yz + wx;
+
+			world->matrix.m[2][0] = xz + wy;
+			world->matrix.m[2][1] = yz - wx;
+			world->matrix.m[2][2] = 4096 - (xx + yy);
+		}
+
+		if((world->rotate.vx) || (world->rotate.vy) || (world->rotate.vz))
+		{
+			RotMatrixYXZ_gte(&world->rotate,&rotmat1);
+			gte_MulMatrix0(&rotmat1,&world->matrix,&world->matrix);
+		}
+		
+		if(world->child)
+		{
+			psiSetRotateKeyFrames3(world->child,frame0, frame1, b, root);
+		}
+
+		if(world != root)
+			world = world->next;
+		else
+			world = 0;
+	}
+}
+
+static void psiSetScaleKeyFrames3(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b, PSIOBJECT *root)
+{
+	SVKEYFRAME	*tmpscalekeys,*tmpscalekeyslast;
+	LONG		t;
+	LONG		keystep;
+	PSIMESH		*mesh;
+	SVECTOR		scale[3];
+	ULONG		frame[2];
+	int			loop;
+
+	frame[0] = frame0;
+	frame[1] = frame1;
+
+
+	while(world)
+	{
+		mesh = world->meshdata;
+
+		for(loop = 0; loop < 2; loop ++)
+		{
+			tmpscalekeys = mesh->scalekeys;
+
+			if ((!frame[loop]) || (mesh->numScaleKeys<=1))
+			{
+				scale[loop].vx = (tmpscalekeys->vect.x)<<2;
+				scale[loop].vy = (tmpscalekeys->vect.y)<<2;
+				scale[loop].vz = (tmpscalekeys->vect.z)<<2;
+			}
+			else
+			{
+				////////////////////////////////////////////
+				// bin search
+				////////////////////////////////////////////
+				keystep = mesh->numScaleKeys / 2;
+
+				tmpscalekeys = &mesh->scalekeys[keystep];
+				
+				if ( keystep>1 )
+				{
+					keystep /= 2;
+				}
+				
+				while (frame[loop] != tmpscalekeys->time)
+				{
+
+					if (frame[loop] > tmpscalekeys->time)
+					{
+						if ( frame[loop] <= tmpscalekeys[1].time )
+						{
+							tmpscalekeys++;
+							break;
+						}
+						else
+						{
+							tmpscalekeys += keystep;
+						}
+					}
+					else
+					{
+						tmpscalekeys -= keystep;
+					}
+
+					if ( keystep>1 )
+					{
+						keystep /= 2;
+					}
+				}
+				////////////////////////////////////////////
+
+				if(tmpscalekeys->time == frame[loop])	// it's on the keyframe 
+				{
+					scale[loop].vx = (tmpscalekeys->vect.x)<<2;
+					scale[loop].vy = (tmpscalekeys->vect.y)<<2;
+					scale[loop].vz = (tmpscalekeys->vect.z)<<2;
+				}
+				else // work out the differences 
+				{
+					tmpscalekeyslast = tmpscalekeys - 1;
+
+					if((tmpscalekeys->vect.x == tmpscalekeyslast->vect.x) && (tmpscalekeys->vect.y == tmpscalekeyslast->vect.y) && (tmpscalekeys->vect.z == tmpscalekeyslast->vect.z))
+					{
+						scale[loop].vx = (tmpscalekeys->vect.x)<<2;
+						scale[loop].vy = (tmpscalekeys->vect.y)<<2;
+						scale[loop].vz = (tmpscalekeys->vect.z)<<2;
+					}
+					else
+					{
+						VECTOR temp1;
+						VECTOR temp2;
+						VECTOR dest;
+						
+						temp1.vx =((int)(tmpscalekeyslast->vect.x));
+						temp1.vy =((int)(tmpscalekeyslast->vect.y));
+						temp1.vz =((int)(tmpscalekeyslast->vect.z));
+						temp2.vx =((int)(tmpscalekeys->vect.x));
+						temp2.vy =((int)(tmpscalekeys->vect.y));
+						temp2.vz =((int)(tmpscalekeys->vect.z));
+						
+						t = tmpscalekeyslast->time;
+						t = ((frame[loop] - t) << 12) / (tmpscalekeys->time - t);
+
+						gte_lddp(t);							// load interpolant
+						gte_ldlvl(&temp1);						// load source
+						gte_ldfc(&temp2);						// load dest
+						gte_intpl();							// interpolate (8 cycles)
+						gte_stlvnl(&dest);				// store interpolated vector
+						scale[loop].vx = dest.vx<<2;
+						scale[loop].vy = dest.vy<<2;
+						scale[loop].vz = dest.vz<<2;
+
+					}
+
+				}
+			}
+		}
+
+		// interpolate between scale values
+		gte_ld_intpol_sv1(&scale[0]);
+		gte_ld_intpol_sv0(&scale[1]);
+		gte_lddp(b);
+		gte_intpl();
+		gte_stlvnl(&world->scale);
+
+		if(world->child)
+		{
+			psiSetScaleKeyFrames3(world->child,frame0, frame1, b, root);
+		}
+
+		if(world != root)
+			world = world->next;
+		else
+			world = 0;
+	}
+}
+
+static void psiSetMoveKeyFrames3(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG b, PSIOBJECT *root)
+{
+	
+	register SVKEYFRAME	*workingkeys,*tmpmovekeys;
+	LONG		t;
+	VECTOR		dest;
+	long		keystep;
+	PSIMESH 	*mesh;
+	SVECTOR		move[3];
+	int			loop;
+	ULONG		frame[2];
+
+
+	frame[0] = frame0;
+	frame[1] = frame1;
+
+
+	while(world)
+	{
+
+		mesh = world->meshdata;
+
+		for(loop = 0; loop < 2; loop ++)
+		{
+			tmpmovekeys = mesh->movekeys;//+frame;
+
+			if ((!frame[loop]) || (mesh->numMoveKeys<=1) )
+			{
+				move[loop].vx = (tmpmovekeys->vect.x);
+				move[loop].vy = -(tmpmovekeys->vect.y);
+				move[loop].vz = (tmpmovekeys->vect.z);
+			}
+			else
+			{
+				////////////////////////////////////////////
+				// bin search
+				////////////////////////////////////////////
+				keystep = mesh->numMoveKeys / 2;
+
+				tmpmovekeys = &mesh->movekeys[keystep];
+				
+				if ( keystep>1 )
+				{
+					keystep /= 2;
+				}
+				
+				while (frame[loop] != tmpmovekeys->time)
+				{
+					if (frame[loop] > tmpmovekeys->time)
+					{
+						if ( frame[loop] <= tmpmovekeys[1].time )
+						{
+							tmpmovekeys++;
+							break;
+						}
+						else
+						{
+							tmpmovekeys += keystep;
+						}
+					}
+					else
+					{
+						tmpmovekeys -= keystep;
+					}
+
+					if ( keystep>1 )
+					{
+						keystep /= 2;
+					}
+				}
+				////////////////////////////////////////////
+
+				if(tmpmovekeys->time == frame[loop])	// it's on the keyframe 
+				{
+					move[loop].vx = (tmpmovekeys->vect.x);
+					move[loop].vy = -(tmpmovekeys->vect.y);
+					move[loop].vz = (tmpmovekeys->vect.z);
+				}
+				else // work out the differences 
+				{
+					workingkeys = tmpmovekeys - 1;
+
+					if((tmpmovekeys->vect.x == workingkeys->vect.x) && (tmpmovekeys->vect.y == workingkeys->vect.y) && (tmpmovekeys->vect.z == workingkeys->vect.z))
+					{
+						move[loop].vx = (tmpmovekeys->vect.x);
+						move[loop].vy = -(tmpmovekeys->vect.y);
+						move[loop].vz = (tmpmovekeys->vect.z);
+					}
+					else
+					{
+						t = workingkeys->time;
+						t = ((frame[loop] - t) << 12) / (tmpmovekeys->time - t);
+						
+						gte_ld_intpol_sv1(&workingkeys->vect);
+						gte_ld_intpol_sv0(&tmpmovekeys->vect);
+
+						gte_lddp(t);							// load interpolant
+						gte_intpl();							// interpolate (8 cycles)
+						gte_stlvnl(&dest);						// store interpolated vector
+
+						move[loop].vx = dest.vx;
+						move[loop].vy = -dest.vy;
+						move[loop].vz = dest.vz;
+					}
+				}
+			}
+		}
+
+		// interpolate between frame0 and frame1
+		
+		gte_lddp(b);							// load interpolant
+		gte_ld_intpol_sv1(&move[0]);
+		gte_ld_intpol_sv0(&move[1]);
+		gte_intpl();							// interpolate (8 cycles)
+		gte_stlvnl(&world->matrix.t);			// store interpolated vector
+	
+		if(world->child)
+		{
+			psiSetMoveKeyFrames3(world->child, frame0, frame1, b, root);
+		}
+		
+		if(world != root)
+			world = world->next;
+		else
+			world = 0;
+	}
+}
+
+
+void psiSetKeyFrames3(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend)
+{
+	psiSetMoveKeyFrames3(world, frame0, frame1, blend, world);
+	psiSetScaleKeyFrames3(world, frame0, frame1, blend, world);
+	psiSetRotateKeyFrames3(world, frame0, frame1, blend, world);
 }
 
 

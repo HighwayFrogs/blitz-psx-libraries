@@ -300,11 +300,21 @@ void psiSetKeyFrames(PSIOBJECT *world, ULONG frame);
 /**************************************************************************
 	FUNCTION:	psiSetKeyFrames2()
 	PURPOSE:	Set the keyframes for an object and its siblings/children
-	PARAMETERS:	Pointer to object, source frame number, desination frame number, blend value
+	PARAMETERS:	Pointer to object, source frame number, destination frame number, blend value
 	RETURNS:	
 **************************************************************************/
 
 void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
+
+
+/**************************************************************************
+	FUNCTION:	psiSetKeyFrames3()
+	PURPOSE:	Set the keyframes for an object and its descendants
+	PARAMETERS:	Pointer to object, source frame number, destination frame number, blend value
+	RETURNS:	
+**************************************************************************/
+
+void psiSetKeyFrames3(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
 
 
 /**************************************************************************
