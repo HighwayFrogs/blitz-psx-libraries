@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+11-1-2000
+=========
+
+An original AM optimisation was left in the file library, so only 8k was allocated for the file table rather than the full 16k. This has been fixed now, as Titan ran out of files.
+
+
 10-1-2000
 =========
 
