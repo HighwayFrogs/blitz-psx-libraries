@@ -1,6 +1,11 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+9-2-2000
+========
+
+Fixed the sprite support in the library, so they should work properly now.
+
 4-2-2000
 ========
 

@@ -8,6 +8,13 @@
 #ifndef __ISLTEX_H__
 #define __ISLTEX_H__
 
+// 
+#define NLASTSPR	1 
+#define NEIGHTBIT	2
+#define NSPLIT		4
+#define NBITSTREAM	8
+#define NALPHA		16
+
 
 // single texture structure
 typedef struct {
@@ -37,10 +44,10 @@ typedef struct _TextureAnimType
 
 // single texture as stored within the SPT file
 typedef struct tagNSPRITE{
-	unsigned char	*image;
-	unsigned short	*pal;
-	unsigned char	w; 
-	unsigned char	h;   
+	unsigned char	*image;		// image data
+	unsigned short	*pal;		// palette data
+	unsigned char	w;			// width
+	unsigned char	h;			// height
 	short			u;    
 	short			v;     
 	unsigned short	flags;
@@ -236,6 +243,16 @@ void textureSetAnimation(TextureAnimType *texAnim, int frameNum);
 **************************************************************************/
 
 void textureDestroyAnimation(TextureAnimType *texAnim);
+
+
+/**************************************************************************
+	FUNCTION:	textureDownLoad
+	PURPOSE:	Create a TextureType from an NSPRITE
+	PARAMETERS:	NSPRITE pointer, TextureType pointer
+	RETURNS:	
+**************************************************************************/
+
+void textureDownLoad(NSPRITE *nspr, TextureType *txPtr);
 
 // useful macros for finding textures by name
 

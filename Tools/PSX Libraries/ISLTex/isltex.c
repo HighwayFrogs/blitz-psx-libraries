@@ -46,13 +46,6 @@ static int	VRAM_256PALETTES;
 
 static TextureBankType *texBank[MAXTEXBANKS];
 
-#define NLASTSPR	1 
-#define NEIGHTBIT	2
-#define NSPLIT		4
-#define NBITSTREAM	8
-#define NALPHA		16
-
-
 unsigned char	VRAMblock[VRAM_PAGES][VRAM_PAGEW*VRAM_PAGEH];
 
 unsigned short	*VRAMpalBlock;
@@ -510,7 +503,7 @@ int textureRemoveCLUT256(unsigned short clut)
 }
 
 
-static void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
+void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
 {
 	RECT			rect;
 	unsigned short	ww,hh,uMax,vMax;
