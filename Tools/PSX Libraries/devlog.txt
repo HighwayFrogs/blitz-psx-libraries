@@ -1,6 +1,16 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+24-11-99
+========
+
+Added a couple of small things to the texture library: the debugging palette counter is now reset when textureInitialise() is called.
+
+textureInitialise() now takes a parameter, specifying the number of 256-colour cluts to allocate at the start of VRAM.
+
+Added a couple of helper macros from Rich for finding textures by name.
+
+
 22-11-99
 ========
 
