@@ -697,11 +697,15 @@ void sfxStopChannel(int channel)
 	if(channel == -1)
 	{
 		for(loop = 0; loop < 24; loop ++)
+		{
 			SpuSetKey(SPU_OFF, 1 << loop);
+			SpuSetVoiceVolume(loop, 0, 0);	// mute this channel, cuz setting key off doesn't always work
+		}
 	}
 	else
 	{
 		SpuSetKey(SPU_OFF, 1 << channel);
+		SpuSetVoiceVolume(channel, 0, 0);	// mute this channel, cuz setting key off doesn't always work
 	}
 }
 
