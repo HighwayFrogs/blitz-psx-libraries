@@ -2355,8 +2355,11 @@ static void psiSetRotateKeyFrames(PSIOBJECT *world, ULONG frame)
 			}
 		}
 	   
-		RotMatrixYXZ_gte(&world->rotate,&rotmat1);
-		gte_MulMatrix0(&rotmat1,&world->matrix,&world->matrix);
+		if((world->rotate.vx) || (world->rotate.vy) || (world->rotate.vz))
+		{
+			RotMatrixYXZ_gte(&world->rotate,&rotmat1);
+			gte_MulMatrix0(&rotmat1,&world->matrix,&world->matrix);
+		}
 
 		
 		if(world->child)
@@ -2796,8 +2799,11 @@ static void psiSetRotateKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1,
 			world->matrix.m[2][2] = 4096 - (xx + yy);
 		}
 
-		RotMatrixYXZ_gte(&world->rotate,&rotmat1);
-		gte_MulMatrix0(&rotmat1,&world->matrix,&world->matrix);
+		if((world->rotate.vx) || (world->rotate.vy) || (world->rotate.vz))
+		{
+			RotMatrixYXZ_gte(&world->rotate,&rotmat1);
+			gte_MulMatrix0(&rotmat1,&world->matrix,&world->matrix);
+		}
 		
 		if(world->child)
 		{

@@ -197,6 +197,12 @@ extern VECTOR *PSIrootScale;
 
 extern long *pilLibraryList[8];
 
+// workspace variables
+extern int	biggestVertexModel;		// number of verts in largest model
+extern long *transformedVertices;	// pointer to transformed vert workspace
+extern long *transformedDepths;		// pointer to transformed depth workspace
+extern VERT *transformedNormals;	// pointer to transformed normal workspace
+
 
 // function prototypes
 
@@ -379,6 +385,16 @@ void *psiLoadPIL(char *pilName);
 **************************************************************************/
 
 void psiAllocWorkspace();
+
+
+/**************************************************************************
+	FUNCTION:	transformVertexListA()
+	PURPOSE:	transform a list of vertices into screen space
+	PARAMETERS:	pointer to verts, number of verts, pointer to screen x&y's, pointer to screen z's
+	RETURNS:	
+**************************************************************************/
+
+void transformVertexListA(VERT *vertPtr, long numVerts, long *transformedVerts, long *transformedDepths);
 
 
 #endif //__ISLPSI_H__
