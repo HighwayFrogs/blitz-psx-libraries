@@ -231,7 +231,7 @@ void *memoryAllocate(unsigned long size, char *file, int line)
 
 	if (pool.lastused==-1)									// first ever block claimed?
 	{
-		strncpy(pool.blocks[0].file, file, 19);
+		strncpy(pool.blocks[0].file, file, 14);
 		pool.blocks[0].lineno = line;
 		pool.blocks[0].inuse = 1;
 		pool.blocks[0].size = size;
