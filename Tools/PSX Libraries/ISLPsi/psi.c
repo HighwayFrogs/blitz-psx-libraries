@@ -1549,13 +1549,11 @@ static void psiDrawSortedPrimitives(int depth)
 				int			width, height;
 
 				BEGINPRIM(si, POLY_FT4);
-
 /*
 	We can't use the "quick" scaling method in skinned objects, since we don't know which
 	bone the sprite is attached to, hence we can't rtps the vertex and get the scaled width/height,
 	so we have to do the scaling based on the distance ourselves.
 */
-
 				width = ((op->v2 * gteH) / tfd[op->v0]) / 2;
 				height = ((op->v3 * gteH) / tfd[op->v0]) / 4;
 
@@ -1567,13 +1565,11 @@ static void psiDrawSortedPrimitives(int depth)
 
 				si->x1 = si->x3 = ((DVECTOR *)tfv)[op->v0].vx + width;
 				si->x0 = si->x2 = ((DVECTOR *)tfv)[op->v0].vx - width;
-		 	
 				si->y2 = si->y3 = ((DVECTOR *)tfv)[op->v0].vy + height;
 				si->y0 = si->y1 = ((DVECTOR *)tfv)[op->v0].vy - height;
+				
 				setPolyFT4(si);
-
-				si->code |= modctrl->semitrans;
-		
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, depth, POLY_FT4);
 				op = op->next;
 			}
@@ -1985,13 +1981,11 @@ void psiDrawPrimitives(int depth)
 				int			width, height;
 
 				BEGINPRIM(si, POLY_FT4);
-
 /*
 	We can't use the "quick" scaling method in skinned objects, since we don't know which
 	bone the sprite is attached to, hence we can't rtps the vertex and get the scaled width/height,
 	so we have to do the scaling based on the distance ourselves.
 */
-
 				width = ((op->v2 * gteH) / tfd[op->v0]) / 2;
 				height = ((op->v3 * gteH) / tfd[op->v0]) / 4;
 
@@ -2003,13 +1997,11 @@ void psiDrawPrimitives(int depth)
 
 				si->x1 = si->x3 = ((DVECTOR *)tfv)[op->v0].vx + width;
 				si->x0 = si->x2 = ((DVECTOR *)tfv)[op->v0].vx - width;
-		 	
 				si->y2 = si->y3 = ((DVECTOR *)tfv)[op->v0].vy + height;
 				si->y0 = si->y1 = ((DVECTOR *)tfv)[op->v0].vy - height;
+				
 				setPolyFT4(si);
-
-				si->code |= modctrl->semitrans;
-		
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, depth & 1023, POLY_FT4);
 			}
 			break;
