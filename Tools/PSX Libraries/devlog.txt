@@ -1,10 +1,28 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+14-2-2000
+=========
+
+Documented the islsfx2 API. Fixed a few teeny buggets and it's now gone out into the wild. I'm sure I'll get loads of hassle, but it's worth it, since this new library is about a thousand times better than the old one.
+
+
+11-2-2000
+=========
+
+Pretty much finished work on the first release of islsfx2.lib. Just need to document it now.
+
+
+10-2-2000
+=========
+
+Started work on a new sound library, since the old one was rather pants. Should have many new features obviously missing from the existing one.
+
+
 9-2-2000
 ========
 
-Fixed the sprite support in the library, so they should work properly now.
+Fixed the sprite support in the PSI library, so they should work properly now.
 
 4-2-2000
 ========
