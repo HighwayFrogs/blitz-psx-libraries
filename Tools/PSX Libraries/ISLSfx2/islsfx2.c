@@ -14,7 +14,7 @@
 #include "islsfx2.h"
 
 
-#define DEBUGGING
+//#define DEBUGGING
 
 
 #define SFX2_MAXSAMPLES 100
