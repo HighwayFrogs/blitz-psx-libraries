@@ -2180,9 +2180,11 @@ void psiDrawSegments(PSIDATA *psiData)
 
 		gte_ldv0(&world->meshdata->center);
 
-		modctrl->NormTop = world->meshdata->nortop;
+		gte_rtps();
 
-		gte_rtps_b();
+		modctrl->NormTop = world->meshdata->nortop;
+		np = (SVECTOR*)world->meshdata->nortop;
+		j = world->meshdata->norn;
 
 		gte_stszotz(&world->depth);
 
@@ -2193,8 +2195,6 @@ void psiDrawSegments(PSIDATA *psiData)
 			gte_SetRotMatrix(&world->matrix);			 
 	   		//gte_SetTransMatrix(&world->matrix);	
 			
-			np = (SVECTOR*)world->meshdata->nortop;
-			j = world->meshdata->norn;
 			
 			for(i = 0; i < j; i ++)
 			{
