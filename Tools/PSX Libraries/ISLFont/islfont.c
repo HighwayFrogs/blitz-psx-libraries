@@ -33,6 +33,10 @@
 
 static TextureType	*buttonSprites[4];
 
+static TextureType	*otherSprites[16];
+static char			otherChars[16];
+static int			numOtherSprites;
+
 
 unsigned char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-=+[]{}:;\"'|\\,<.>/?"
 					"\xe0\xe8\xec\xf2\xf9\xc0\xc8\xcc\xd2\xd9\xe1\xe9\xed\xf3\xfa\xfd\xc1\xc9\xcd\xd3\xda\xdd\xe2\xea\xee\xf4\xfb\xc2\xca\xce\xd4\xdb\xe3\xf1\xf5\xc3\xd1\xd5\xe4\xeb\xef\xf6\xfc\xff\xc4\xcb\xcf\xd6\xdc\xe5\xc5\xe6\xc6\xe7\xc7\xf0\xd0\xf8\xd8\xbf\xa1\xdf";
@@ -92,6 +96,8 @@ psFont *fontLoad(char *fontname)
 	int				*fontptr;
 	psFont			*font;
 //	unsigned char			*str;
+
+	numOtherSprites = 0;
 
 	font = (psFont *)MALLOC(sizeof(psFont));
 	if ((fontdata = fileLoad(fontname, NULL))==NULL)
@@ -220,6 +226,18 @@ void fontPrint(psFont *font, short x,short y, char *text, unsigned char r, unsig
 				x += buttonSprites[0]->w+6;
 				break;
 			}
+
+			for(loop = 0; loop < numOtherSprites; loop ++)
+			{
+				if((*(strPtr+1)) == otherChars[loop])
+				{
+					fontDispSprite(otherSprites[loop], x+3,y-3);
+					strPtr++;
+					x += otherSprites[loop]->w+6;
+					break;
+				}
+			}
+
 			break;
 
 		default:
@@ -284,6 +302,17 @@ int fontExtentW(psFont *font, char *text)
 				x += buttonSprites[0]->w+6;
 				break;
 			}
+
+			for(loop = 0; loop < numOtherSprites; loop ++)
+			{
+				if((*(strPtr+1)) == otherChars[loop])
+				{
+					strPtr++;
+					x += otherSprites[loop]->w+6;
+					break;
+				}
+			}
+
 			break;
 		default:
 			loop = font->charlookup[c];
@@ -404,6 +433,18 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 				x += buttonSprites[0]->w+6;
 				break;
 			}
+
+			for(loop = 0; loop < numOtherSprites; loop ++)
+			{
+				if((*(strPtr+1)) == otherChars[loop])
+				{
+					fontDispSprite(otherSprites[loop], x+3,y-3);
+					strPtr++;
+					x += otherSprites[loop]->w+6;
+					break;
+				}
+			}
+
 			break;
 		default:
 			loop = font->charlookup[c];
@@ -464,4 +505,16 @@ void fontRegisterButtonSprites(TextureType *triangle, TextureType *circle, Textu
 	buttonSprites[1] = circle;
 	buttonSprites[2] = cross;
 	buttonSprites[3] = square;
+}
+
+
+void fontRegisterOtherSprites(char code, TextureType *sprite)
+{
+
+	if(numOtherSprites < 16)
+	{
+		otherSprites[numOtherSprites] = sprite;
+		otherChars[numOtherSprites] = code;
+		numOtherSprites ++;
+	}
 }

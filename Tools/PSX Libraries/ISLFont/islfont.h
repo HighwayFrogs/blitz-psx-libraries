@@ -93,4 +93,14 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 void fontRegisterButtonSprites(TextureType *triangle, TextureType *circle, TextureType *cross, TextureType *square);
 
 
+/**************************************************************************
+	FUNCTION:	fontRegisterOtherSprites()
+	PURPOSE:	Set sprites to be used for display
+	PARAMETERS:	character code ,pointers to sprite
+	RETURNS:	
+**************************************************************************/
+
+void fontRegisterOtherSprites(char code, TextureType *sprite);
+
+
 #endif //__ISLFONT_H__
