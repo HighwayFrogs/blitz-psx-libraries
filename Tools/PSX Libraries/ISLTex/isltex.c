@@ -1298,13 +1298,13 @@ TextureAnimType *textureCreateAnimation(TextureType *dummy, TextureType **anim, 
 	int				loop;
 	int				mallocSize;
 
-	mallocSize = sizeof(TextureAnimType) + (sizeof(TextureType) * numFrames);
+	mallocSize = sizeof(TextureAnimType) + (sizeof(TextureType *) * numFrames);
 
 	texAnim = MALLOC(mallocSize);
 
 	texAnim->dest = dummy;
 
-	texAnim->anim = (TextureType *)((unsigned char *)texAnim + sizeof(TextureAnimType));
+	texAnim->anim = (TextureType **)((unsigned char *)texAnim + sizeof(TextureAnimType));
 
 	for(loop = 0; loop < numFrames; loop ++)
 	{
