@@ -1,6 +1,15 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+2-11-99
+=======
+
+Finished the reference counting of textures, freeing a texture now checks its reference count and only frees it from VRAM when there are no other references to it. CRC's now work properly (rather that not). Also checks to see if the texture dimensions are the same, just in case two different sized textures produce the same CRC (unlikely, but nevertheless possible).
+
+1-11-99
+=======
+
+Working on the texture library at the moment. Added some limited 256 colour support (only 16 palettes). Changed the palette organisation, so that ram copies are not needed any more, just uses CRC's instead. Textures also now have CRC's, so that textures with multiple palettes can be used without wasting VRAM.
 
 
 30-10-99
