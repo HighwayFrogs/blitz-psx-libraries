@@ -20,11 +20,13 @@
 
 extern psFont	*font;
 
-#define MAXTEXBANKS		50
-#define VRAM_PALETTES	300
+#define MAXTEXBANKS			50
+#define VRAM_PALETTES		300
+#define VRAM_256PALETTES	16
 
 // Richard's funky macros for calculating vram related stuff
 
+#define VRAM_STARTX			512
 #define VRAM_PAGECOLS		8
 #define VRAM_PAGEROWS		2
 #define VRAM_PAGES			16
@@ -54,23 +56,17 @@ unsigned char	VRAMblock[VRAM_PAGES][VRAM_PAGEW*VRAM_PAGEH];
 unsigned short	VRAMpalBlock[VRAM_PALETTES];
 int				VRAMpalHandle[VRAM_PALETTES/32];
 unsigned short	VRAMpalCLUT[VRAM_PALETTES];
-unsigned short	VRAMpalette[VRAM_PALETTES][16];
 
-/*
-typedef struct {
-	unsigned char		x;
-	unsigned char		y;
-	unsigned char		w;
-	unsigned char		h;
-	unsigned short		tpage;
-	unsigned short		clut;
-	unsigned char		u0, v0;
-	unsigned char		u1, v1;
-	unsigned char		u2, v2;
-	unsigned char		u3, v3;
-	int					handle;
-} TextureType;
-*/
+// *** NEW IMPROVED CRC CHECKING FOR PALETTES!!! ***
+unsigned long	VRAMpalCRC[VRAM_PALETTES];
+
+unsigned long	VRAMpal256CRC[VRAM_256PALETTES];
+unsigned long	VRAMpal256CLUT[VRAM_256PALETTES];
+unsigned short	VRAMpal256Block[VRAM_256PALETTES];
+
+unsigned short	currentPal16[16];
+unsigned short	currentPal256[256];
+
 
 #ifdef _DEBUG
 unsigned int	palsused = 0;
@@ -155,6 +151,35 @@ void textureVRAMfree(int handle, short w, short h)
 	}
 }
 
+/**************************************************************************
+	FUNCTION:	textureInit256ClutSpace()
+	PURPOSE:	Allocate some space for 256 colour palettes
+	PARAMETERS:	
+	RETURNS:
+**************************************************************************/
+
+void textureInit256ClutSpace()
+{
+	int		page, x,i;
+
+	for(page = 0; page < 4; page ++)
+	{
+		for(x = 0; x < VRAM_PAGEW; x ++)
+		{
+			for(i = 0; i < (VRAM_256PALETTES / 8); i ++)
+			{
+				VRAMblock[page][VRAM_SETXY(x, i)] = 1;
+			}
+		}
+	}
+
+	for(i = 0; i < VRAM_256PALETTES; i ++)
+	{
+		VRAMpal256Block[i] = 0;
+		VRAMpal256CRC[i] = 0;
+	}
+}
+
 
 /**************************************************************************
 	FUNCTION:	textureInitialise()
@@ -176,7 +201,7 @@ void textureInitialise()
 	memset(VRAMblock, 0, sizeof(VRAMblock));
 	memset(VRAMpalBlock, 0, sizeof(VRAMpalBlock));
 	memset(VRAMpalHandle, 0, sizeof(VRAMpalHandle));
-	memset(VRAMpalette, 0, sizeof(VRAMpalette));
+	memset(VRAMpalCRC, 0, sizeof(VRAMpalCRC));
 	rect.x = rect.y = 0;
 	rect.w = 512;
 	rect.h = 512;
@@ -199,37 +224,36 @@ void textureInitialise()
 		DrawSync(0);
 	}
 
+	textureInit256ClutSpace();
+
 }
 
 unsigned short textureAddCLUT16(unsigned short *palette)
 {
-#ifdef _DEBUG
-	int		test, match;
-#endif
-	int		pal,col,hnd, r,g,b;
-	RECT	rect;
+	int				pal,col,hnd, r,g,b;
+	RECT			rect;
+	unsigned long	palCRC;
 
 	for(col=0; col<16; col++)								// Mask out magenta + mark transparencies
 	{
 		r = (palette[col]>>10) & 31;
 		g = (palette[col]>>5) & 31;
 		b = palette[col] & 31;
+
+		// close enough to magenta
 		if ((r>20) && (g<10) && (b>20))
 			palette[col] = 0x0000;
 		else
 			palette[col] |= 0x8000;
 	}
 
+	palCRC = utilBlockCRC((char *)palette, (2 * 16));
+
    	for(pal=0; pal<VRAM_PALETTES; pal++)					// Search for matching palette
    	{
 		if (VRAMpalBlock[pal])
 		{
-  			for(col=0; col<16; col++)
-			{
-  				if (palette[col]!=VRAMpalette[pal][col])
-					break;
-			}
-	  		if ( col == 16 )									// Found match
+			if(palCRC == VRAMpalCRC[pal])	// Found match
 			{
 				VRAMpalBlock[pal]++;
 				hnd = VRAMpalHandle[pal/32];
@@ -258,8 +282,7 @@ unsigned short textureAddCLUT16(unsigned short *palette)
 			DrawSync(0);
 			LoadImage(&rect, (unsigned long *)palette);
 			DrawSync(0);
-			for(col=0; col<16; col++)						// Local copy
-				VRAMpalette[pal][col] = palette[col];
+			VRAMpalCRC[pal] = palCRC;	// keep checksum of this palette
 			VRAMpalCLUT[pal] = getClut(rect.x,rect.y);
 #ifdef _DEBUG
 			palsused++;
@@ -307,6 +330,98 @@ void textureRemoveCLUT16(unsigned short clut)
 }
 
 
+unsigned short textureAddCLUT256(unsigned short *palette)
+{
+	int				pal,col,r,g,b;
+	RECT			rect;
+	int				found;
+	unsigned long	palCRC;
+
+#ifdef _DEBUG
+	utilPrintf("\nAdding 8-bit CLUT ...");
+#endif
+
+	for(col = 0; col < 256; col ++)								// Mask out magenta + mark transparencies
+	{
+		r = (palette[col] >> 10) & 31;
+		g = (palette[col] >> 5) & 31;
+		b = palette[col] & 31;
+
+		if ((r > 20) && (g < 10) && (b > 20))
+			palette[col] = 0x0000;
+		else
+			palette[col] |= 0x8000;
+	}
+
+	palCRC = utilBlockCRC((char *)palette, (256 * 2));
+
+	for(found = 0; found < VRAM_256PALETTES; found ++)
+	{
+		if(VRAMpal256CRC[found] == palCRC)
+		{
+			VRAMpal256Block[found] ++;
+
+			return(VRAMpal256CLUT[found]);
+		}
+	}
+	
+	
+	// CLUT wasn't found in the list
+
+	for(pal=0; pal < VRAM_256PALETTES; pal++)					// Search for new palette slot
+	{
+		if (VRAMpal256Block[pal] == 0)
+		{
+			VRAMpal256Block[pal] = 1;
+
+			rect.x = VRAM_STARTX;		// Copy up the palette
+			rect.y = pal;
+			rect.w = 256;
+			rect.h = 1;
+			LoadImage(&rect, (unsigned long *)palette);
+
+			VRAMpal256CLUT[pal] = getClut(rect.x,rect.y);
+			VRAMpal256Block[pal] = 1;
+			VRAMpal256CRC[pal] = palCRC;
+
+			return(VRAMpal256CLUT[pal]);
+		}
+	}
+
+	utilPrintf("\nOut of 8 bit palettes!");
+
+	return NULL;
+}
+
+
+int textureRemoveCLUT256(unsigned short clut)
+{
+	int pal;
+
+
+#ifdef _DEBUG
+	utilPrintf("Removing 8 bit palette ...\n");
+#endif
+
+	for(pal = 0; pal < VRAM_256PALETTES; pal ++)
+	{
+		if(VRAMpal256CLUT[pal] == clut)
+		{
+			if((-- VRAMpal256Block[pal]) <= 0)
+			{
+#ifdef _DEBUG
+				utilPrintf("Freeing it\n");
+#endif
+				VRAMpal256Block[pal] = 0;
+				VRAMpal256CLUT[pal] = 0;
+				VRAMpal256CRC[pal] = 0;
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
 
 
 static void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
@@ -315,27 +430,45 @@ static void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
 	unsigned short	ww,hh,uMax,vMax;
 	int		handle;
 
-	txPtr->clut = textureAddCLUT16(nspr->pal);
+	if(nspr->flags & NEIGHTBIT)
+		txPtr->clut = textureAddCLUT256(nspr->pal);
+	else
+		txPtr->clut = textureAddCLUT16(nspr->pal);
 
 	ww = (nspr->w+7)/8;
 	hh = (nspr->h+7)/8;
+
+	if(nspr->flags & NEIGHTBIT)
+		ww*=2;
+
 	handle = textureVRAMalloc(ww,hh);
 	rect.x = VRAM_CALCVRAMX(handle);
 	rect.y = VRAM_CALCVRAMY(handle);
 	rect.w = (nspr->w+3)/4;
 	rect.h = nspr->h;
 
+	if(nspr->flags & NEIGHTBIT)
+		rect.w *= 2;	
+
 	DrawSync(0);
 	LoadImage(&rect,((unsigned long*)nspr->image)+1); 
-	txPtr->tpage = getTPage(0,0,rect.x,rect.y);
+	
+	txPtr->tpage = getTPage(
+		((nspr->flags & NEIGHTBIT) ? 1 : 0),
+		0, rect.x, rect.y);
+
 	txPtr->x = VRAM_GETX(handle)*8;
+
+	if(nspr->flags & NEIGHTBIT)
+		txPtr->x = txPtr->x / 2;
+
 	txPtr->y = rect.y;
 
-	uMax = txPtr->x+nspr->w-1;
-	if (uMax>255)
+	uMax = txPtr->x + nspr->w - 1;
+	if (uMax > 255)
 		uMax = 255;
-	vMax = txPtr->y+nspr->h-1;
-	if (vMax>255)
+	vMax = txPtr->y + nspr->h - 1;
+	if (vMax > 255)
 		vMax = 255;
 
 	txPtr->w = nspr->w;
@@ -369,12 +502,22 @@ void textureUnload(TextureType *txPtr)
 	rect.y = VRAM_CALCVRAMY(txPtr->handle);
 	rect.w = 2*((txPtr->w+7)/8);
 	rect.h = 8*((txPtr->h+7)/8);
+
+	if(txPtr->tpage & (1 << 7))
+		rect.w *= 2;
+
 	if ((page+page/VRAM_PAGECOLS) & 1)
 		ClearImage(&rect, 64,64,64);
 	else
 		ClearImage(&rect, 100,100,100);
+	
 	textureVRAMfree(txPtr->handle, (txPtr->w+7)/8,(txPtr->h+7)/8);
-	textureRemoveCLUT16(txPtr->clut);
+
+	if(txPtr->tpage & (1 << 7))
+		textureRemoveCLUT256(txPtr->clut);
+	else
+		textureRemoveCLUT16(txPtr->clut);
+	
 	DrawSync(0);
 }
 
@@ -684,30 +827,93 @@ static void VRAMdrawPalette(unsigned long clut, int y)
 	POLY_F4		*f4;
 	char		str[40];
 	int			pal, loop;
+	RECT		rect;
 
-   	for(pal=0; pal<VRAM_PALETTES; pal++)
+	rect.x = (clut & 0x3f) << 4;
+	rect.y = (clut >> 6);
+	rect.w = 16;
+	rect.h = 1;
+
+	DrawSync(0);
+	StoreImage(&rect, &currentPal16[0]);
+   	
+	BEGINPRIM(f4, POLY_F4);
+	setPolyF4(f4);
+	setXYWH(f4, -230-2,y-1, 16*20+3,10);
+	setRGB0(f4, 128,128,128);
+	ENDPRIM(f4, 1, POLY_F4);
+	for(loop=0; loop<16; loop++)
+	{
+		BEGINPRIM(f4, POLY_F4);
+		setPolyF4(f4);
+		setXYWH(f4, -230+loop*20,y, 20,8);
+		setRGB0(f4, 8*((currentPal16[loop]>>0) & 0x1f),
+					8*((currentPal16[loop]>>5) & 0x1f),
+					8*((currentPal16[loop]>>10) & 0x1f));
+   		ENDPRIM(f4, 0, POLY_F4);
+   	}
+
+	for(pal=0; pal<VRAM_PALETTES; pal++)
    	{
    		if ((VRAMpalBlock[pal]) && (clut==VRAMpalCLUT[pal]))
    		{
+			sprintf(str, "Palette #%d (used %dx) CRC=0x%x", pal, VRAMpalBlock[pal], VRAMpalCRC[pal]);
+   			fontPrint(font, -230,y+13, str, 128,128,128);
+			break;
+		}
+	}
+
+}
+
+static void VRAMdrawPalette256(unsigned long clut, int y)
+{
+	POLY_F4			*f4;
+	char			str[40];
+	int				pal, loop, loop2;
+	RECT			rect;
+	unsigned short	*palPtr;
+
+	rect.x = (clut & 0x3f) << 4;
+	rect.y = (clut >> 6);
+	rect.w = 256;
+	rect.h = 1;
+
+	DrawSync(0);
+	StoreImage(&rect, &currentPal256[0]);
+   	
+	BEGINPRIM(f4, POLY_F4);
+	setPolyF4(f4);
+	setXYWH(f4, -230-2,y-1, 16*20+3,10);
+	setRGB0(f4, 128,128,128);
+	ENDPRIM(f4, 1, POLY_F4);
+
+	palPtr = &currentPal256[0];
+
+	for(loop = 0; loop < 4; loop ++)
+	{
+		for(loop2 = 0; loop2 < 64; loop2 ++)
+		{
 			BEGINPRIM(f4, POLY_F4);
 			setPolyF4(f4);
-			setXYWH(f4, -230-2,y-1, 16*20+3,12);
-			setRGB0(f4, 128,128,128);
-			ENDPRIM(f4, 1, POLY_F4);
-   			for(loop=0; loop<16; loop++)
-   			{
-   				BEGINPRIM(f4, POLY_F4);
-   				setPolyF4(f4);
-   				setXYWH(f4, -230+loop*20,y, 20,10);
-   				setRGB0(f4, 8*((VRAMpalette[pal][loop]>>0) & 0x1f),
-   							8*((VRAMpalette[pal][loop]>>5) & 0x1f),
-   							8*((VRAMpalette[pal][loop]>>10) & 0x1f));
-   				ENDPRIM(f4, 0, POLY_F4);
-   			}
-   			sprintf(str, "Palette #%d (used %dx)", pal, VRAMpalBlock[pal]);
-   			fontPrint(font, -230,y+13, str, 128,128,128);
+			setXYWH(f4, -230+loop2*5,y, 5, 2);
+			setRGB0(f4, 8*(((*palPtr)>>0) & 0x1f),
+						8*(((*palPtr)>>5) & 0x1f),
+						8*(((*palPtr)>>10) & 0x1f));
+   			ENDPRIM(f4, 0, POLY_F4);
+			palPtr ++;
    		}
-   	}
+		y += 2;
+	}
+
+	for(pal=0; pal<VRAM_256PALETTES; pal++)
+   	{
+   		if ((VRAMpal256Block[pal]) && (clut==VRAMpal256CLUT[pal]))
+   		{
+			sprintf(str, "256Palette #%d (used %dx) CRC=0x%x", pal, VRAMpal256Block[pal], VRAMpal256CRC[pal]);
+   			fontPrint(font, -230,y+5, str, 128,128,128);
+			break;
+		}
+	}
 }
 
 static void VRAMviewTextures(int *currTex)
@@ -747,7 +953,11 @@ static void VRAMviewTextures(int *currTex)
 		ft4->clut = tex->clut;
 		ENDPRIM(ft4, 1, POLY_FT4);
 
-		VRAMdrawPalette(tex->clut, -90);
+		if(tex->tpage & (1 << 7))
+			VRAMdrawPalette256(tex->clut, -90);
+		else
+			VRAMdrawPalette(tex->clut, -90);
+
 		sprintf(str, "Texture #%d (%dx%d)", *currTex, tex->w,tex->h);
 		fontPrint(font, -fontExtentW(font, str)/2,75, str, 128,128,128);
 		yu = -tex->h/2-8;
@@ -889,6 +1099,9 @@ void textureSetAnimation(TextureAnimType *texAnim, int frameNum)
 	moveRect.w = (texAnim->dest->w + 3) / 4;
 	moveRect.h = texAnim->dest->h;
 
+	// check for 256 colour mode
+	if(texAnim->dest->tpage & (1 << 7))
+		moveRect.w *= 2;
 
 	// copy bit of vram
 	BEGINPRIM(siMove, DR_MOVE);
