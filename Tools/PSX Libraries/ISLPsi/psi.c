@@ -933,9 +933,9 @@ PSIMODEL *psiFixup(char *addr)
 
 void psiAllocWorkspace()
 {
-	transformedVertices = (long*)MALLOC( biggestVertexModel * sizeof(long) );
-	transformedDepths = (long*)MALLOC( biggestVertexModel * sizeof(long) );
-	transformedNormals = (VERT*)MALLOC( biggestVertexModel * sizeof(VERT));
+	transformedVertices = (long*)MALLOC( (biggestVertexModel + 2) * sizeof(long) );
+	transformedDepths = (long*)MALLOC( (biggestVertexModel + 2) * sizeof(long) );
+	transformedNormals = (VERT*)MALLOC( (biggestVertexModel + 2) * sizeof(VERT));
 }
 
 
@@ -3126,7 +3126,7 @@ static void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 			psiCalcChildMatrix(world->child, world);
 
 		// if inherit scale is off, then scale matrix after calculating children
-		if(!PSImodelctrl.inheritScale)
+		if(PSImodelctrl.inheritScale == 0)
 			ScaleMatrix(&world->matrixscale,&world->scale);
 		
 		world = world->next;
