@@ -38,7 +38,7 @@ unsigned char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
 					"\xe0\xe8\xec\xf2\xf9\xc0\xc8\xcc\xd2\xd9\xe1\xe9\xed\xf3\xfa\xfd\xc1\xc9\xcd\xd3\xda\xdd\xe2\xea\xee\xf4\xfb\xc2\xca\xce\xd4\xdb\xe3\xf1\xf5\xc3\xd1\xd5\xe4\xeb\xef\xf6\xfc\xff\xc4\xcb\xcf\xd6\xdc\xe5\xc5\xe6\xc6\xe7\xc7\xf0\xd0\xf8\xd8\xbf\xa1\xdf";
 
 
-static void fontDispSprite(TextureType *tex, short x,short y, UBYTE r, UBYTE g, UBYTE b, UBYTE transMode, UBYTE depth, USHORT scale, USHORT rot, UBYTE xflip);
+static void fontDispSprite(TextureType *tex, short x,short y);
 
 static void fontDownload(psFont *font, char *fontdata, int character)
 {
@@ -196,6 +196,32 @@ void fontPrint(psFont *font, short x,short y, char *text, unsigned char r, unsig
 		case ' ':
 			x += font->height/2;
 			break;
+		case '@':
+			switch(*(strPtr+1))
+			{
+			case 'X':
+			    fontDispSprite(buttonSprites[2], x+(buttonSprites[2]->w/2)+6,y+6);
+				strPtr++;
+				x += buttonSprites[2]->w+(buttonSprites[2]->w/2)+6;
+				break;
+			case 'C':
+			   	fontDispSprite(buttonSprites[1], x+(buttonSprites[1]->w/2)+6,y+6);
+				strPtr++;
+				x += buttonSprites[1]->w+(buttonSprites[1]->w/2)+6;
+				break;
+			case 'S':
+			   	fontDispSprite(buttonSprites[3], x+(buttonSprites[3]->w/2)+6,y+6);
+				strPtr++;
+				x += buttonSprites[3]->w+(buttonSprites[3]->w/2)+6;
+				break;
+			case 'T':
+			   	fontDispSprite(buttonSprites[0], x+(buttonSprites[0]->w/2)+6,y+6);
+				strPtr++;
+				x += buttonSprites[0]->w+(buttonSprites[0]->w/2)+6;
+				break;
+			}
+			break;
+
 		default:
 			loop = font->charlookup[c];
 			if (loop<font->numchars)
@@ -237,6 +263,27 @@ int fontExtentW(psFont *font, char *text)
 			break;
 		case ' ':
 			x += font->height/2;
+			break;
+		case '@':
+			switch(*(strPtr+1))
+			{
+			case 'X':
+				strPtr++;
+				x += buttonSprites[2]->w+(buttonSprites[2]->w/2)+6;
+				break;
+			case 'C':
+				strPtr++;
+				x += buttonSprites[1]->w+(buttonSprites[1]->w/2)+6;
+				break;
+			case 'S':
+				strPtr++;
+				x += buttonSprites[3]->w+(buttonSprites[3]->w/2)+6;
+				break;
+			case 'T':
+				strPtr++;
+				x += buttonSprites[0]->w+(buttonSprites[0]->w/2)+6;
+				break;
+			}
 			break;
 		default:
 			loop = font->charlookup[c];
@@ -337,24 +384,24 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 			switch(*(strPtr+1))
 			{
 			case 'X':
-			    fontDispSprite(buttonSprites[2], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			    fontDispSprite(buttonSprites[2], x+(buttonSprites[2]->w/2)+6,y+6);
 				strPtr++;
-				x += 32;
+				x += buttonSprites[2]->w+(buttonSprites[2]->w/2)+6;
 				break;
 			case 'C':
-			   	fontDispSprite(buttonSprites[1], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			   	fontDispSprite(buttonSprites[1], x+(buttonSprites[1]->w/2)+6,y+6);
 				strPtr++;
-				x += 32;
+				x += buttonSprites[1]->w+(buttonSprites[1]->w/2)+6;
 				break;
 			case 'S':
-			   	fontDispSprite(buttonSprites[3], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			   	fontDispSprite(buttonSprites[3], x+(buttonSprites[3]->w/2)+6,y+6);
 				strPtr++;
-				x += 32;
+				x += buttonSprites[3]->w+(buttonSprites[3]->w/2)+6;
 				break;
 			case 'T':
-			   	fontDispSprite(buttonSprites[0], x+16,y+6, 128,128,128, 0, 0, 4096,-1,0);
+			   	fontDispSprite(buttonSprites[0], x+(buttonSprites[0]->w/2)+6,y+6);
 				strPtr++;
-				x += 32;
+				x += buttonSprites[0]->w+(buttonSprites[0]->w/2)+6;
 				break;
 			}
 			break;
@@ -373,7 +420,7 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 	}
 }
 
-static void fontDispSprite(TextureType *tex, short x,short y, UBYTE r, UBYTE g, UBYTE b, UBYTE transMode, UBYTE depth, USHORT scale, USHORT rot, UBYTE xflip)
+static void fontDispSprite(TextureType *tex, short x,short y)
 {
 	POLY_FT4 	*si;
 	USHORT		w,h;
@@ -381,63 +428,21 @@ static void fontDispSprite(TextureType *tex, short x,short y, UBYTE r, UBYTE g, 
 	
 	BEGINPRIM(si, POLY_FT4);
 
-	w = (tex->w*2*scale)/8192;
-	h = (tex->h*scale)/8192;
+	w = tex->w;
+	h = tex->h;
 
-
-	if (rot>4095)
-	{
-		if (!xflip)
-		{
-			si->x0 = x-w;
-			si->y0 = y-h;
-			si->x1 = x+w;
-			si->y1 = y-h;
-			si->x2 = x-w;
-			si->y2 = y+h-1;
-			si->x3 = x+w;
-			si->y3 = y+h-1;
-		}
-		else
-		{
-			si->x0 = x+w;
-			si->y0 = y-h;
-			si->x1 = x-w;
-			si->y1 = y-h;
-			si->x2 = x+w;
-			si->y2 = y+h-1;
-			si->x3 = x-w;
-			si->y3 = y+h-1;
-		}
-	}
-	else
-	{
-		if (!xflip)
-		{
-			si->x0 = x-(w*rsin(ANG2FIX(135)+rot))/2897;		// Inverse of root 2
-			si->y0 = y+(h*rcos(ANG2FIX(135)+rot))/2897;
-			si->x1 = x-(w*rsin(ANG2FIX(225)+rot))/2897;
-			si->y1 = y+(h*rcos(ANG2FIX(225)+rot))/2897;
-			si->x2 = x-(w*rsin(ANG2FIX(45)+rot))/2897;
-			si->y2 = y+(h*rcos(ANG2FIX(45)+rot))/2897;
-			si->x3 = x-(w*rsin(ANG2FIX(315)+rot))/2897;
-			si->y3 = y+(h*rcos(ANG2FIX(315)+rot))/2897;
-		}
-		else
-		{
-			si->x0 = x+(w*rsin(ANG2FIX(135)+rot))/2897;
-			si->y0 = y+(h*rcos(ANG2FIX(135)+rot))/2897;
-			si->x1 = x+(w*rsin(ANG2FIX(225)+rot))/2897;
-			si->y1 = y+(h*rcos(ANG2FIX(225)+rot))/2897;
-			si->x2 = x+(w*rsin(ANG2FIX(45)+rot))/2897;
-			si->y2 = y+(h*rcos(ANG2FIX(45)+rot))/2897;
-			si->x3 = x+(w*rsin(ANG2FIX(315)+rot))/2897;
-			si->y3 = y+(h*rcos(ANG2FIX(315)+rot))/2897;
-		}
-	}
-	si->r0 = r;
-	si->g0 = g;
-	si->b0 = b;
+	si->x0 = x-w;
+	si->y0 = y-h;
+	si->x1 = x+w;
+	si->y1 = y-h;
+	si->x2 = x-w;
+	si->y2 = y+h-1;
+	si->x3 = x+w;
+	si->y3 = y+h-1;
+		
+	si->r0 = 128;
+	si->g0 = 128;
+	si->b0 = 128;
 	si->u0 = tex->u0;
 	si->v0 = tex->v0;
 	si->u1 = tex->u1;
@@ -448,13 +453,8 @@ static void fontDispSprite(TextureType *tex, short x,short y, UBYTE r, UBYTE g, 
 	si->v3 = tex->v3;
 	si->tpage = tex->tpage;
 	si->clut = tex->clut;
-	si->code = 0x2c;
-	if (transMode)
-	{
-		SETSEMIPRIM(si, transMode);
-		si->code |= 2;
-	}
-	ENDPRIM(si, depth, POLY_FT4);
+	setPolyFT4(si);
+	ENDPRIM(si, 0, POLY_FT4);
 }
 
 
