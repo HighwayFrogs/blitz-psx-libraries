@@ -62,7 +62,7 @@ typedef struct _sfxListType
 
 static sfxBankType		sampleBank;
 static long				lastSampleCall[MAX_SAMPLES];
-static unsigned long	sfxFrameNum;
+static long				sfxFrameNum;
 static sfxListType		sfxList[SAMPLELIST_LENGTH];
 static int				listHead, listTail;
 
@@ -79,7 +79,7 @@ static int				listHead, listTail;
 	RETURNS:	channel number
 **************************************************************************/
 
-unsigned long sfxPlayVoice(int sfxNum);
+static unsigned long sfxPlayVoice(int sfxNum);
 
 /**************************************************************************
 	FUNCTION:	sfxStopVoice()
@@ -88,7 +88,7 @@ unsigned long sfxPlayVoice(int sfxNum);
 	RETURNS:	none
 **************************************************************************/
 
-void sfxStopVoice(int channelNum);
+static void sfxStopVoice(int channelNum);
 
 
 /**************************************************************************
@@ -98,17 +98,8 @@ void sfxStopVoice(int channelNum);
 	RETURNS:	none
 **************************************************************************/
 
-void sfxSetVoiceVolume(int channelNum, int vol);
+static void sfxSetVoiceVolume(int channelNum, int vol);
 
-
-/**************************************************************************
-	FUNCTION:	sfxSetPitch()
-	PURPOSE:	set pitch of channel
-	PARAMETERS:	channel number, pitch
-	RETURNS:	none
-**************************************************************************/
-
-void sfxSetVoicePitch(int channelNum, int pitch);
 
 /**************************************************************************
 	FUNCTION:	sfxCalc3DPosition()
@@ -179,12 +170,15 @@ static int sfxCalc3DPosition(VECTOR *pos, VECTOR *camPos, VECTOR *camRef, int *l
 	RETURNS:	none
 **************************************************************************/
 
-unsigned long sfxPlayVoice(int sfxNum)
+static unsigned long sfxPlayVoice(int sfxNum)
 {
 	unsigned long voiceLoop;
 
 	if (lastSampleCall[sfxNum]+2 > sfxFrameNum)
+	{
+		//printf("\nlastSampleCall[%d] = %d, sfxFrameNum = %d",sfxNum, lastSampleCall[sfxNum], sfxFrameNum);
 		return -2;
+	}
 
 	lastSampleCall[sfxNum] = sfxFrameNum;
 
@@ -218,9 +212,11 @@ unsigned long sfxPlayVoice(int sfxNum)
 	RETURNS:	none
 **************************************************************************/
 
-void sfxSetVoiceVolume(int sampleNum, int vol)
+static void sfxSetVoiceVolume(int sampleNum, int vol)
 {
-	if (sampleNum < 0 || sampleNum > 99) return;
+	if (sampleNum < 0 || sampleNum > 23)
+		return;
+
 	SpuSetVoiceVolume(sampleNum,(vol*sampleBank.volume)/100,(vol*sampleBank.volume)/100);	// channel, left vol, right vol,
 }
 
@@ -232,9 +228,11 @@ void sfxSetVoiceVolume(int sampleNum, int vol)
 	RETURNS:	none
 **************************************************************************/
 
-void sfxStopVoice(int sfxNum)
+static void sfxStopVoice(int sfxNum)
 {
-	if (sfxNum < 0 || sfxNum > 99) return;
+	if (sfxNum < 0 || sfxNum > 23)
+		return;
+
 	SpuSetKey(SPU_OFF, 1 << sfxNum);
 }
 
@@ -413,13 +411,13 @@ void sfxStartSound()
 
 
 /**************************************************************************
-	FUNCTION:	sfxDisableDMA()
+	FUNCTION:	sfxStopSound()
 	PURPOSE:	Stop sound DMA processing
 	PARAMETERS:	none
 	RETURNS:	none
 **************************************************************************/
 
-void sfxDisableDMA()
+void sfxStopSound()
 {
 #ifdef _DEBUG
 	printf("\nSound system stopped...");
@@ -641,7 +639,7 @@ void sfxFrame()
 
 			if(sfxNum!=-1)
 			{
-//				printf("\nSOUND: Playing sound %d at %d",sfxList[listTail].sample,sfxList[listTail].pitch);
+				//printf("\nSOUND: Playing sound %d at %d",sfxList[listTail].sample,sfxList[listTail].pitch);
 				sfxSetVoicePitch(sfxNum,sfxList[listTail].pitch);
 				if (sfxList[listTail].returnAddress)
 					*(sfxList[listTail].returnAddress) = sfxNum;

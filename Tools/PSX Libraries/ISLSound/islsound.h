@@ -90,13 +90,13 @@ void sfxPlaySound(int sampleNum, int vol, int pitch);
 
 
 /**************************************************************************
-	FUNCTION:	sfxStopVoice()
-	PURPOSE:	stops a channel
-	PARAMETERS:	channel number
+	FUNCTION:	sfxPlaySound2()
+	PURPOSE:	queues a sound request
+	PARAMETERS:	sample number, volume, pitch, variable to set with channel number
 	RETURNS:	none
 **************************************************************************/
 
-void sfxStopVoice(int channelNum);
+void sfxPlaySound2(int sampleNum, int vol, int pitch,unsigned char *address);
 
 
 /**************************************************************************
@@ -137,56 +137,6 @@ void sfxSetGlobalVolume(int vol);
 **************************************************************************/
 
 void sfxFrame();
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueSound()
-	PURPOSE:	queues a sound request
-	PARAMETERS:	sample number, volume, pitch
-	RETURNS:	none
-**************************************************************************/
-
-void sfxQueueSound(int sampleNum, int vol, int pitch);
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueSound2()
-	PURPOSE:	queues a sound request
-	PARAMETERS:	sample number, volume, pitch, variable to set with channel number
-	RETURNS:	none
-**************************************************************************/
-
-void sfxQueueSound2(int sampleNum, int vol, int pitch,unsigned char *address);
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueStopSample()
-	PURPOSE:	queues a stop request
-	PARAMETERS:	channel number
-	RETURNS:	none
-**************************************************************************/
-
-void sfxQueueStopSample(int channelNum);
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueSetVolume()
-	PURPOSE:	queues a volume set request
-	PARAMETERS:	sample number, volume
-	RETURNS:	none
-**************************************************************************/
-
-void sfxQueueSetVolume(int sampleNum, int vol);
-
-
-/**************************************************************************
-	FUNCTION:	sfxQueueSetPitch()
-	PURPOSE:	queues a volume set request
-	PARAMETERS:	sample number, volume
-	RETURNS:	none
-**************************************************************************/
-
-void sfxQueueSetPitch(int sampleNum, int pitch);
 
 
 /**************************************************************************
