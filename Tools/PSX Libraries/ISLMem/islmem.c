@@ -56,8 +56,8 @@ int memoryInitialise(unsigned long base, unsigned long size, unsigned long maxAl
 		return 1;
 	}
 
-	pool.base = base + sizeof(AllocBlockType) * maxAllocs;
-	pool.size = size;
+	pool.base = base + (sizeof(AllocBlockType) * maxAllocs);
+	pool.size = size - (sizeof(AllocBlockType) * maxAllocs);
 	pool.blocks = (AllocBlockType *)base;
 	pool.maxAllocs = maxAllocs;
 	memoryReset();
