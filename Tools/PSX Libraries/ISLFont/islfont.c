@@ -200,24 +200,24 @@ void fontPrint(psFont *font, short x,short y, char *text, unsigned char r, unsig
 			switch(*(strPtr+1))
 			{
 			case 'X':
-			    fontDispSprite(buttonSprites[2], x+(buttonSprites[2]->w/2)+6,y+6);
+			    fontDispSprite(buttonSprites[2], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[2]->w+(buttonSprites[2]->w/2)+6;
+				x += buttonSprites[2]->w+6;
 				break;
 			case 'C':
-			   	fontDispSprite(buttonSprites[1], x+(buttonSprites[1]->w/2)+6,y+6);
+			   	fontDispSprite(buttonSprites[1], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[1]->w+(buttonSprites[1]->w/2)+6;
+				x += buttonSprites[1]->w+6;
 				break;
 			case 'S':
-			   	fontDispSprite(buttonSprites[3], x+(buttonSprites[3]->w/2)+6,y+6);
+			   	fontDispSprite(buttonSprites[3], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[3]->w+(buttonSprites[3]->w/2)+6;
+				x += buttonSprites[3]->w+6;
 				break;
 			case 'T':
-			   	fontDispSprite(buttonSprites[0], x+(buttonSprites[0]->w/2)+6,y+6);
+			   	fontDispSprite(buttonSprites[0], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[0]->w+(buttonSprites[0]->w/2)+6;
+				x += buttonSprites[0]->w+6;
 				break;
 			}
 			break;
@@ -269,19 +269,19 @@ int fontExtentW(psFont *font, char *text)
 			{
 			case 'X':
 				strPtr++;
-				x += buttonSprites[2]->w+(buttonSprites[2]->w/2)+6;
+				x += buttonSprites[2]->w+6;
 				break;
 			case 'C':
 				strPtr++;
-				x += buttonSprites[1]->w+(buttonSprites[1]->w/2)+6;
+				x += buttonSprites[1]->w+6;
 				break;
 			case 'S':
 				strPtr++;
-				x += buttonSprites[3]->w+(buttonSprites[3]->w/2)+6;
+				x += buttonSprites[3]->w+6;
 				break;
 			case 'T':
 				strPtr++;
-				x += buttonSprites[0]->w+(buttonSprites[0]->w/2)+6;
+				x += buttonSprites[0]->w+6;
 				break;
 			}
 			break;
@@ -384,24 +384,24 @@ void fontPrintN(psFont *font, short x,short y, char *text, unsigned char r, unsi
 			switch(*(strPtr+1))
 			{
 			case 'X':
-			    fontDispSprite(buttonSprites[2], x+(buttonSprites[2]->w/2)+6,y+6);
+			    fontDispSprite(buttonSprites[2], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[2]->w+(buttonSprites[2]->w/2)+6;
+				x += buttonSprites[2]->w+6;
 				break;
 			case 'C':
-			   	fontDispSprite(buttonSprites[1], x+(buttonSprites[1]->w/2)+6,y+6);
+			   	fontDispSprite(buttonSprites[1], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[1]->w+(buttonSprites[1]->w/2)+6;
+				x += buttonSprites[1]->w+6;
 				break;
 			case 'S':
-			   	fontDispSprite(buttonSprites[3], x+(buttonSprites[3]->w/2)+6,y+6);
+			   	fontDispSprite(buttonSprites[3], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[3]->w+(buttonSprites[3]->w/2)+6;
+				x += buttonSprites[3]->w+6;
 				break;
 			case 'T':
-			   	fontDispSprite(buttonSprites[0], x+(buttonSprites[0]->w/2)+6,y+6);
+			   	fontDispSprite(buttonSprites[0], x+3,y-3);
 				strPtr++;
-				x += buttonSprites[0]->w+(buttonSprites[0]->w/2)+6;
+				x += buttonSprites[0]->w+6;
 				break;
 			}
 			break;
@@ -431,13 +431,13 @@ static void fontDispSprite(TextureType *tex, short x,short y)
 	w = tex->w;
 	h = tex->h;
 
-	si->x0 = x-w;
-	si->y0 = y-h;
-	si->x1 = x+w;
-	si->y1 = y-h;
-	si->x2 = x-w;
+	si->x0 = x;
+	si->y0 = y;
+	si->x1 = x+w-1;
+	si->y1 = y;
+	si->x2 = x;
 	si->y2 = y+h-1;
-	si->x3 = x+w;
+	si->x3 = x+w-1;
 	si->y3 = y+h-1;
 		
 	si->r0 = 128;
