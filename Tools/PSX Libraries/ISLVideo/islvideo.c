@@ -58,6 +58,13 @@ static int SCREEN_Y;
 static unsigned short	*vlc_table_ptr;
 static u_long			*ringBuf;
 
+// In 4-audio-track STR's, the audio tracks are (0,1,2,3)
+// In Normal STR's, the audio track is (1)
+
+char video_audio_channel = 1;
+char video_is_playing = 0;
+
+
 // Maximum number of retries.
 #define MAX_RETRY				5
 
@@ -171,6 +178,27 @@ static void PrintVLCBufSize(void);
  * ---------------------------------------------------------------------------
  */
 
+void videoSetAudioChannel(int channel)
+{
+	u_char param[4];
+	CdlFILTER theFilter;
+
+	video_audio_channel = channel;
+
+	if(video_is_playing)
+	{
+		theFilter.file=1;
+		theFilter.chan=video_audio_channel;
+		CdControlF(CdlSetfilter, (u_char *)&theFilter);
+
+		// Aha! Right, this allows us to select audio channel without making the video turn off
+		param[0] = CdlModeSpeed|CdlModeRT|CdlModeSF;
+		CdControlB(CdlSetmode, param, 0);
+	}
+	printf("vid channel set to %d\n",channel);
+}
+
+
 short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 {
 
@@ -213,7 +241,8 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
     DecDCTvlcBuild(&vlc_table_ptr[0]);			// expand compressed vlc parameter data
 
 
-	if (!CdSearchFile(&fp, str->strName)) {
+	if (!CdSearchFile(&fp, str->strName))
+	{
 #ifdef _DEBUG
 		printf("ERROR: MOVIE -- Could not find stream file '%s'.\n", str->strName);
 #endif
@@ -224,7 +253,8 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 
 	StrInit(str);
 
-	if (!StrKickCD(&fp.pos)) {;
+	if (!StrKickCD(&fp.pos))
+	{
 #ifdef _DEBUG
 		printf("ERROR: MOVIE -- Couldn't start the CD!!\n");
 #endif
@@ -240,9 +270,11 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 	}
 
 
-	while (!(frame = StrGetNextFrame())) {		// If we can't get frame exit!
+	while (!(frame = StrGetNextFrame()))	// If we can't get frame exit!
+	{		
 
-		if (++frameRetry == MAX_RETRY) {
+		if (++frameRetry == MAX_RETRY) 
+		{
 #ifdef _DEBUG
 			printf("ERROR: MOVIE -- Couldn't get first frame!!\n");
 #endif
@@ -261,20 +293,24 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 	frameRetry = 0;
 	StrVLCFrame(frame);
 
-
-	while (!dec.rewindSwitch && !strQuit) {
+	videoSetAudioChannel(video_audio_channel);
+	while (!dec.rewindSwitch && !strQuit)
+	{
 
 
 		DecDCTin(dec.vlcBuffer[dec.vlcId], GetDCT_MODE());
 		DecDCTout(dec.imageBuffer[dec.imageId], GetDCToutSize());
 
 
-		if (!(frame = StrGetNextFrame())) {
+		if (!(frame = StrGetNextFrame()))
+		{
 
 			if (++frameRetry == MAX_RETRY)
 				strQuit = PLAYSTR_ERROR;
 			
-		} else {
+		}
+		else
+		{
 			frameRetry = 0;
 		}
 
@@ -358,7 +394,8 @@ short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void))
 
 /* ------------------------------------------------------------------------ */
 
-static void StrDecDCToutCB(void) {
+static void StrDecDCToutCB(void)
+{
 
 
 /* - Type:	CALLBACK
@@ -368,11 +405,12 @@ static void StrDecDCToutCB(void) {
 
 
 	// In 24bit mode call StCdInterrupt() manually.
-	if (dec.is24Bit) {
-
+	if (dec.is24Bit)
+	{
 		extern StCdIntrFlag;
 
-		if(StCdIntrFlag) {
+		if(StCdIntrFlag)
+		{
 			StCdInterrupt();
 			StCdIntrFlag = 0;
 		}
@@ -382,11 +420,14 @@ static void StrDecDCToutCB(void) {
 	dec.imageId ^= 1;
 	dec.slice.x += dec.slice.w;
 
-	if (dec.slice.x < (dec.rect[dec.rectId].x + dec.rect[dec.rectId].w)) {
+	if (dec.slice.x < (dec.rect[dec.rectId].x + dec.rect[dec.rectId].w))
+	{
 
 		DecDCTout(dec.imageBuffer[dec.imageId], GetDCToutSize());
 
-	} else {
+	}
+	else
+	{
 
 		dec.frameDone = 1;
 	}
@@ -409,6 +450,8 @@ static void StrInit(StrDataType *str) {
 	short	scrWidth;
 	u_long	vlcBufSize,
 			imageBufSize;	
+
+	video_is_playing = 1;
 
 	x = str->x;
 	y = str->y;	
@@ -526,7 +569,7 @@ static void StrEnd(void) {
  * - Usage: Clean up.
  */
 
-	
+	video_is_playing = 0;
 	StUnSetRing();
 	CdControlB(CdlPause, 0, 0);
 	DecDCToutCallback(0);            

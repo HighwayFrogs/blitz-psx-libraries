@@ -56,6 +56,8 @@ typedef struct _StrDataType
  
 short videoPlayStream(StrDataType *str, int palMode, short (*keyHandler)(void));
 
+void videoSetAudioChannel(int channel);
+
 /* ------------------------------------------------------------------------ */
 
 #endif // __ISLVIDEO_H__
