@@ -649,7 +649,6 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					((TMD_P_GT3I*)primitive)->tv2 += sprt->y;
 
 					TG3count++;
-					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
 					break;
 
 				case GPU_COM_TG4:	
@@ -676,7 +675,7 @@ static void psiFixupPrims(PSIMODEL *psiModel)
 					((TMD_P_GT4I*)primitive)->tv3 += sprt->y;
 									
 					TG4count++;
-					((TMD_P_FG4I*)primitive)->dummy &= psiDOUBLESIDED; 
+
 					break;
 
 
