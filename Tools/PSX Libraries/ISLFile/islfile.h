@@ -38,4 +38,14 @@ unsigned char fileLoadBinary(char *fName, char *loc);
 unsigned char *fileLoad(unsigned char *fName, int *length);
 
 
+/**************************************************************************
+	FUNCTION:	fileGetLastLoaded()
+	PURPOSE:	Prints out the name and size of the last loaded file
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void fileGetLastLoaded();
+
+
 #endif

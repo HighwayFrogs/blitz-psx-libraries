@@ -37,6 +37,9 @@ typedef struct _FileIODataType
 FileIODataType	fileIO;
 static char		sectorBuf[2048];
 
+static char		lastFileLoaded[64];
+static int		lastFileSize;
+
 
 /* PC READING CODE *********************************************************************************/
 
@@ -518,6 +521,13 @@ static unsigned char fileCDloadDATbinary(char *fName, int *loc)
 /* EXTERNAL INTERFACE ******************************************************************************/
 
 
+void fileGetLastLoaded()
+{
+	printf("\nLast file: %s (%d bytes)\n",lastFileLoaded, lastFileSize);
+}
+
+
+
 /**************************************************************************
 	FUNCTION:	fileInitialise()
 	PURPOSE:	Initialise file I/O
@@ -532,6 +542,9 @@ void fileInitialise(char *fileSystem)
 #else
 	filePCInitialise(fileSystem);
 #endif
+	
+	lastFileLoaded[0] = 0;
+	lastFileSize = 0;
 }
 
 
@@ -549,8 +562,6 @@ unsigned char *fileLoad(unsigned char *fName, int *length)
 	int		len;
 
 	utilUpperStr(fName);
-
-
 
 #ifndef _DEBUG
 	data = fileCDLoad(fName, &len);
@@ -577,6 +588,11 @@ unsigned char *fileLoad(unsigned char *fName, int *length)
 	printf("READ FILE: %s\n", fName);
 	if (length!=NULL)
 		*length = len;
+
+	// quick fix so people know what the hell is getting loaded and how big
+	strcpy(lastFileLoaded, fName);
+	lastFileSize = len;
+
 	return data;
 }
 
