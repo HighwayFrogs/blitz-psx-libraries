@@ -1332,13 +1332,13 @@ static void psiDrawSortedPrimitives(int depth)
 				*(u_long *)  (&si->u2) = *(u_long *) (&op->tu2);
 
 				gte_stsxy3_ft3(si);
-			
+
 				switch (lightmode)
 				{
 					case DIRECTIONAL:
 						gte_ldrgb(&op->r0);
 						gte_ldv0(&tfn[op->v0]);
-						gte_nccs();			
+						gte_nccs();
 						gte_strgb(&si->r0);
 						break;
 					case DIRECTIONONLY:
@@ -1354,9 +1354,8 @@ static void psiDrawSortedPrimitives(int depth)
 		 		}
 
 				setPolyFT3(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, depth, POLY_FT3);
-
 				op = op->next;
 				break;
 #undef si
@@ -1401,7 +1400,7 @@ static void psiDrawSortedPrimitives(int depth)
 				*(u_long *)  (&si->u3) = *(u_long *) (&op->tu3);
 
 				setPolyFT4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, depth, POLY_FT4);
 				op = op->next;
 				break;
@@ -1448,7 +1447,7 @@ static void psiDrawSortedPrimitives(int depth)
 						*(u_long *)  (&si->r2) = *(u_long *) (&op->r2);
 				}
 				setPolyGT3(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, depth, POLY_GT3);
 				op = op->next;
 				break;
@@ -1510,7 +1509,7 @@ static void psiDrawSortedPrimitives(int depth)
 				}
 		
 				setPolyGT4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, depth, POLY_GT4);
 				(int)op = op->next;
 				break;
@@ -1565,7 +1564,7 @@ static void psiDrawSortedPrimitives(int depth)
 				si->y0 = si->y1=si->y0-height;
 				setPolyFT4(si);
 
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 		
  				ENDPRIM(si, depth, POLY_FT4);
 				op = op->next;
@@ -1628,7 +1627,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 
 				setPolyG4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
  				ENDPRIM(si, depth, POLY_G4);
 				op = op->next;
 				break;
@@ -1675,7 +1674,7 @@ static void psiDrawSortedPrimitives(int depth)
 
 
 				setPolyG3(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, depth, POLY_G3);
 				op = op->next;
 				break;
@@ -1764,7 +1763,7 @@ void psiDrawPrimitives(int depth)
 						*(u_long *) (&si->r0) = *(u_long *) (&op->r0);		// 9 cycles here
 		 		}
 				setPolyFT3(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 
  				ENDPRIM(si, depth & 1023, POLY_FT3);
 				modctrl->polysdrawn++;
@@ -1818,7 +1817,7 @@ void psiDrawPrimitives(int depth)
 				*(u_long *)  (&si->u3) = *(u_long *) (&op->tu3);
 
 				setPolyFT4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				
 				modctrl->polysdrawn++;
  			
@@ -1875,7 +1874,7 @@ void psiDrawPrimitives(int depth)
 						*(u_long *)  (&si->r2) = *(u_long *) (&op->r2);
 				}
 				setPolyGT3(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 			
 				modctrl->polysdrawn++;
 
@@ -1951,7 +1950,7 @@ void psiDrawPrimitives(int depth)
 				modctrl->polysdrawn++;
 			
 				setPolyGT4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 				ENDPRIM(si, depth & 1023, POLY_GT4);
 				break;
 #undef si
@@ -2010,7 +2009,7 @@ void psiDrawPrimitives(int depth)
 				si->y0 = si->y1=si->y0-height;
 
 				setPolyFT4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 
 				ENDPRIM(si, depth & 1023, POLY_FT4);
 				break;
@@ -2076,7 +2075,7 @@ void psiDrawPrimitives(int depth)
 				}
 
 				setPolyG4(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 
 				modctrl->polysdrawn++;
 
@@ -2135,7 +2134,7 @@ void psiDrawPrimitives(int depth)
 				modctrl->polysdrawn++;
 
 				setPolyG3(si);
-				si->code |= modctrl->semitrans;
+				si->code = op->cd | modctrl->semitrans;
 
 				ENDPRIM(si, depth & 1023, POLY_G3);
 				break;
