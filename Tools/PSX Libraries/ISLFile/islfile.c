@@ -539,6 +539,10 @@ unsigned char *fileLoad(unsigned char *fName, int *length)
 	unsigned long	*lPtr;
 	int		len;
 
+	utilUpperStr(fName);
+
+
+
 #ifndef _DEBUG
 	data = fileCDLoad(fName, &len);
 #else
