@@ -129,10 +129,10 @@ void sfxInitialise(int reverbMode)
 
 	sfx2Data.sfx2SampleVolume = 255;
 
-
+/*
 	sceEnv.mask = 0;							// turn voice queueing on
 	sceEnv.queueing = SPU_ON;
-
+*/
 	SpuSetEnv(&sceEnv);
 
 }
@@ -181,7 +181,7 @@ void sfxDestroy()
 
 void sfxUpdate()
 {
-	SpuFlush(SPU_EVENT_ALL);
+	//SpuFlush(SPU_EVENT_ALL);
 }
 
 
