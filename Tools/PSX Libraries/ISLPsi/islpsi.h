@@ -203,11 +203,11 @@ extern long *pilLibraryList[8];
 /**************************************************************************
 	FUNCTION:	psiInitialise()
 	PURPOSE:	Initialise PSI library
-	PARAMETERS:	
+	PARAMETERS:	Maximum number of models
 	RETURNS:	
 **************************************************************************/
 
-void psiInitialise();
+void psiInitialise(int maxModels);
 
 
 /**************************************************************************

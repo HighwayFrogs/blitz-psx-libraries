@@ -57,9 +57,9 @@ PSIMODEL *currentPSI;
 char *PSIname=0;
 
 //#define transformedNormals  ((long*) getScratchAddr(0))
-long *transformedVertices = 0;
-long *transformedDepths = 0;
-VERT *transformedNormals = 0;
+long *transformedVertices __attribute__ ((section("cachedata"))) = 0;
+long *transformedDepths __attribute__ ((section("cachedata"))) = 0;
+VERT *transformedNormals __attribute__ ((section("cachedata"))) = 0;
 int  tfTotal = 0;
 #ifdef _DEBUG
 long *transformedScreenN = 0;
@@ -73,11 +73,11 @@ int biggestSortDepth=0;
 int smallestSortDepth=0;
 
 
-#define MAXMODELS 50
+static int MAXMODELS;
 
-PSIMODEL *psiModelList[MAXMODELS];
-char psiModelListNames[MAXMODELS][32];
-long psiModelListCRC[MAXMODELS];
+PSIMODEL **psiModelList;
+//char psiModelListNames[MAXMODELS][32];
+long *psiModelListCRC;
 int	psiModelListLen = 0;
 
 long *pilLibraryList[8];
@@ -364,11 +364,11 @@ void psiSetAmbient(int r, int g, int b)
 /**************************************************************************
 	Function 	: psiInitialise()
 	Purpose 	: initialises the linked list of actors and local vars
-	Parameters 	: none
+	Parameters 	: Maximum number of models
 	Returns 	: none
 	Info 		:
 **************************************************************************/
-void psiInitialise()
+void psiInitialise(int maxModels)
 {
 
 	psiResetModelctrl();
@@ -392,6 +392,9 @@ void psiInitialise()
 	customDrawFunction = 0;
 	customDrawFunction2 = 0;
 
+	psiModelList = MALLOC(sizeof(PSIMODEL *) * maxModels);
+	psiModelListCRC =MALLOC(sizeof(long) * maxModels);
+	MAXMODELS = maxModels;
 }
 
 
@@ -436,6 +439,9 @@ void psiDestroy()
 
 	sortedIndex = NULL;
 	maxDepthRange = 0;
+
+	FREE(psiModelList);
+	FREE(psiModelListCRC);
 
 	
 }
