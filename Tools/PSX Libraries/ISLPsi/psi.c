@@ -1074,7 +1074,6 @@ static void psiSortPrimitives()
 
 	while(primsleft)
 	{
-		
 		switch (opcd->cd & (0xff-2))
 		{
 /*-----------------------------------------------------------------------------------------------------------------*/
@@ -1083,13 +1082,11 @@ static void psiSortPrimitives()
 						
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
+				gte_nclip();	// takes 8 cycles
+				
 				deep = (tfd[op->v2]-minDepth);
 
-				gte_nclip_b();	// takes 8 cycles
-				
-
 				gte_stopz(&clipflag);
-				
 					
 				if (( clipflag<0) || (op->dummy))
 				{
@@ -1107,14 +1104,12 @@ static void psiSortPrimitives()
 			
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
-				deep = (tfd[op->v2]-minDepth);
-
-				gte_nclip_b();	// takes 8 cycles
+				gte_nclip();	// takes 8 cycles
 				
+				deep = (tfd[op->v2]-minDepth);
 
 				gte_stopz(&clipflag);
 				
-					
 				if (( clipflag<0) || (op->dummy))
 				{
 					op->next = sl[deep];
@@ -1130,21 +1125,18 @@ static void psiSortPrimitives()
 	
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
-				deep = (tfd[op->v2]-minDepth);
-
-				gte_nclip_b();	// takes 8 cycles
+				gte_nclip();	// takes 8 cycles
 				
+				deep = (tfd[op->v2]-minDepth);
 
 				gte_stopz(&clipflag);
 				
-					
 				if (( clipflag<0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
 					sortCount++;
 				}
-				
 				op++;
 				break;
 #undef op
@@ -1154,9 +1146,9 @@ static void psiSortPrimitives()
 
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
-				deep = (tfd[op->v2]-minDepth);
+				gte_nclip();	// takes 8 cycles
 
-				gte_nclip_b();	// takes 8 cycles
+				deep = (tfd[op->v2]-minDepth);
 		
 				gte_stopz(&clipflag);
 					
@@ -1166,7 +1158,6 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount++;
 				}
-
 				op++;
 				break;
 #undef op
@@ -1193,10 +1184,9 @@ static void psiSortPrimitives()
    		
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
-				deep = (tfd[op->v2]-minDepth);
+				gte_nclip();	// takes 8 cycles
 
-				gte_nclip_b();	// takes 8 cycles
-				
+				deep = (tfd[op->v2]-minDepth);
 
 				gte_stopz(&clipflag);
 				
@@ -1207,7 +1197,6 @@ static void psiSortPrimitives()
 					sl[deep] = (int)op;
 					sortCount++;
 				}
-
 				op++;
 				break;
 #undef op
@@ -1218,21 +1207,18 @@ static void psiSortPrimitives()
 
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
-				deep = (tfd[op->v2]-minDepth);
+				gte_nclip();	// takes 8 cycles
 
-				gte_nclip_b();	// takes 8 cycles
-				
+				deep = (tfd[op->v2]-minDepth);
 
 				gte_stopz(&clipflag);
 				
-					
 				if (( clipflag<0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
 					sortCount++;
 				}
-
 				op++;
 				break;
 #undef op
@@ -1456,6 +1442,7 @@ static void psiDrawSortedPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_nct();			
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldv0(&tfn[op->v3]);
 						gte_ncs();			// NormalColorCol
 						gte_strgb(&si->r3);
@@ -1609,7 +1596,6 @@ static void psiDrawSortedPrimitives(int depth)
    			
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
- 
 				*(u_long *)  (&si->r0) = *(u_long *) (&op->r0);
 				
 				gte_stsxy3_g3(si);
@@ -1622,7 +1608,6 @@ static void psiDrawSortedPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_ncct();
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
-						
 						break;
 					case DIRECTIONONLY:
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
