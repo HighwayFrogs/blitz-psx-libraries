@@ -721,7 +721,7 @@ static void psiFixupMesh(PSIMESH *mesh)
 	PARAMETERS:	PSIMODEL*
 	RETURNS:	nowt
 **************************************************************************/
-void psiDisplay(PSIMODEL* psiModel)
+static void psiDisplay(PSIMODEL* psiModel)
 {
 	utilPrintf("Loading model '%s'\n",psiModel->name);
 	utilPrintf("PSI Verion no. %d\n",psiModel->version);
@@ -789,7 +789,7 @@ long psiCRCName(char *psiName)
 	RETURNS:	pointer to PSIMODEL / null
 **************************************************************************/
 
-PSIMODEL *psiCheck(char *psiName)
+static PSIMODEL *psiCheck(char *psiName)
 {
 	int i,crc;
 
@@ -3056,7 +3056,7 @@ void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend)
 	RETURNS:	
 **************************************************************************/
 
-void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
+static void psiCalcChildMatrix(PSIOBJECT *world, PSIOBJECT *parent)
 {
 
 	while(world)

@@ -212,11 +212,7 @@ void psiSetLight(int lightNum, int r, int g, int b, int x, int y, int z);
 
 void psiSetAmbient(int r, int g, int b);
 
-void psiDisplay(PSIMODEL* psiModel);
-
 PSIOBJECT *psiObjectScan(PSIOBJECT *obj, char *name);
-
-PSIMODEL *psiCheck(char *psiName);
 
 void psiDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri);
 

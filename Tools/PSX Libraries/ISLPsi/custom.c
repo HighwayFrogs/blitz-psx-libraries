@@ -8,6 +8,7 @@ extern VERT *transformedNormals;
 extern PSIMODELCTRL	PSImodelctrl;
 extern unsigned long *sortedIndex;
 extern int sortCount;
+extern long minDepth;
 
 
 // use psiRegisterDrawFunction to register your own draw function with the library
@@ -28,7 +29,8 @@ void customDrawSortedPrimitives(int depth)
 	register TMD_P_GT4I		*opcd;
 	PSIMODELCTRL			*modctrl = &PSImodelctrl;
 	int						primsleft,lightmode;
-	unsigned long			*sorts = sortedIndex;
+	ULONG					*sorts = sortedIndex;
+	ULONG					sortBucket = 0;
 								  
 	primsleft = sortCount;
 	if (!primsleft)
@@ -40,7 +42,7 @@ void customDrawSortedPrimitives(int depth)
 	{
 		if (opcd==0)
 		{
-			(int)opcd = *(sorts++);
+			(int)opcd = sorts[sortBucket++];
 			continue;
 		}
 
@@ -59,7 +61,9 @@ void customDrawSortedPrimitives(int depth)
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 			
 				*(u_long *)  (&si->u0) = *(u_long *) (&op->tu0);		// Texture coords
+			
 				*(u_long *)  (&si->u2) = *(u_long *) (&op->tu2);
+
 				*(u_long *)  (&si->u1) = *(u_long *) (&op->tu1);
 
 				gte_stsxy3_ft3(si);
@@ -86,7 +90,7 @@ void customDrawSortedPrimitives(int depth)
 
 				setPolyFT3(si);
 				//si->code = op->cd | modctrl->semitrans;
-				ENDPRIM(si, depth, POLY_FT3);
+				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT3);
 
 				op = op->next;
 				break;
@@ -103,6 +107,8 @@ void customDrawSortedPrimitives(int depth)
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 			
 				*(u_long *)  (&si->u0) = *(u_long *) (&op->tu0);		// Texture coords
+
+		
 				*(u_long *)  (&si->u1) = *(u_long *) (&op->tu1);
 
 				gte_stsxy3_ft4(si);
@@ -133,7 +139,7 @@ void customDrawSortedPrimitives(int depth)
 
 				setPolyFT4(si);
 				//si->code = op->cd | modctrl->semitrans;
- 				ENDPRIM(si, depth, POLY_FT4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
 				op = op->next;
 				break;
 #undef si
@@ -180,7 +186,7 @@ void customDrawSortedPrimitives(int depth)
 				}
 				setPolyGT3(si);
 				//si->code = op->cd | modctrl->semitrans;
-				ENDPRIM(si, depth, POLY_GT3);
+				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT3);
 				op = op->next;
 				break;
 #undef si
@@ -212,6 +218,7 @@ void customDrawSortedPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_ncct();
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldrgb(&op->r3);
 						gte_ldv0(&tfn[op->v3]);
 						gte_nccs();			// NormalColorCol
@@ -240,7 +247,7 @@ void customDrawSortedPrimitives(int depth)
 		
 				setPolyGT4(si);
 				//si->code = op->cd | modctrl->semitrans;
- 				ENDPRIM(si, depth, POLY_GT4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_GT4);
 				(int)op = op->next;
 				break;
 
@@ -297,7 +304,7 @@ void customDrawSortedPrimitives(int depth)
 
 				si->code = GPU_COM_TF4 | modctrl->semitrans;
 		
- 				ENDPRIM(si, depth, POLY_FT4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_FT4);
 				op = op->next;
 			}
 			break;
@@ -337,6 +344,7 @@ void customDrawSortedPrimitives(int depth)
 						gte_ldv3(&tfn[op->v0], &tfn[op->v1], &tfn[op->v2]);
 						gte_nct();			
 						gte_strgb3(&si->r0, &si->r1, &si->r2);
+
 						gte_ldv0(&tfn[op->v3]);
 						gte_ncs();			// NormalColorCol
 						gte_strgb(&si->r3);
@@ -358,7 +366,7 @@ void customDrawSortedPrimitives(int depth)
 
 				setPolyG4(si);
 				//si->code = op->cd | modctrl->semitrans;
- 				ENDPRIM(si, depth, POLY_G4);
+ 				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G4);
 				op = op->next;
 				break;
 #undef si
@@ -407,7 +415,7 @@ void customDrawSortedPrimitives(int depth)
 
 				setPolyG3(si);
 				//si->code = op->cd | modctrl->semitrans;
-				ENDPRIM(si, depth, POLY_G3);
+				ENDPRIM(si, ((sortBucket+minDepth) >> 2) & 1023, POLY_G3);
 				op = op->next;
 				break;
 #undef si
