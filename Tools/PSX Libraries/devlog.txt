@@ -1,6 +1,11 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+28-1-2000
+=========
+
+Fixed a couple of bugs in the texture library today. 8-bit textures were only being partially freed, and palettes on instanced textures were being freed more often than they should, creating some problems with textures not being freed at all.
+
 
 13-1-2000
 =========
