@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+2-3-2000
+========
+
+Added some missing functionality to islsfx2.lib, sfxSetSample/ChannelVolume and sfxSetSample/ChannelPitch.
+
+
 16-2-2000
 =========
 
