@@ -1,6 +1,25 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+21-10-99
+========
+
+Addressed some issues found with the skinning library after Tom G. had some problems.
+
+The normals were being scaled with the model, so the lighting intensity would increase/decrease with the size of the model.
+
+The normals were also being rotated by the camera matrix, so if the camera moved, the lights would also move.
+
+Both these problems have been fixed by using the matrixscale member of PSIOBJECT to draw the model, while the matrix member is merely a rotated/translated version, without scale or camera rotation.
+
+Made psiSetRotate/Scale/MoveKeyFrames(2)() static, and provided a psiSetKeyFrames(2)() function which calls them instead. Makes the interface a whole lot neater.
+
+The reference drawing function now sorts the model into the global sort table as well as against itself. This should help sorting with other objects.
+
+Found out from Sony that we should hopefully be getting a PS2 dev-kit around the end of November. That should be fun!
+
+Continued to document islpsi.lib, darn this is hard work.
+
 
 20-10-99
 ========
