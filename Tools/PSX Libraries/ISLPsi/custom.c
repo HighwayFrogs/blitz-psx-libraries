@@ -56,9 +56,7 @@ void customDrawSortedPrimitives(int depth)
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 			
 				*(u_long *)  (&si->u0) = *(u_long *) (&op->tu0);		// Texture coords
-			
 				*(u_long *)  (&si->u2) = *(u_long *) (&op->tu2);
-
 				*(u_long *)  (&si->u1) = *(u_long *) (&op->tu1);
 
 				gte_stsxy3_ft3(si);
@@ -102,8 +100,6 @@ void customDrawSortedPrimitives(int depth)
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 			
 				*(u_long *)  (&si->u0) = *(u_long *) (&op->tu0);		// Texture coords
-
-		
 				*(u_long *)  (&si->u1) = *(u_long *) (&op->tu1);
 
 				gte_stsxy3_ft4(si);
