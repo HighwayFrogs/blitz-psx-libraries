@@ -120,6 +120,7 @@ copy islpsi\Release\islpsi.lib Distribution\Lib\Release
 copy islpsi\actor.c Distribution\Source
 copy islpsi\actor.h Distribution\Source
 copy islpsi\custom.c Distribution\Source
+copy islpsi\custom2.c Distribution\Source
 
 rem *** Copy shell headers ***
 copy shell\shell.h Distribution\Include
