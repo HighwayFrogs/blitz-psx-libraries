@@ -35,6 +35,182 @@ Package=<4>
 
 ###############################################################################
 
+Project: "ISLFont"=.\ISLFont\ISLFont.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLFont", ZDEBAAAA
+    .\islfont
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLLocal"=.\ISLLocal\ISLLocal.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLLocal", DEEBAAAA
+    .\isllocal
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLMem"=.\ISLMem\ISLMem.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLMem", HEEBAAAA
+    .\islmem
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLPad"=.\ISLPad\ISLPad.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLPad", LEEBAAAA
+    .\islpad
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLPsi"=.\ISLPsi\ISLPsi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLPsi", PEEBAAAA
+    .\islpsi
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLSound"=.\ISLSound\ISLSound.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLSound", XEEBAAAA
+    .\islsound
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLTex"=.\ISLTex\ISLTex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLTex", BFEBAAAA
+    .\isltex
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLUtil"=.\ISLUtil\ISLUtil.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLUtil", FFEBAAAA
+    .\islutil
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLVideo"=.\ISLVideo\ISLVideo.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLVideo", PFEBAAAA
+    .\islvideo
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ISLXa"=.\ISLXa\ISLXa.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/ISLXa", TFEBAAAA
+    .\islxa
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "Shell"=.\Shell\Shell.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+    begin source code control
+    "$/Tools/PSX Libraries/Shell", XFEBAAAA
+    .\shell
+    end source code control
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Global:
 
 Package=<5>
