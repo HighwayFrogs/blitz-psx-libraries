@@ -45,7 +45,6 @@ void ShortquaternionSlerpMatrix(SHORTQUAT *src1, SHORTQUAT *sp2, ULONG t,MATRIX 
 
 MATRIX	cameraAndGlobalscale;
 VECTOR *PSIactorScale = 0;
-VECTOR *PSIrootScale = 0;
 
 GsF_LIGHT	flatLight[3];
 MATRIX		lightMat;
