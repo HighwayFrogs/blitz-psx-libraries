@@ -10,6 +10,9 @@ extern unsigned long *sortedIndex;
 extern int sortCount;
 
 
+// use psiRegisterDrawFunction to register your own draw function with the library
+
+
 /**************************************************************************
 	FUNCTION:	customDrawSortedPrimitives
 	PURPOSE:	draw dynamic sorted polys
