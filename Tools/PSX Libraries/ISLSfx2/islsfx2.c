@@ -517,11 +517,11 @@ SfxBankType *sfxUnloadSampleBank(SfxBankType *bank)
 /**************************************************************************
 	FUNCTION:	sfxRemoveSampleBank
 	PURPOSE:	Remove sample bank from list
-	PARAMETERS:	pointer to sample bank
+	PARAMETERS:	pointer to sample bank, whether to free it (1, 0)
 	RETURNS:	1 if removed, 0 if not found in list
 **************************************************************************/
 
-int sfxRemoveSampleBank(SfxBankType *bank)
+int sfxRemoveSampleBank(SfxBankType *bank, int free)
 {
 	int	loop, ok;
 
@@ -535,6 +535,9 @@ int sfxRemoveSampleBank(SfxBankType *bank)
 			ok = 1;
 		}
 	}
+
+	if(free)
+		FREE(bank);
 
 	return ok;
 }
