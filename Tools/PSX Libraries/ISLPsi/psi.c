@@ -278,9 +278,10 @@ void psiCalcMaxMin(PSIDATA *psiData)
 	long *tfd = transformedDepths;
 	int i;
 	
-
+/*
 	for (i=0; i<maxDepthRange; i++)
 		sortedIndex[i]=0;
+*/
 
 	sortCount=0;
 	maxDepth = minDepth = *tfd;
@@ -293,18 +294,21 @@ void psiCalcMaxMin(PSIDATA *psiData)
 			minDepth = *tfd;
 		if (*tfd > maxDepth)
 			maxDepth = *tfd;
-		tfd++;
-		i--;
+		tfd ++;
+		i --;
 	}
-	depthRange= (maxDepth-minDepth)+1;
-	if (depthRange>maxDepthRange)
+
+	depthRange = (maxDepth - minDepth) + 1;
+	
+	for (i = 0; i < depthRange; i ++)
+		sortedIndex[i] = 0;
+	
+	if (depthRange > maxDepthRange)
 	{
 		printf("PROGRAM HALTED. \nDEPTH RANGE EXCEEDED !\nINCREASE MAXDEPTHRANGE TO %d (=%d)\n\n",depthRange,maxDepthRange);
 		printf("Object Mesh Name = >%s<\n",psiData->modelName);
 		for (;;);
 	}
-	if (depthRange > biggestSortDepth)
-		biggestSortDepth = depthRange;
 
 }
 /**************************************************************************
@@ -874,23 +878,19 @@ PSIMODEL *psiFixup(char *addr)
 	i = psiModel->noofVerts;
 	if ( i>biggestVertexModel )
 	{
+		/*
 		if (transformedVertices!=0)
 		{
 			 FREE(transformedVertices);
 			 FREE(transformedDepths);
 			 FREE(transformedNormals);
-#ifdef _DEBUG
-			FREE(transformedScreenN);
-#endif
 		}
+		
 		transformedVertices = (long*)MALLOC( i*sizeof(SVECTOR));
 		transformedDepths = (long*)MALLOC( i*sizeof(SVECTOR));
 		transformedNormals = (VERT*)MALLOC( i*sizeof(VERT));
+		*/
 		biggestVertexModel = i;
-
-#ifdef _DEBUG
-		transformedScreenN = (long*)MALLOC( i*sizeof(SVECTOR));
-#endif
 	}
 
 //	DisplayPSI(psiModel);
@@ -921,6 +921,22 @@ PSIMODEL *psiFixup(char *addr)
 
 	return psiModel;
 }
+
+
+/**************************************************************************
+	FUNCTION:	psiAllocWorkspace()
+	PURPOSE:	allocate workspace for model drawing
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void psiAllocWorkspace()
+{
+	transformedVertices = (long*)MALLOC( biggestVertexModel * sizeof(long) );
+	transformedDepths = (long*)MALLOC( biggestVertexModel * sizeof(long) );
+	transformedNormals = (VERT*)MALLOC( biggestVertexModel * sizeof(VERT));
+}
+
 
 /**************************************************************************
 	FUNCTION:	LoadPSI()
@@ -1092,11 +1108,11 @@ static void psiSortPrimitives()
 
 	prims = (int)modctrl->PrimTop;
 	primsleft = modctrl->PrimLeft;
-	opcd = (TMD_P_GT4I*)( prims  );
+	opcd = (TMD_P_GT4I*)(prims);
 
 	while(primsleft)
 	{
-		switch (opcd->cd & (0xff-2))
+		switch (opcd->cd & (0xff - 2))
 		{
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_FT3I*)opcd)
@@ -1106,17 +1122,17 @@ static void psiSortPrimitives()
 
 				gte_nclip();	// takes 8 cycles
 				
-				deep = (tfd[op->v2]-minDepth);
+				deep = (tfd[op->v2] - minDepth);
 
 				gte_stopz(&clipflag);
 					
-				if (( clipflag<0) || (op->dummy))
+				if ((clipflag < 0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
-					sortCount++;
+					sortCount ++;
 				}
-				op++;
+				op ++;
 				break;
 
 #undef op			
@@ -1128,38 +1144,39 @@ static void psiSortPrimitives()
 
 				gte_nclip();	// takes 8 cycles
 				
-				deep = (tfd[op->v2]-minDepth);
+				deep = (tfd[op->v2] - minDepth);
 
 				gte_stopz(&clipflag);
 				
-				if (( clipflag<0) || (op->dummy))
+				if ((clipflag < 0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
-					sortCount++;
+					sortCount ++;
 				}
-				op++;
+				op ++;
 				break;
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_GT3I*)opcd)
 			case GPU_COM_TG3:
-	
+
 				gte_ldsxy3(tfv[op->v0], tfv[op->v1], tfv[op->v2]);		// Load 1st three vertices
 
 				gte_nclip();	// takes 8 cycles
-				
-				deep = (tfd[op->v2]-minDepth);
+					
+				deep = (tfd[op->v2] - minDepth);
 
 				gte_stopz(&clipflag);
-				
-				if (( clipflag<0) || (op->dummy))
+					
+				if ((clipflag < 0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
-					sortCount++;
+					sortCount ++;
 				}
-				op++;
+				
+				op ++;
 				break;
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
@@ -1170,17 +1187,18 @@ static void psiSortPrimitives()
 
 				gte_nclip();	// takes 8 cycles
 
-				deep = (tfd[op->v2]-minDepth);
-		
+				deep = (tfd[op->v2] - minDepth);
+			
 				gte_stopz(&clipflag);
-					
-				if (( clipflag<0) || (op->dummy))
+						
+				if ((clipflag < 0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
-					sortCount++;
+					sortCount ++;
 				}
-				op++;
+
+				op ++;
 				break;
 #undef op
 
@@ -1208,18 +1226,18 @@ static void psiSortPrimitives()
 
 				gte_nclip();	// takes 8 cycles
 
-				deep = (tfd[op->v2]-minDepth);
+				deep = (tfd[op->v2] - minDepth);
 
 				gte_stopz(&clipflag);
 				
 					
-				if (( clipflag<0) || (op->dummy))
+				if ((clipflag<0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
-					sortCount++;
+					sortCount ++;
 				}
-				op++;
+				op ++;
 				break;
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
@@ -1231,24 +1249,24 @@ static void psiSortPrimitives()
 
 				gte_nclip();	// takes 8 cycles
 
-				deep = (tfd[op->v2]-minDepth);
+				deep = (tfd[op->v2] - minDepth);
 
 				gte_stopz(&clipflag);
 				
-				if (( clipflag<0) || (op->dummy))
+				if ((clipflag < 0) || (op->dummy))
 				{
 					op->next = sl[deep];
 					sl[deep] = (int)op;
-					sortCount++;
+					sortCount ++;
 				}
-				op++;
+				op ++;
 				break;
 #undef op
 /*-----------------------------------------------------------------------------------------------------------------*/
 			default:
 				break;
 		}
-		primsleft--;
+		primsleft --;
 	}
 }
 
@@ -2133,29 +2151,24 @@ void psiDrawPrimitives(int depth)
 
 void psiDrawSegments(PSIDATA *psiData)
 {
-	register long	*tfv = transformedVertices;
-	register long	*tfd = transformedDepths;
-	register PSIOBJECT		*world;
-	register SVECTOR *np;
+	register long		*tfv = transformedVertices;
+	register long		*tfd = transformedDepths;
+	register PSIOBJECT	*world;
+	register SVECTOR	*np;
 	PSIMODELCTRL		*modctrl = &PSImodelctrl;
-	LONG			depth;
-	LONG			s = modctrl->sorttable;
-	int loop,obs,i,j;
-	VERT	*tfn;
+	LONG				depth;
+	LONG				s = modctrl->sorttable;
+	int					loop, obs, i, j;
+	VERT				*tfn;
 
-	/*
-#ifdef _DEBUG
-	register long	*tfns = transformedScreenN;
-#endif
-*/
-	
 	world = psiData->object;
 	obs = psiData->numObjects;
 
 	// transform all the vertices (by heirarchy)
 	// tfv == one long list of transformed vertices
 
-	tfn = transformedNormals;
+	tfn = transformedNormals - 1;
+
 	tfTotal = 0;
 
 	for (loop = 0; loop < obs; loop++)
@@ -2178,42 +2191,31 @@ void psiDrawSegments(PSIDATA *psiData)
 		if (modctrl->lighting)
 		{
 			gte_SetRotMatrix(&world->matrix);			 
-	   		gte_SetTransMatrix(&world->matrix);	
+	   		//gte_SetTransMatrix(&world->matrix);	
 			
 			np = (SVECTOR*)world->meshdata->nortop;
 			j = world->meshdata->norn;
 			
-			for (i=0; i<j; i++)
+			for(i = 0; i < j; i ++)
 			{
 				gte_ldv0(&np[i]);
 				gte_rtv0();
-				gte_stsv(&tfn[0]);
 				tfn++;
+				gte_stsv(&tfn[0]);
 			}
 		}
-		
 
-		tfv+=world->meshdata->vern;
-		tfd+=world->meshdata->vern;
-		tfTotal+=world->meshdata->vern;
-
-
+		tfv += world->meshdata->vern;
+		tfd += world->meshdata->vern;
+		tfTotal += world->meshdata->vern;
 	}
 
-//	tfv = (DVECTOR*)transformedVertices;
-//	DotToDot(&tfv[21],&tfv[22]);
-
-	// draw all the primitives (by heirarchy)
-	// tfv = transformedNormals;
 
 	modctrl->PrimTop = (ULONG*)psiData->primitiveList;
 
-//	i = PSIIsVisible(actor);
-//	utilPrintf("viz=%d\n",i);
-//	if (i==0) return;
-
 	j = modctrl->depthShift;
-	if (j==0)
+
+	if (j == 0)
 	{
 		j = DEFAULTDEPTHSHIFT;
 	}
@@ -2221,6 +2223,7 @@ void psiDrawSegments(PSIDATA *psiData)
 	if (psiData->flags & ACTOR_DYNAMICSORT)
 	{
 	 	psiCalcMaxMin(psiData);
+
 		world = (PSIOBJECT*)psiData->objectTable[0];
 
 		if (modctrl->depthoverride)
@@ -2236,6 +2239,7 @@ void psiDrawSegments(PSIDATA *psiData)
 		modctrl->VertTop = world->meshdata->vertop;
 		psiSortPrimitives();
 		modctrl->polysdrawn = sortCount;
+
 		if(customDrawFunction)
 			customDrawFunction(depth & 1023);
 		else
@@ -2259,16 +2263,13 @@ void psiDrawSegments(PSIDATA *psiData)
 			modctrl->VertTop = world->meshdata->vertop;
 		 	modctrl->SortOffs = world->meshdata->sortlistptr[s];
 			modctrl->PrimLeft = world->meshdata->sortlistsize[s];
+
 			if(customDrawFunction2)
 				customDrawFunction2(depth);
 			else
 				psiDrawPrimitives(depth);
 		}
 	}
-	
-#ifdef _DEBUG
-	//DrawNormals();
-#endif
 }
 
 

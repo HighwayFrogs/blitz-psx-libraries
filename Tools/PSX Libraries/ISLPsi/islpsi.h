@@ -371,4 +371,14 @@ void psiRegisterDrawFunction2(void (*drawHandler)(int));
 void *psiLoadPIL(char *pilName);
 
 
+/**************************************************************************
+	FUNCTION:	psiAllocWorkspace()
+	PURPOSE:	allocate workspace for model drawing
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
+void psiAllocWorkspace();
+
+
 #endif //__ISLPSI_H__
