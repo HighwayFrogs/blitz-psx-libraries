@@ -672,7 +672,7 @@ void textureUnload(TextureType *txPtr)
 
 	if(txPtr->refCount > 1)
 	{
-		utilPrintf("\ntexture has multiple references, decrementing all instances\n");
+		//utilPrintf("\ntexture has multiple references, decrementing all instances\n");
 		for(loop = 0; loop < MAXTEXBANKS; loop ++)
 		{
 			if (texBank[loop] != NULL)
