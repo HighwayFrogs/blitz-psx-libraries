@@ -1,8 +1,12 @@
+/************************************************************************************
+	ISL PSX LIBRARY	(c) 1999 Interactive Studios Ltd.
 
+	psitypes.h			Primitive definitions
+
+************************************************************************************/
 
 #ifndef __PSITYPES_H__
 #define __PSITYPES_H__
-
 
 
 #define GPU_COM_TF4SPR (0x64)

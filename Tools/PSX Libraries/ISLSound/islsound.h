@@ -81,12 +81,12 @@ void sfxLoadBank(char *filename);
 
 /**************************************************************************
 	FUNCTION:	sfxPlaySound()
-	PURPOSE:	plays a sound
-	PARAMETERS:	sample number, volume
-	RETURNS:	channel number
+	PURPOSE:	queues a sound request
+	PARAMETERS:	sample number, volume, pitch
+	RETURNS:	none
 **************************************************************************/
 
-unsigned long sfxPlaySound(int sfxNum, int vol);
+void sfxPlaySound(int sampleNum, int vol, int pitch);
 
 
 /**************************************************************************

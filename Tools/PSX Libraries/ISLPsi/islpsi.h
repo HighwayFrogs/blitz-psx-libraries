@@ -198,38 +198,164 @@ extern VECTOR *PSIrootScale;
 
 // function prototypes
 
+/**************************************************************************
+	FUNCTION:	psiInitialise()
+	PURPOSE:	Initialise PSI library
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
 void psiInitialise();
+
+
+/**************************************************************************
+	FUNCTION:	psiDestroy()
+	PURPOSE:	Shut down PSI library
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
 
 void psiDestroy();
 
+
+/**************************************************************************
+	FUNCTION:	psiLoad()
+	PURPOSE:	Load a PSI file
+	PARAMETERS:	filename
+	RETURNS:	pointer to a PSIMODEL
+**************************************************************************/
+
 PSIMODEL *psiLoad(char *psiName);
+
+
+/**************************************************************************
+	FUNCTION:	psiFixup()
+	PURPOSE:	Fix up pointers in a PSIMODEL file
+	PARAMETERS:	pointer to model in memory
+	RETURNS:	Pointer to a PSIMODEL
+**************************************************************************/
 
 PSIMODEL *psiFixup(char *addr);
 
+
+/**************************************************************************
+	FUNCTION:	psiInitLights()
+	PURPOSE:	Initialise hardware lights
+	PARAMETERS:	
+	RETURNS:	
+**************************************************************************/
+
 void psiInitLights();
+
+
+/**************************************************************************
+	FUNCTION:	psiSetLight()
+	PURPOSE:	Set a hardware light
+	PARAMETERS:	light number (0-2), colour, direction
+	RETURNS:	
+**************************************************************************/
 
 void psiSetLight(int lightNum, int r, int g, int b, int x, int y, int z);
 
+
+/**************************************************************************
+	FUNCTION:	psiSetAmbient()
+	PURPOSE:	Set hardware ambient colour
+	PARAMETERS:	colour (0-4095)
+	RETURNS:	
+**************************************************************************/
+
 void psiSetAmbient(int r, int g, int b);
+
+
+/**************************************************************************
+	FUNCTION:	psiObjectScan()
+	PURPOSE:	Find a specific part of a model
+	PARAMETERS:	Pointer to root object, name of object in hierarchy
+	RETURNS:	Pointer to object
+**************************************************************************/
 
 PSIOBJECT *psiObjectScan(PSIOBJECT *obj, char *name);
 
-void psiDrawBox(SHORT x,SHORT y,SHORT w,SHORT h,UBYTE r,UBYTE g,UBYTE b,UBYTE semi,SHORT pri);
+
+/**************************************************************************
+	FUNCTION:	psiSetKeyFrames()
+	PURPOSE:	Set the keyframes for an object and its siblings/children
+	PARAMETERS:	Pointer to object, frame number
+	RETURNS:	
+**************************************************************************/
 
 void psiSetKeyFrames(PSIOBJECT *world, ULONG frame);
 
+
+/**************************************************************************
+	FUNCTION:	psiSetKeyFrames2()
+	PURPOSE:	Set the keyframes for an object and its siblings/children
+	PARAMETERS:	Pointer to object, source frame number, desination frame number, blend value
+	RETURNS:	
+**************************************************************************/
+
 void psiSetKeyFrames2(PSIOBJECT *world, ULONG frame0, ULONG frame1, ULONG blend);
+
+
+/**************************************************************************
+	FUNCTION:	psiInitSortList()
+	PURPOSE:	Initialise the internal sort list
+	PARAMETERS:	Range of values
+	RETURNS:	
+**************************************************************************/
 
 void psiInitSortList(int range);
 
+
+/**************************************************************************
+	FUNCTION:	psiCalcWorldMatrix()
+	PURPOSE:	Calculate the matrices ready for drawing an object
+	PARAMETERS:	Pointer to root object
+	RETURNS:	
+**************************************************************************/
+
 void psiCalcWorldMatrix(PSIOBJECT *world);
+
+
+/**************************************************************************
+	FUNCTION:	psiCalcLocalMatrix()
+	PURPOSE:	Calculate the matrices ready for getting position of an object
+	PARAMETERS:	Pointer to root object
+	RETURNS:	
+**************************************************************************/
 
 void psiCalcLocalMatrix(PSIOBJECT *world);
 
+
+/**************************************************************************
+	FUNCTION:	psiDrawSegments()
+	PURPOSE:	Draw an objects mesh segments
+	PARAMETERS:	Pointer to psiData
+	RETURNS:	
+**************************************************************************/
+
 void psiDrawSegments(PSIDATA *psiData);
+
+
+/**************************************************************************
+	FUNCTION:	psiRegisterDrawFunction()
+	PURPOSE:	Register a custom draw function with the library for dynamically sorted models
+	PARAMETERS:	Pointer to draw function
+	RETURNS:	
+**************************************************************************/
 
 void psiRegisterDrawFunction(void (*drawHandler)(int));
 
+
+/**************************************************************************
+	FUNCTION:	psiRegisterDrawFunction2()
+	PURPOSE:	Register a custom draw function with the library for non-dynamically sorted models
+	PARAMETERS:	Pointer to draw function
+	RETURNS:	
+**************************************************************************/
+
 void psiRegisterDrawFunction2(void (*drawHandler)(int));
+
 
 #endif //__ISLPSI_H__
