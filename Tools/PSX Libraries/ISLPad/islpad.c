@@ -127,7 +127,7 @@ void padInitialise(unsigned char multiTap)
 		padData.analogY2S[loop] = 0;
 
 		padData2.digitalPrev[loop] = 0;
-		padData2.newShock[loop] = 0;
+		padData2.newShock[loop] = 10;
 	}
 }
 
