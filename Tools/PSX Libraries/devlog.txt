@@ -1,6 +1,34 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+11-11-99
+========
+
+Added the "inheritScale" member to PSImodelctrl. Should allow people to choose whether they want their models to inherit scale down the hierarchy.
+
+
+10-11-99
+========
+
+Finally got the darn thing working, those sneaky guys had hidden the flashrom in the root directory, meaning it was in /usr/local, not under /usr/local/sce. Grrrr!
+
+Demos rather uninspiring, but the particle one is quite pretty.
+
+EA came around to grill us on our suitability for Chicken Run (PS2).
+
+
+9-11-99
+=======
+
+Got the libraries and compiler for the PS2. Only 100meg download, great. Still doesn't work though.
+
+
+8-11-99
+=======
+
+PS2 dev-kit arrived today... Without any software... Great...
+
+
 5-11-99
 =======
 
