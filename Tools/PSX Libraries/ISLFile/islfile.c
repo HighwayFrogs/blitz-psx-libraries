@@ -520,12 +520,15 @@ static unsigned char fileCDloadDATbinary(char *fName, int *loc)
 
 /* EXTERNAL INTERFACE ******************************************************************************/
 
+#ifdef _DEBUG
 
 void fileGetLastLoaded()
 {
 	printf("\nLast file: %s (%d bytes)\n",lastFileLoaded, lastFileSize);
+	memoryGetLastAlloc();
 }
 
+#endif
 
 
 /**************************************************************************

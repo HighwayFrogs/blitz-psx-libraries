@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+8-12-99
+=======
+
+Added fileGetLastLoaded() to islfile.lib. This prints out the name and size of the last file that was loaded, to help debug the "where the hell's my memory gone?" problem.
+
+
 3-12-99
 =======
 
