@@ -1,6 +1,13 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+
+30-11-99
+========
+
+Added a call to utilUpperStr() in fileLoad(), so that filenames automatically get promoted to upper-case. This should save all of the grief people have been having with their darn lower-case filenames. :)
+
+
 29-11-99
 ========
 
