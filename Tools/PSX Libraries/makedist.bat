@@ -2,10 +2,12 @@ rem *** Remove old versions ***
 
 deltree /Y Distribution\Include
 deltree /Y Distribution\Lib
+deltree /Y Distribution\Source
 md Distribution\Include
 md Distribution\Lib
 md Distribution\Lib\Debug
 md Distribution\Lib\Release
+md Distribution\Source
 
 rem *** Build ISLMem Library ***
 cd islmem
@@ -112,8 +114,12 @@ psymake /dDEBUG=1
 psymake
 cd ..
 copy islpsi\islpsi.h Distribution\Include
+copy islpsi\psitypes.h Distribution\Include
 copy islpsi\Debug\islpsi.lib Distribution\Lib\Debug
 copy islpsi\Release\islpsi.lib Distribution\Lib\Release
+copy islpsi\actor.c Distribution\Source
+copy islpsi\actor.h Distribution\Source
+copy islpsi\custom.c Distribution\Source
 
 rem *** Copy shell headers ***
 copy shell\shell.h Distribution\Include

@@ -7,6 +7,7 @@ Andy Sidwell's Development Log for PSX Libraries
 
 Worked on the skinning library today. Split off all the actor functions into a separate file, which will be provided as source code for people to use however they want. The actual animation setup/blending and rendering functions will be provided as a library.
 
+Provided a function which will allow people to use their own backend to draw models. A reference driver will be provided so that people can write their own one.
 
 
 19-10-99
