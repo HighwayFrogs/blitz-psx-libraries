@@ -1,6 +1,12 @@
 Andy Sidwell's Development Log for PSX Libraries
 ================================================
 
+3-11-99
+=======
+
+Found the horrible slowdown problem, turns out that large models were being loaded and the internal sort-list was getting huge (over 5000 entries). This was having to be cleared every time a model was being drawn, hence the loooonnnggg time in psiCalcMaxMix(). This has now been sorted by Ian, who's customised his actor.c to sort this out.
+
+
 2-11-99
 =======
 
