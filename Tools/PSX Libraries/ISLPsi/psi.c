@@ -1204,11 +1204,11 @@ static void psiSortPrimitives()
 #undef op
 
 /*-----------------------------------------------------------------------------------------------------------------*/
-/*
+
 #define op ((TMD_P_FT4I*)opcd)
 			case GPU_COM_TF4SPR :
 			
-				deep = (tfd[op->v2]-minDepth);
+				deep = (tfd[op->v0] - minDepth);
 
 				op->next = sl[deep];
 				sl[deep] = (int)op;
@@ -1217,7 +1217,7 @@ static void psiSortPrimitives()
 				op++;
 				break;
 #undef op
-*/
+
 /*-----------------------------------------------------------------------------------------------------------------*/
 #define op ((TMD_P_FG4I*)opcd)
 			case GPU_COM_G4:
@@ -1527,7 +1527,7 @@ static void psiDrawSortedPrimitives(int depth)
 				testsi = si;
 
 	// scaling-and-transform-in-one-go code from the Action Man people...
-				width = op->v1;
+				width = op->v2;
 				gte_SetLDDQB(0);			// clear offset control reg (C2_DQB)
 				gte_ldv0(&vp[op->v0]);		// Load centre point
 				gte_SetLDDQA(width);		// shove sprite width into control reg (C2_DQA)
