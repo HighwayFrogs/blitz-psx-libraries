@@ -945,7 +945,7 @@ PSIMODEL *psiLoad(char *psiName)
 }
 
 /**************************************************************************
-	FUNCTION:	LoadPIL()
+	FUNCTION:	psiLoadPIL()
 	PURPOSE:	load psi library and ALL models in it, fix up ponters and load textures
 	PARAMETERS:	filename.pil
 	RETURNS:	pointer to PSIMODEL

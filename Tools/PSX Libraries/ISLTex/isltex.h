@@ -22,6 +22,8 @@ typedef struct {
 	unsigned char		u2, v2;
 	unsigned char		u3, v3;
 	int					handle;
+	unsigned long		imageCRC;
+	int					refCount;
 } TextureType;
 
 // animated texture structure

@@ -6,6 +6,8 @@ Andy Sidwell's Development Log for PSX Libraries
 
 Finished the reference counting of textures, freeing a texture now checks its reference count and only frees it from VRAM when there are no other references to it. CRC's now work properly (rather that not). Also checks to see if the texture dimensions are the same, just in case two different sized textures produce the same CRC (unlikely, but nevertheless possible).
 
+Edited all the libraries makefiles to enable optimisation on debug builds, as un-optimised builds were getting too slow to be usable.
+
 1-11-99
 =======
 

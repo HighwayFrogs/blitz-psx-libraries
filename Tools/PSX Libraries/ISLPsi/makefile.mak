@@ -1,5 +1,5 @@
 !if $(DEBUG) == 1
-OPT = -D_DEBUG -c -O2 -comments-c++ -Wall
+OPT = -D_DEBUG -c -O2 -g -comments-c++ -Wall
 !else
 OPT = -c -O2 -comments-c++ -Wall
 !endif

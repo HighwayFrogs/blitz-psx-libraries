@@ -96,33 +96,33 @@ int textureVRAMalloc(short w, short h)
 	int		page, x,y, xx,yy;
 	unsigned char	found;
 
-	for(page=0; page<VRAM_PAGES; page++)
+	for(page = 0; page < VRAM_PAGES; page ++)
 	{
-		for(y=0; y<=VRAM_PAGEH-h; y++)
+		for(y = 0; y <= VRAM_PAGEH - h; y ++)
 		{
-			for(x=0; x<=VRAM_PAGEW-w; x++)
+			for(x = 0; x <= VRAM_PAGEW - w; x ++)
 			{
-				if (VRAMblock[page][VRAM_SETXY(x,y)]==0)
+				if (VRAMblock[page][VRAM_SETXY(x, y)] == 0)
 				{
 					found = 0;
-					for(yy=y; yy<y+h; yy++)
+					for(yy = y; yy < y + h; yy ++)
 					{
-						for(xx=x; xx<x+w; xx++)
+						for(xx = x; xx < x + w; xx ++)
 						{
-							found |= (VRAMblock[page][VRAM_SETXY(xx,yy)]);
+							found |= (VRAMblock[page][VRAM_SETXY(xx, yy)]);
 						}
 					}
 					if (!found)
 					{
-						for(yy=y; yy<y+h; yy++)
+						for(yy = y; yy < y + h; yy ++)
 						{
-							for(xx=x; xx<x+w; xx++)
+							for(xx = x; xx < x + w; xx ++)
 							{
-								VRAMblock[page][VRAM_SETXY(xx,yy)] = 1;
+								VRAMblock[page][VRAM_SETXY(xx, yy)] = 1;
 							}
 						}
 //						printf("Allocated %dx%d, from page %d @ %d,%d\n", w,h,page,x,y);
-						return (VRAM_SETPAGE(page)|VRAM_SETXY(x,y));
+						return (VRAM_SETPAGE(page) | VRAM_SETXY(x, y));
 					}
 				}
 			}
@@ -426,15 +426,87 @@ int textureRemoveCLUT256(unsigned short clut)
 
 static void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
 {
-	RECT	rect;
+	RECT			rect;
 	unsigned short	ww,hh,uMax,vMax;
-	int		handle;
+	int				handle, loop, loop2;
+	unsigned long	imageCRC, imageLength, foundMatch;
 
 	if(nspr->flags & NEIGHTBIT)
 		txPtr->clut = textureAddCLUT256(nspr->pal);
 	else
 		txPtr->clut = textureAddCLUT16(nspr->pal);
 
+	// set image CRC to zero for this texture
+	txPtr->imageCRC = 0;
+
+	foundMatch = 0;
+
+	// reference count is one to start with
+	txPtr->refCount = 1;
+
+	// calc width
+	imageLength = (nspr->w+3)/4;
+
+	// double if 256 colour
+	if(nspr->flags & NEIGHTBIT)
+		imageLength *= 2;
+
+	// multiply by height and double (cuz its 16-bit)
+	imageLength = (imageLength * nspr->h) * 2;
+
+	// calc crc for texture
+	imageCRC = utilBlockCRC((char *)nspr->image, imageLength);
+	
+	// for each texture bank
+	for(loop = 0; loop < MAXTEXBANKS; loop ++)
+	{
+		if (texBank[loop]!=NULL)
+		{
+			// for all textures in bank
+			for(loop2 = 0; loop2 < texBank[loop]->numTextures; loop2 ++)
+			{
+				// check to see if image crc matches
+				if (texBank[loop]->texture[loop2].imageCRC == imageCRC)
+				{
+					// check width and height just to make sure
+					if( (texBank[loop]->texture[loop2].w == nspr->w) && (texBank[loop]->texture[loop2].h == nspr->h) )
+					{
+						// copy stuff (except clut of course)
+						if(!foundMatch)
+						{
+							txPtr->h = texBank[loop]->texture[loop2].h;
+							txPtr->handle = texBank[loop]->texture[loop2].handle;
+							txPtr->tpage = texBank[loop]->texture[loop2].tpage;
+							txPtr->u0 = texBank[loop]->texture[loop2].u0;
+							txPtr->u1 = texBank[loop]->texture[loop2].u1;
+							txPtr->u2 = texBank[loop]->texture[loop2].u2;
+							txPtr->u3 = texBank[loop]->texture[loop2].u3;
+							txPtr->v0 = texBank[loop]->texture[loop2].v0;
+							txPtr->v1 = texBank[loop]->texture[loop2].v1;
+							txPtr->v2 = texBank[loop]->texture[loop2].v2;
+							txPtr->v3 = texBank[loop]->texture[loop2].v3;
+							txPtr->w = texBank[loop]->texture[loop2].w;
+							txPtr->x = texBank[loop]->texture[loop2].x;
+							txPtr->y = texBank[loop]->texture[loop2].y;
+						}
+						texBank[loop]->texture[loop2].refCount ++;
+						txPtr->refCount = texBank[loop]->texture[loop2].refCount;	// increment reference count and assign
+						foundMatch ++;
+					}
+				}
+			}
+		}
+	}
+
+	// if we've found matching textures, return
+	if(foundMatch)
+	{
+		txPtr->imageCRC = imageCRC;
+		return;
+	}
+
+	txPtr->refCount = 1;
+	
 	ww = (nspr->w+7)/8;
 	hh = (nspr->h+7)/8;
 
@@ -482,6 +554,7 @@ static void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
    	txPtr->u3 = uMax;
    	txPtr->v3 = vMax;
 	txPtr->handle = handle;
+	txPtr->imageCRC = imageCRC;
 }
 
 
@@ -495,7 +568,39 @@ static void textureDownLoad(NSPRITE *nspr, TextureType *txPtr)
 void textureUnload(TextureType *txPtr)
 {
 	RECT	rect;
-	int		page;
+	int		page, loop, loop2;
+
+	if(txPtr->refCount > 1)
+	{
+		utilPrintf("\ntexture has multiple references, decrementing all instances\n");
+		for(loop = 0; loop < MAXTEXBANKS; loop ++)
+		{
+			if (texBank[loop] != NULL)
+			{
+				// for all textures in bank
+				for(loop2 = 0; loop2 < texBank[loop]->numTextures; loop2 ++)
+				{
+					// check to see if image crc matches
+					if (texBank[loop]->texture[loop2].imageCRC == txPtr->imageCRC)
+					{
+						if( (texBank[loop]->texture[loop2].w == txPtr->w) && (texBank[loop]->texture[loop2].h == txPtr->h) )
+						{
+							// decrement reference count for all matching textures
+							texBank[loop]->texture[loop2].refCount --;
+						}
+					}
+				}
+
+				// remove palette
+				if(txPtr->tpage & (1 << 7))
+					textureRemoveCLUT256(txPtr->clut);
+				else
+					textureRemoveCLUT16(txPtr->clut);
+
+				return;
+			}
+		}
+	}
 
 	page = VRAM_GETPAGE(txPtr->handle);
 	rect.x = VRAM_CALCVRAMX(txPtr->handle);
@@ -656,10 +761,7 @@ void textureUnloadBank(TextureBankType *bank)
 	if (bank==NULL)
 		return;
 
-	for(loop=0; loop<MAXTEXBANKS; loop++)
-		if (texBank[loop]==bank)
-			texBank[loop] = NULL;
-
+	// free up texture space in vram
 	numTex = bank->numTextures;
 	for(loop=0; loop<numTex; loop++)
 	{
@@ -669,6 +771,13 @@ void textureUnloadBank(TextureBankType *bank)
 			textureUnload(bank->texture+loop);
 	}
 
+	// remove internal reference to bank
+
+	for(loop=0; loop<MAXTEXBANKS; loop++)
+		if (texBank[loop]==bank)
+			texBank[loop] = NULL;
+
+	// free up ram space
 	FREE(bank->texture);
 	FREE(bank->CRC);
 	FREE(bank);
@@ -857,7 +966,7 @@ static void VRAMdrawPalette(unsigned long clut, int y)
    	{
    		if ((VRAMpalBlock[pal]) && (clut==VRAMpalCLUT[pal]))
    		{
-			sprintf(str, "Palette #%d (used %dx) CRC=0x%x", pal, VRAMpalBlock[pal], VRAMpalCRC[pal]);
+			sprintf(str, "Palette #%d (used %dx)", pal, VRAMpalBlock[pal]);
    			fontPrint(font, -230,y+13, str, 128,128,128);
 			break;
 		}
@@ -958,7 +1067,7 @@ static void VRAMviewTextures(int *currTex)
 		else
 			VRAMdrawPalette(tex->clut, -90);
 
-		sprintf(str, "Texture #%d (%dx%d)", *currTex, tex->w,tex->h);
+		sprintf(str, "Texture #%d (%dx%d) (used %dx)", *currTex, tex->w,tex->h, tex->refCount);
 		fontPrint(font, -fontExtentW(font, str)/2,75, str, 128,128,128);
 		yu = -tex->h/2-8;
 		yd = tex->h/2+8;
@@ -1006,10 +1115,13 @@ static void VRAMviewTextures(int *currTex)
 		}
 		if (padData.digital[4] & (PAD_RIGHT|PAD_DOWN))
 		{
-			*currTex = (*currTex)+1;
-			padDelay = 3;
-			if (padData.debounce[4] & (PAD_RIGHT|PAD_DOWN))
-				padDelay = 20;
+			if(VRAMfindTextureN(*currTex+1))
+			{
+				*currTex = (*currTex)+1;
+				padDelay = 3;
+				if (padData.debounce[4] & (PAD_RIGHT|PAD_DOWN))
+					padDelay = 20;
+			}
 		}
 	}
 	else

@@ -1,7 +1,7 @@
 !if $(DEBUG) == 1
-OPT = -D_DEBUG -c -O0 -X0$00018000 -comments-c++ -Wall
+OPT = -D_DEBUG -c -O0 -g -comments-c++ -Wall
 !else
-OPT = -c -O2 -X0$00018000 -comments-c++ -Wall
+OPT = -c -O2 -comments-c++ -Wall
 !endif
 
 CCPSX = C:\Psx\bin\ccpsx

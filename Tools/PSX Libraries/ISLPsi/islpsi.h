@@ -195,6 +195,8 @@ extern VECTOR *PSIactorScale;
 
 extern VECTOR *PSIrootScale;
 
+extern long *pilLibraryList[8];
+
 
 // function prototypes
 
@@ -356,6 +358,17 @@ void psiRegisterDrawFunction(void (*drawHandler)(int));
 **************************************************************************/
 
 void psiRegisterDrawFunction2(void (*drawHandler)(int));
+
+
+/**************************************************************************
+	FUNCTION:	psiLoadPIL()
+	PURPOSE:	load psi library and ALL models in it, fix up ponters and load textures
+	PARAMETERS:	filename.pil
+	RETURNS:	pointer to PSIMODEL
+**************************************************************************/
+
+
+void *psiLoadPIL(char *pilName);
 
 
 #endif //__ISLPSI_H__
